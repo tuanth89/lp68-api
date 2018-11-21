@@ -1,0 +1,383 @@
+﻿[
+	{
+		"provinceId": "1",
+		"name": "Hà Nội",
+		"type": "Thành Phố",
+		"unsignName": "ha noi"
+	},
+	{
+		"provinceId": "2",
+		"name": "Hà Giang",
+		"type": "Tỉnh",
+		"unsignName": "ha giang"
+	},
+	{
+		"provinceId": "4",
+		"name": "Cao Bằng",
+		"type": "Tỉnh",
+		"unsignName": "cao bang"
+	},
+	{
+		"provinceId": "6",
+		"name": "Bắc Kạn",
+		"type": "Tỉnh",
+		"unsignName": "bac kan"
+	},
+	{
+		"provinceId": "8",
+		"name": "Tuyên Quang",
+		"type": "Tỉnh",
+		"unsignName": "tuyen quang"
+	},
+	{
+		"provinceId": "10",
+		"name": "Lào Cai",
+		"type": "Tỉnh",
+		"unsignName": "lao cai"
+	},
+	{
+		"provinceId": "11",
+		"name": "Điện Biên",
+		"type": "Tỉnh",
+		"unsignName": "dien bien"
+	},
+	{
+		"provinceId": "12",
+		"name": "Lai Châu",
+		"type": "Tỉnh",
+		"unsignName": "lai chau"
+	},
+	{
+		"provinceId": "14",
+		"name": "Sơn La",
+		"type": "Tỉnh",
+		"unsignName": "son la"
+	},
+	{
+		"provinceId": "15",
+		"name": "Yên Bái",
+		"type": "Tỉnh",
+		"unsignName": "yen bai"
+	},
+	{
+		"provinceId": "17",
+		"name": "Hòa Bình",
+		"type": "Tỉnh",
+		"unsignName": "hoa binh"
+	},
+	{
+		"provinceId": "19",
+		"name": "Thái Nguyên",
+		"type": "Tỉnh",
+		"unsignName": "thai nguyen"
+	},
+	{
+		"provinceId": "20",
+		"name": "Lạng Sơn",
+		"type": "Tỉnh",
+		"unsignName": "lang son"
+	},
+	{
+		"provinceId": "22",
+		"name": "Quảng Ninh",
+		"type": "Tỉnh",
+		"unsignName": "quang ninh"
+	},
+	{
+		"provinceId": "24",
+		"name": "Bắc Giang",
+		"type": "Tỉnh",
+		"unsignName": "bac giang"
+	},
+	{
+		"provinceId": "25",
+		"name": "Phú Thọ",
+		"type": "Tỉnh",
+		"unsignName": "phu tho"
+	},
+	{
+		"provinceId": "26",
+		"name": "Vĩnh Phúc",
+		"type": "Tỉnh",
+		"unsignName": "vinh phuc"
+	},
+	{
+		"provinceId": "27",
+		"name": "Bắc Ninh",
+		"type": "Tỉnh",
+		"unsignName": "bac ninh"
+	},
+	{
+		"provinceId": "30",
+		"name": "Hải Dương",
+		"type": "Tỉnh",
+		"unsignName": "hai duong"
+	},
+	{
+		"provinceId": "31",
+		"name": "Hải Phòng",
+		"type": "Thành Phố",
+		"unsignName": "hai phong"
+	},
+	{
+		"provinceId": "33",
+		"name": "Hưng Yên",
+		"type": "Tỉnh",
+		"unsignName": "hung yen"
+	},
+	{
+		"provinceId": "34",
+		"name": "Thái Bình",
+		"type": "Tỉnh",
+		"unsignName": "thai binh"
+	},
+	{
+		"provinceId": "35",
+		"name": "Hà Nam",
+		"type": "Tỉnh",
+		"unsignName": "ha nam"
+	},
+	{
+		"provinceId": "36",
+		"name": "Nam Định",
+		"type": "Tỉnh",
+		"unsignName": "nam dinh"
+	},
+	{
+		"provinceId": "37",
+		"name": "Ninh Bình",
+		"type": "Tỉnh",
+		"unsignName": "ninh binh"
+	},
+	{
+		"provinceId": "38",
+		"name": "Thanh Hóa",
+		"type": "Tỉnh",
+		"unsignName": "thanh hoa"
+	},
+	{
+		"provinceId": "40",
+		"name": "Nghệ An",
+		"type": "Tỉnh",
+		"unsignName": "nghe an"
+	},
+	{
+		"provinceId": "42",
+		"name": "Hà Tĩnh",
+		"type": "Tỉnh",
+		"unsignName": "ha tinh"
+	},
+	{
+		"provinceId": "44",
+		"name": "Quảng Bình",
+		"type": "Tỉnh",
+		"unsignName": "quang binh"
+	},
+	{
+		"provinceId": "45",
+		"name": "Quảng Trị",
+		"type": "Tỉnh",
+		"unsignName": "quang tri"
+	},
+	{
+		"provinceId": "46",
+		"name": "Thừa Thiên Huế",
+		"type": "Tỉnh",
+		"unsignName": "thua thien hue"
+	},
+	{
+		"provinceId": "48",
+		"name": "Đà Nẵng",
+		"type": "Thành Phố",
+		"unsignName": "da nang"
+	},
+	{
+		"provinceId": "49",
+		"name": "Quảng Nam",
+		"type": "Tỉnh",
+		"unsignName": "quang nam"
+	},
+	{
+		"provinceId": "51",
+		"name": "Quảng Ngãi",
+		"type": "Tỉnh",
+		"unsignName": "quang ngai"
+	},
+	{
+		"provinceId": "52",
+		"name": "Bình Định",
+		"type": "Tỉnh",
+		"unsignName": "binh dinh"
+	},
+	{
+		"provinceId": "54",
+		"name": "Phú Yên",
+		"type": "Tỉnh",
+		"unsignName": "phu yen"
+	},
+	{
+		"provinceId": "56",
+		"name": "Khánh Hòa",
+		"type": "Tỉnh",
+		"unsignName": "khanh hoa"
+	},
+	{
+		"provinceId": "58",
+		"name": "Ninh Thuận",
+		"type": "Tỉnh",
+		"unsignName": "ninh thuan"
+	},
+	{
+		"provinceId": "60",
+		"name": "Bình Thuận",
+		"type": "Tỉnh",
+		"unsignName": "binh thuan"
+	},
+	{
+		"provinceId": "62",
+		"name": "Kon Tum",
+		"type": "Tỉnh",
+		"unsignName": "kon tum"
+	},
+	{
+		"provinceId": "64",
+		"name": "Gia Lai",
+		"type": "Tỉnh",
+		"unsignName": "gia lai"
+	},
+	{
+		"provinceId": "66",
+		"name": "Đắk Lắk",
+		"type": "Tỉnh",
+		"unsignName": "dak lak"
+	},
+	{
+		"provinceId": "67",
+		"name": "Đắk Nông",
+		"type": "Tỉnh",
+		"unsignName": "dak nong"
+	},
+	{
+		"provinceId": "68",
+		"name": "Lâm Đồng",
+		"type": "Tỉnh",
+		"unsignName": "lam dong"
+	},
+	{
+		"provinceId": "70",
+		"name": "Bình Phước",
+		"type": "Tỉnh",
+		"unsignName": "binh phuoc"
+	},
+	{
+		"provinceId": "72",
+		"name": "Tây Ninh",
+		"type": "Tỉnh",
+		"unsignName": "tay ninh"
+	},
+	{
+		"provinceId": "74",
+		"name": "Bình Dương",
+		"type": "Tỉnh",
+		"unsignName": "binh duong"
+	},
+	{
+		"provinceId": "75",
+		"name": "Đồng Nai",
+		"type": "Tỉnh",
+		"unsignName": "dong nai"
+	},
+	{
+		"provinceId": "77",
+		"name": "Bà Rịa - Vũng Tàu",
+		"type": "Tỉnh",
+		"unsignName": "ba ria - vung tau"
+	},
+	{
+		"provinceId": "79",
+		"name": "Hồ Chí Minh",
+		"type": "Thành Phố",
+		"unsignName": "ho chi minh"
+	},
+	{
+		"provinceId": "80",
+		"name": "Long An",
+		"type": "Tỉnh",
+		"unsignName": "long an"
+	},
+	{
+		"provinceId": "82",
+		"name": "Tiền Giang",
+		"type": "Tỉnh",
+		"unsignName": "tien giang"
+	},
+	{
+		"provinceId": "83",
+		"name": "Bến Tre",
+		"type": "Tỉnh",
+		"unsignName": "ben tre"
+	},
+	{
+		"provinceId": "84",
+		"name": "Trà Vinh",
+		"type": "Tỉnh",
+		"unsignName": "tra vinh"
+	},
+	{
+		"provinceId": "86",
+		"name": "Vĩnh Long",
+		"type": "Tỉnh",
+		"unsignName": "vinh long"
+	},
+	{
+		"provinceId": "87",
+		"name": "Đồng Tháp",
+		"type": "Tỉnh",
+		"unsignName": "dong thap"
+	},
+	{
+		"provinceId": "89",
+		"name": "An Giang",
+		"type": "Tỉnh",
+		"unsignName": "an giang"
+	},
+	{
+		"provinceId": "91",
+		"name": "Kiên Giang",
+		"type": "Tỉnh",
+		"unsignName": "kien giang"
+	},
+	{
+		"provinceId": "92",
+		"name": "Cần Thơ",
+		"type": "Thành Phố",
+		"unsignName": "can tho"
+	},
+	{
+		"provinceId": "93",
+		"name": "Hậu Giang",
+		"type": "Tỉnh",
+		"unsignName": "hau giang"
+	},
+	{
+		"provinceId": "94",
+		"name": "Sóc Trăng",
+		"type": "Tỉnh",
+		"unsignName": "soc trang"
+	},
+	{
+		"provinceId": "95",
+		"name": "Bạc Liêu",
+		"type": "Tỉnh",
+		"unsignName": "bac lieu"
+	},
+	{
+		"provinceId": "96",
+		"name": "Cà Mau",
+		"type": "Tỉnh",
+		"unsignName": "ca mau"
+	},
+	{
+		"provinceId": ""
+	}
+]

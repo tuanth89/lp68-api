@@ -1,0 +1,91 @@
+module.exports = {
+    domain: 'http://localhost:3000/',
+    frontend_domain: 'http://localhost:9001/',
+    video_url_template: 'http://localhost:1935/giangcoffee/_definst_/$$VIDEO_EXT$$:$$VIDEO_URL$$/playlist.m3u8',
+    name: 'elearning-api',
+    root_dir: '/usr/SOURCES/rest-api/',
+    env: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || 3000,
+    port_http: 3001,
+    base_url: process.env.BASE_URL || 'http://localhost:3000',
+    pagination: {
+        page: 1,
+        limit: 12,
+        maximum: 1000
+    },
+    resource :{
+            excel: 'resources/excels/'
+    },
+    db: {
+        uri: process.env.MONGODB_URI || 'mongodb://database:27017/elearning-api',
+        authorizationEnabled: false,
+        auth: {
+            user: "elearning",
+            password: "Elearning#2018"
+        }
+    },
+    cors: ['http://localhost:9001', 'http://localhost:3000'],
+    jwt: {
+        public_key: 'var/jwt/public.pem',
+        private_key: 'var/jwt/private.pem',
+        token_expire: '1d',
+        hash_algorithm: 'RS256'
+    },
+    public_url: [
+        /^\/api\/v1\/categories/,
+        /^\/api\/v1\/certificates/,
+        /^\/api\/v1\/courselogs/,
+        /^\/api\/v1\/collections/,
+        /^\/api\/v1\/courses/,
+        /^\/api\/v1\/users/,
+        /^\/api\/v1\/search/,
+        '/api/v1/bootstrap',
+        /^\/api\/v1\/subcategories/,
+        /^\/api\/v1\/topics/,
+        '/api/v1/checkToken',
+        '/api/v1/register',
+        '/api/v1/getToken',
+        /\/xdomain\/?.*/,
+        /\/upload\/?.*/,
+        '/api/v1/suggestcourse',
+        '/api/v1/myCourses',
+        '/api/v1/requests',
+        /^\/api\/v1\/resetting/,
+        /^\/api\/v1\/activate/,
+        /^\/api\/v1\/usefulreviews/,
+        /^\/api\/v1\/loginGoogle/,
+        /^\/api\/v1\/loginFacebook/,
+        '/api/v1/crop-image',
+        '/api/v1/share-via-email',
+        /\/api\/v1\/courses\/?.*\/course-related/,
+         '/api/v1/resendActiveEmail',
+         '/api/v1/bestinstructor',
+         '/api/v1/banners-cusReviews-partners',
+         '/api/v1/header-footer-config-all',
+         '/api/v1/promotionGetActive',
+         /\/api\/v1\/vouchers\/?.*\/get-by-code/,
+         /^\/api\/admin\/v1\/reportViolationTypes/,
+         /^\/api\/admin\/v1\/reportViolations/
+    ],
+    non_json_route: [
+        '/api/v1/uploadFiles',
+        '/api/admin/v1/uploadFiles',
+    ],
+    mail: {
+        host: 'localhost',
+        port: 587,
+        secure: false,
+        from: '"Admin" <admin@localhost>',
+        credentials: {
+            user: 'test',
+            pass: 'test'
+        }
+    },
+    security: {
+        special_character_pattern: /[\/\\()~%:*?<>{}]/g
+    },
+    mailgun: {
+        apiKey: "1cee7f5df7357c385a9534da1b3f3bc3-e44cc7c1-61436deb",
+        domain: "sskpi.com"
+    }
+};

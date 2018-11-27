@@ -33,7 +33,7 @@ module.exports = function (server) {
                         id: user._id,
                         username: user.username,
                         email: user.email,
-                        name: user.name,
+                        fullName: user.fullName,
                         photo: user.photo,
                         userRoles: user.roles
                     };
@@ -55,14 +55,10 @@ module.exports = function (server) {
                                 username: user.username,
                                 userRoles: user.roles,
                                 token: token,
-                                name: user.name,
+                                fullName: user.fullName,
                                 email: user.email,
-                                photo: user.photo,
-                                province: user.province,
                                 phone: user.phone,
-                                address: user.address,
-                                firstName: user.firstName,
-                                lastName: user.lastName,
+                                photo: user.photo
                             });
                             next();
                         }
@@ -113,17 +109,10 @@ module.exports = function (server) {
                             username: userNewest.username,
                             token: token,
                             userRoles: userNewest.roles,
-                            name: userNewest.name,
+                            fullName: userNewest.fullName,
                             email: userNewest.email,
-                            photo: userNewest.photo,
-                            province: userNewest.province,
-                            experience: userNewest.experience,
                             phone: userNewest.phone,
-                            address: userNewest.address,
-                            facebookId: userNewest.facebookId,
-                            noChangedPwFbGg: userNewest.noChangedPwFbGg,
-                            firstName: userNewest.firstName,
-                            lastName: userNewest.lastName,
+                            photo: userNewest.photo
                         });
                         next();
                     })
@@ -152,39 +141,10 @@ module.exports = function (server) {
                     UserRepository.save(data)
                         .then(function (user) {
                             user.isLecture = data.isLecture;
-                            EventDispatcher.newUserEvent(user);
+                            // EventDispatcher.newUserEvent(user);
 
-                            let parser = new UAParser();
-                            parser.setUA(req.headers['user-agent']);
-                            let dataEmail = {
-                                action_url: config.frontend_domain.concat('activateAccount/', user.activateToken),
-                                support_url: config.frontend_domain.concat('activateAccount/', user.activateToken),
-                                product: PRODUCT,
-                                product_url: "https://medu.vn",
-                                live_chat_url: "https://medu.vn/livechat",
-                                support_email: "support@medu.vn",
-                                name: user.name,
-                                operating_system: parser.getOS().name,
-                                browser_name: parser.getBrowser().name,
-                                company_name: COMPANY_NAME,
-                                company_address: COMPANY_ADDRESS
-                            };
-
-                            EmailService.sendWithTemplate(
-                                'templates/activate',
-                                config.mail.from,
-                                user.email,
-                                "[Medu Elearning] Kích hoạt tài khoản",
-                                dataEmail
-                            ).then((response) => {
-                                res.send(201);
-                                next();
-                            })
-                                .catch((error) => {
-                                    log.error(error);
-                                    return next(new errors.InternalError(error.message));
-                                });
-
+                            res.send(201);
+                            next();
                         })
                         .catch(function (error) {
                             log.error(error);

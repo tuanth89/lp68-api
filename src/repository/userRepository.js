@@ -173,7 +173,7 @@ function save(data) {
 
     let user = new User(data);
 
-    if (!user.name || !user.password || !user.email) {
+    if (!user.fullName || !user.password || !user.email) {
         deferred.reject(new errors.InvalidContentError('"name", "password" và "email" không được để trống!'));
         return deferred.promise;
     }
@@ -182,16 +182,16 @@ function save(data) {
     user.password = hashed.passwordHash;
     user.salt = hashed.salt;
 
-    if (user.name) {
+    if (user.fullName) {
         if (!user.firstName || !user.lastName) {
-            let splitName = user.name.trim().split(" ");
+            let splitName = user.fullName.trim().split(" ");
             user.firstName = splitName[splitName.length - 1];
-            user.lastName = user.name.substr(0, user.name.length - user.firstName.length).trim();
+            user.lastName = user.fullName.substr(0, user.fullName.length - user.firstName.length).trim();
         }
 
         user.firstName = StringService.stripHtmlTag(user.firstName);
         user.lastName = StringService.stripHtmlTag(user.lastName);
-        user.name = StringService.stripHtmlTag(user.name);
+        user.fullName = StringService.stripHtmlTag(user.fullName);
     }
 
     if (user.enabled) {

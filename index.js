@@ -20,6 +20,8 @@ const filterUnauthorizedRequest = require('./src/middlewares/filterUnauthorizedR
 const userRouter = require('./src/routes/userRouter');
 const utilRouter = require('./src/routes/utilRouter');
 const authenRouter = require('./src/routes/authenRouter');
+const customerRouter = require('./src/routes/customerRouter');
+const contractRouter = require('./src/routes/contractRouter');
 
 const adminRouter = require('./src/routes/adminRouter');
 const rootRouter = require('./src/routes/rootRouter');
@@ -114,6 +116,8 @@ server.listen(config.port, () => {
 
         rootRouter(server);
         adminRouter(server);
+        customerRouter(server);
+        contractRouter(server);
 
         console.log(`Server is listening on port ${config.port}`);
     })

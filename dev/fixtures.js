@@ -61,7 +61,7 @@ let dropUser = function () {
 
 let users = [
     {
-        name: "admin",
+        fullName: "admin",
         firstName: "admin",
         lastName: "admin",
         username: "admin",
@@ -72,7 +72,7 @@ let users = [
         enabled: true
     },
     {
-        name: "Super Admin",
+        fullName: "Super Admin",
         firstName: "Super",
         lastName: "Admin",
         username: "root",
@@ -98,7 +98,7 @@ db.once('open', () => {
                     console.log('all users created');
                 })
                 .catch(function (error) {
-
+                    console.log(error.message);
                 });
         }
     });

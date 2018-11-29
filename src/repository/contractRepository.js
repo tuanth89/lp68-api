@@ -66,16 +66,39 @@ function getList(params) {
     return deferred.promise;
 }
 
+Date.prototype.addDays = function (days) {
+    this.setDate(this.getDate() + parseInt(days));
+    return this;
+};
 /**
  *
- * @param params
+ * @param date
+ * @param type
  * @returns {*|promise}
  */
-function getListByDate(params) {
+function getListByDate(date, type) {
     const deferred = Q.defer();
+    let dateFilter = new Date(date);
+    let dateFrom = "";
+    let dateTo = "";
+
+    let query = {};
+    switch (parseInt(type)) {
+        case CONTRACT_CONST.NEW: // Khách mới
+            dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth(), dateFilter.getDate());
+            dateTo = dateFilter.addDays(1);
+            dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate());
+
+            query = {createdAt: {$gte: dateFrom, $lt: dateTo}};
+            break;
+        default: // Lưu thông
+            dateFilter.addDays(1);
+            query = {createdAt: {$lt: dateFilter}};
+            break;
+    }
 
     Contract
-        .find({createdAt: {$lte: new Date().toISOString()}, status: CONTRACT_CONST.NEW})
+        .find(query)
         // .select(Serializer.summary)
         .exec(function (error, contracts) {
             if (error) {
@@ -140,7 +163,7 @@ function updateBulk(contracts) {
 
                 if (!contract.contractNo) {
                     let nowDate = new Date();
-                    contract.contractNo = `${nowDate.getYear()}_${++count}`;
+                    contract.contractNo = `${nowDate.getFullYear()}_${++count}`;
                 }
 
                 if (contract.loanDate) {
@@ -165,7 +188,7 @@ function updateBulk(contracts) {
                 if (error) {
                     deferred.reject(new errors.InvalidContentError(error.message));
                 } else {
-                    deferred.resolve(results);
+                    deferred.resolve(contracts);
                 }
             });
         }

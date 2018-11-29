@@ -61,7 +61,9 @@ function list(req, res, next) {
  * @param next
  */
 function listByDate(req, res, next) {
-    ContractRepository.getListByDate(req.params)
+    let date = req.params.date || new Date();
+    let type = req.params.type || -1;
+    ContractRepository.getListByDate(date, type)
         .then(function (contracts) {
             res.send(contracts);
             next();

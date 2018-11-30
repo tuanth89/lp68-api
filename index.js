@@ -96,10 +96,15 @@ server.listen(config.port, () => {
 
     if (config.db.authorizationEnabled) {
         mongoose.connect(config.db.uri, {
-            auth: config.db.auth
+            auth: config.db.auth,
+            useCreateIndex: true,
+            useNewUrlParser: true
         });
     } else {
-        mongoose.connect(config.db.uri);
+        mongoose.connect(config.db.uri,{
+            useCreateIndex: true,
+            useNewUrlParser: true
+        });
     }
 
     const db = mongoose.connection;

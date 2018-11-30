@@ -146,53 +146,61 @@ function updateBulk(contracts) {
     const deferred = Q.defer();
 
     let bulk = Contract.collection.initializeUnorderedBulkOp();
-    Contract.count({}, function (error, count) {
-        if (error) {
-            deferred.reject(new errors.InvalidContentError(error.message));
-        } else {
-            _.each(contracts, function (contract) {
-                if (!contract._id) {
-                    contract._id = new ObjectId();
-                    contract.createdAt = new Date();
-                }
-                else {
-                    contract.createdAt = new Date(contract.createdAt);
-                    contract._id = ObjectId(contract._id);
-                    contract.updatedAt = new Date();
+
+    Contract.findOne({$query: {}, $orderby: {noIdentity: -1}})
+        .exec(function (error, item) {
+            if (error) {
+                deferred.reject(new errors.InvalidContentError(error.message));
+            } else {
+                let count = 0;
+                if (item) {
+                    count = item.noIdentity || 0;
                 }
 
-                if (!contract.contractNo) {
-                    let nowDate = new Date();
-                    contract.contractNo = `${nowDate.getFullYear()}_${++count}`;
-                }
+                _.each(contracts, function (contract) {
+                    if (!contract._id) {
+                        contract._id = new ObjectId();
+                        contract.createdAt = new Date(contract.createdAt);
+                    }
+                    else {
+                        contract.createdAt = new Date(contract.createdAt);
+                        contract._id = ObjectId(contract._id);
+                        contract.updatedAt = new Date();
+                    }
 
-                if (contract.loanDate) {
-                    let startDate = new Date(contract.createdAt);
-                    contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
-                }
+                    if (!contract.contractNo) {
+                        contract.noIdentity = ++count;
+                        let nowDate = new Date();
+                        contract.contractNo = `${nowDate.getFullYear()}_${contract.noIdentity}`;
+                    }
 
-                if (contract.loanDate > 0) {
-                    let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
-                    // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
-                    contract.dailyMoney = dailyMoney.toFixed();
-                }
+                    if (contract.loanDate) {
+                        let startDate = new Date(contract.createdAt);
+                        contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
+                    }
 
-                let item = new Contract(contract);
+                    if (contract.loanDate > 0) {
+                        let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
+                        // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
+                        contract.dailyMoney = dailyMoney.toFixed();
+                    }
 
-                bulk.find({_id: ObjectId(item._id)})
-                    .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
-                    .updateOne(item);
-            });
+                    let item = new Contract(contract);
 
-            bulk.execute(function (error, results) {
-                if (error) {
-                    deferred.reject(new errors.InvalidContentError(error.message));
-                } else {
-                    deferred.resolve(contracts);
-                }
-            });
-        }
-    });
+                    bulk.find({_id: ObjectId(item._id)})
+                        .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+                        .updateOne(item);
+                });
+
+                bulk.execute(function (error, results) {
+                    if (error) {
+                        deferred.reject(new errors.InvalidContentError(error.message));
+                    } else {
+                        deferred.resolve(contracts);
+                    }
+                });
+            }
+        });
 
     return deferred.promise;
 }

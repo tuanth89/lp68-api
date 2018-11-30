@@ -14,6 +14,9 @@ const ContractSchema = new mongoose.Schema({
         unique: true,
         required: false
     },
+    noIdentity: {
+        type: Number
+    },
     contractHistory: {
         type: Array
     },
@@ -22,9 +25,6 @@ const ContractSchema = new mongoose.Schema({
     },
     customer: {
         type: Mixed
-    },
-    disableReason: {
-        type: String
     },
     /**
      * Số tiền vay.
@@ -65,10 +65,10 @@ const ContractSchema = new mongoose.Schema({
         default: CONTRACT_CONST.NEW,
         required: true
     },
-    creator:{
+    creator: {
         type: ObjectId
     },
-    lastUserUpdate:{
+    lastUserUpdate: {
         type: ObjectId
     }
 }, {

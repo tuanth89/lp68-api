@@ -139,68 +139,95 @@ function update(id, data) {
 }
 
 /**
- * Cập nhật số lượng lơn dữ liệu.
+ * Tạo mới hoặc Cập nhật số lượng lớn dữ liệu.
  * @param {Array} contracts
  */
-function updateBulk(contracts) {
+function insertOrUpdateBulk(contracts) {
     const deferred = Q.defer();
 
-    let bulk = Contract.collection.initializeUnorderedBulkOp();
+    let bulk = Contract.collection.initializeOrderedBulkOp();
 
-    Contract.findOne({$query: {}, $orderby: {noIdentity: -1}})
+    Contract.findOne({}).sort({noIdentity: -1})
         .exec(function (error, item) {
-            if (error) {
-                deferred.reject(new errors.InvalidContentError(error.message));
-            } else {
-                let count = 0;
-                if (item) {
-                    count = item.noIdentity || 0;
+                if (error) {
+                    deferred.reject(new errors.InvalidContentError(error.message));
+                } else {
+                    let count = 0;
+                    if (item) {
+                        count = item.noIdentity;
+                    }
+
+                    _.each(contracts, function (contract) {
+                        if (!contract._id) {
+                            contract._id = new ObjectId();
+                            contract.createdAt = new Date(contract.createdAt);
+                        }
+                        else {
+                            contract.createdAt = new Date(contract.createdAt);
+                            contract._id = ObjectId(contract._id);
+                            contract.updatedAt = new Date();
+                        }
+
+                        if (!contract.contractNo) {
+                            // contract.noIdentity = ++count;
+                            let nowDate = new Date();
+                            contract.contractNo = `${nowDate.getFullYear()}_${++count}`;
+                            contract.noIdentity = count;
+                        }
+
+                        if (contract.loanDate) {
+                            let startDate = new Date(contract.createdAt);
+                            contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
+                        }
+
+                        if (contract.loanDate > 0) {
+                            let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
+                            // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
+                            contract.dailyMoney = dailyMoney.toFixed();
+                        }
+
+                        let item = new Contract(contract);
+
+                        bulk.find({_id: ObjectId(item._id)})
+                            .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+                            .updateOne(item);
+                    });
+
+                    bulk.execute(function (error, results) {
+                        if (error) {
+                            deferred.reject(new errors.InvalidContentError(error.message));
+                        } else {
+                            deferred.resolve(contracts);
+                        }
+                    });
                 }
-
-                _.each(contracts, function (contract) {
-                    if (!contract._id) {
-                        contract._id = new ObjectId();
-                        contract.createdAt = new Date(contract.createdAt);
-                    }
-                    else {
-                        contract.createdAt = new Date(contract.createdAt);
-                        contract._id = ObjectId(contract._id);
-                        contract.updatedAt = new Date();
-                    }
-
-                    if (!contract.contractNo) {
-                        contract.noIdentity = ++count;
-                        let nowDate = new Date();
-                        contract.contractNo = `${nowDate.getFullYear()}_${contract.noIdentity}`;
-                    }
-
-                    if (contract.loanDate) {
-                        let startDate = new Date(contract.createdAt);
-                        contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
-                    }
-
-                    if (contract.loanDate > 0) {
-                        let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
-                        // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
-                        contract.dailyMoney = dailyMoney.toFixed();
-                    }
-
-                    let item = new Contract(contract);
-
-                    bulk.find({_id: ObjectId(item._id)})
-                        .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
-                        .updateOne(item);
-                });
-
-                bulk.execute(function (error, results) {
-                    if (error) {
-                        deferred.reject(new errors.InvalidContentError(error.message));
-                    } else {
-                        deferred.resolve(contracts);
-                    }
-                });
             }
-        });
+        );
+
+    return deferred.promise;
+}
+
+/**
+ * Cập nhật tiền đóng hàng ngày.
+ * @param {Array} contracts
+ */
+function updateDailyMoneyBulk(contracts) {
+    const deferred = Q.defer();
+
+    let bulk = Contract.collection.initializeOrderedBulkOp();
+
+    _.each(contracts, function (contract) {
+        bulk.find({_id: ObjectId(contract._id)})
+            .update({$set: {dailyMoney: contract.dailyMoney}});
+    });
+
+    bulk.execute(function (error, results) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(contracts);
+        }
+    });
 
     return deferred.promise;
 }
@@ -281,5 +308,7 @@ module.exports = {
     save: save,
     remove: remove,
     countByContractNo: countByContractNo,
-    updateBulk: updateBulk
+    insertOrUpdateBulk: insertOrUpdateBulk,
+    updateDailyMoneyBulk: updateDailyMoneyBulk
+
 };

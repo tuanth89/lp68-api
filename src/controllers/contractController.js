@@ -14,7 +14,7 @@ const _ = require('lodash');
  * @param next
  * @returns {*}
  */
-function create(req, res, next) {
+function insertOrUpdateBulk(req, res, next) {
     let data = req.body || {};
     let customerArr = [];
     _.forEach(data, (item) => {
@@ -23,7 +23,7 @@ function create(req, res, next) {
 
     CustomerRepository.updateBulk(customerArr)
         .then((customers) => {
-            ContractRepository.updateBulk(data)
+            ContractRepository.insertOrUpdateBulk(data)
                 .then(function (contracts) {
                     res.send(201, data);
                     next();
@@ -121,6 +121,28 @@ function update(req, res, next) {
  * @param req
  * @param res
  * @param next
+ * @returns {*}
+ */
+function updateDailyMoneyBulk(req, res, next) {
+    let data = req.body || {};
+
+    // let _user = AuthorizationService.getUser(req);
+    ContractRepository.updateDailyMoneyBulk(data)
+        .then(function () {
+            res.send(200);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
  */
 function remove(req, res, next) {
     // let _user = req.user;
@@ -136,10 +158,12 @@ function remove(req, res, next) {
 }
 
 module.exports = {
-    create: create,
+    insertOrUpdateBulk: insertOrUpdateBulk,
     list: list,
     listByDate: listByDate,
     one: one,
     update: update,
     remove: remove,
+    updateDailyMoneyBulk: updateDailyMoneyBulk
+
 };

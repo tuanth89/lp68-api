@@ -7,7 +7,8 @@ module.exports = function (server) {
     /**
      * POST
      */
-    server.post(prefix, ContractController.create);
+    server.post(prefix, ContractController.insertOrUpdateBulk);
+    server.put(prefix + '/circulation/update', ContractController.updateDailyMoneyBulk);
 
     /**
      * LIST

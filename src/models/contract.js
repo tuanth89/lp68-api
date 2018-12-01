@@ -1,12 +1,26 @@
 "use strict";
 
+const config = require('../../config');
 const mongoose = require('mongoose');
 const mongooseStringQuery = require('mongoose-string-query');
+// const autoIncrement = require('mongoose-auto-increment');
 const timestamps = require('mongoose-timestamp');
 const Mixed = mongoose.Schema.Types.Mixed;
 const ObjectId = mongoose.Schema.Types.ObjectId;
 require('mongoose-type-email');
 const CONTRACT_CONST = require('../constant/contractConstant');
+
+// let connection = null;
+//
+// if (config.db.authorizationEnabled) {
+//     connection = mongoose.createConnection(config.db.uri, {
+//         auth: config.db.auth
+//     });
+// } else {
+//     connection = mongoose.createConnection(config.db.uri);
+// }
+
+// autoIncrement.initialize(connection);
 
 const ContractSchema = new mongoose.Schema({
     contractNo: {
@@ -20,9 +34,9 @@ const ContractSchema = new mongoose.Schema({
     contractHistory: {
         type: Array
     },
-    contractDate: {
-        type: Date
-    },
+    // contractDate: {
+    //     type: Date
+    // },
     customer: {
         type: Mixed
     },
@@ -83,6 +97,7 @@ const ContractSchema = new mongoose.Schema({
 
 ContractSchema.plugin(timestamps);
 ContractSchema.plugin(mongooseStringQuery);
+// ContractSchema.plugin(autoIncrement.plugin, { model: 'Contract', field: 'noIdentity' });
 
 const Contract = mongoose.model('Contract', ContractSchema);
 

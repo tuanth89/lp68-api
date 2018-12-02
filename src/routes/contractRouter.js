@@ -9,6 +9,7 @@ module.exports = function (server) {
      */
     server.post(prefix, ContractController.insertOrUpdateBulk);
     server.put(prefix + '/circulation/update', ContractController.updateDailyMoneyBulk);
+    server.post(prefix + '/:contractId/circulationContract', ContractController.circulationContract);
 
     /**
      * LIST

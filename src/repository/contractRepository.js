@@ -89,11 +89,11 @@ function getListByDate(date, type) {
             dateTo = dateFilter.addDays(1);
             dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate());
 
-            query = {createdAt: {$gte: dateFrom, $lt: dateTo}};
+            query = {status: CONTRACT_CONST.NEW, createdAt: {$gte: dateFrom, $lt: dateTo}};
             break;
         default: // Lưu thông
             dateFilter.addDays(1);
-            query = {createdAt: {$lt: dateFilter}};
+            query = {status: CONTRACT_CONST.NEW, createdAt: {$lt: dateFilter}};
             break;
     }
 
@@ -175,16 +175,17 @@ function insertOrUpdateBulk(contracts) {
                             contract.noIdentity = count;
                         }
 
-                        if (contract.loanDate) {
-                            let startDate = new Date(contract.createdAt);
-                            contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
-                        }
+                        let startDate = new Date(contract.createdAt);
+                        contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
 
-                        if (contract.loanDate > 0) {
-                            let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
-                            // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
-                            contract.dailyMoney = dailyMoney.toFixed();
-                        }
+                        let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
+                        contract.dailyMoney = dailyMoney.toFixed();
+
+                        // if (contract.loanDate > 0) {
+                        //     let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
+                        //     // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
+                        //     contract.dailyMoney = dailyMoney.toFixed();
+                        // }
 
                         let item = new Contract(contract);
 
@@ -300,6 +301,69 @@ function remove(id) {
     return deferred.promise;
 }
 
+/**
+ *
+ * @param contractId
+ * @param data
+ * @returns {*|promise}
+ */
+function circulationContract(contractId, data) {
+    const deferred = Q.defer();
+    let newLoanMoney = parseInt(data.totalMoney) || 0;
+    let newActuallyCollectedMoney = parseInt(data.newActuallyCollectedMoney) || 0;
+    // let totalMoney = parseInt(data.totalMoney) || 0;
+    let newLoanDate = parseInt(data.newLoanDate) || 0;
+
+    Contract.findOne({}).sort({noIdentity: -1})
+        .exec(function (error, contractItem) {
+                let countIndetity = contractItem.noIdentity || 0;
+                let nowDate = new Date();
+
+                let contractNew = new Contract();
+                contractNew.customer = data.customer;
+                contractNew.createdAt = new Date();
+                contractNew.loanMoney = newLoanMoney;
+                contractNew.actuallyCollectedMoney = newActuallyCollectedMoney;
+                contractNew.loanDate = newLoanDate;
+                contractNew.contractHistory = [];
+                contractNew.contractHistory.push(contractId);
+                contractNew.contractNo = `${nowDate.getFullYear()}_${++countIndetity}`;
+                contractNew.noIdentity = countIndetity;
+                let startDate = nowDate;
+                startDate.setDate(startDate.getDate() + contractNew.loanDate);
+                contractNew.loanEndDate = new Date(startDate);
+                let dailyMoney = contractNew.actuallyCollectedMoney / (contractNew.loanDate === 0 ? 1 : contractNew.loanDate);
+                contractNew.dailyMoney = dailyMoney.toFixed();
+
+                Contract.update({_id: contractId}, {
+                    $set: {
+                        status: CONTRACT_CONST.END,
+                        updatedAt: new Date()
+                    }
+                }, function (error, user) {
+                    if (error) {
+                        console.error(error);
+                        deferred.reject(new errors.InvalidContentError(error.message));
+                    } else {
+                        contractNew.save(function (error, item) {
+                            if (error) {
+                                console.error(error);
+                                deferred.reject(new errors.InvalidContentError(error.message));
+                            }
+                            else {
+                                deferred.resolve(item);
+                            }
+                        });
+
+                    }
+                });
+            }
+        );
+
+
+    return deferred.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
@@ -309,6 +373,7 @@ module.exports = {
     remove: remove,
     countByContractNo: countByContractNo,
     insertOrUpdateBulk: insertOrUpdateBulk,
-    updateDailyMoneyBulk: updateDailyMoneyBulk
+    updateDailyMoneyBulk: updateDailyMoneyBulk,
+    circulationContract: circulationContract
 
 };

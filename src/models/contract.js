@@ -31,6 +31,9 @@ const ContractSchema = new mongoose.Schema({
     noIdentity: {
         type: Number
     },
+    /**
+     * Lịch sử hợp đồng (_id contracts)
+     */
     contractHistory: {
         type: Array
     },

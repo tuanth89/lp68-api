@@ -17,6 +17,7 @@ const _ = require('lodash');
 function insertOrUpdateBulk(req, res, next) {
     let data = req.body || {};
     let customerArr = [];
+
     _.forEach(data, (item) => {
         customerArr.push(item.customer);
     });
@@ -157,6 +158,32 @@ function remove(req, res, next) {
         .done();
 }
 
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function circulationContract(req, res, next) {
+    let data = req.body || {};
+
+    if (data.newLoanMoney <= 0) {
+        return next(new errors.InvalidContentError("Số tiền vay không được <= 0"));
+    }
+
+    // let _user = AuthorizationService.getUser(req);
+    ContractRepository.circulationContract(req.params.contractId, data)
+        .then(function (contract) {
+            res.send(201, contract);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     insertOrUpdateBulk: insertOrUpdateBulk,
     list: list,
@@ -164,6 +191,7 @@ module.exports = {
     one: one,
     update: update,
     remove: remove,
-    updateDailyMoneyBulk: updateDailyMoneyBulk
+    updateDailyMoneyBulk: updateDailyMoneyBulk,
+    circulationContract: circulationContract
 
 };

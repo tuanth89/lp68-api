@@ -3,7 +3,7 @@
 const Customer = require('../models/customer');
 const Q = require("q");
 const errors = require('restify-errors');
-const Serializer = require('../serializers/user');
+const Serializer = require('../serializers/customer');
 const ObjectId = require('mongoose').Types.ObjectId;
 const _ = require('lodash');
 const StringService = require('../services/stringService');
@@ -40,15 +40,13 @@ function findById(id) {
 }
 
 /**
- *
- * @param params
  * @returns {*|promise}
  */
-function getList(params) {
+function getList() {
     const deferred = Q.defer();
 
     Customer
-        .apiQuery(params)
+        .find({})
         // .select(Serializer.summary)
         .exec(function (error, users) {
             if (error) {
@@ -63,27 +61,56 @@ function getList(params) {
 }
 
 /**
- *
- * @param id
- * @param data
  * @returns {*|promise}
  */
-function update(id, data) {
+function getListAutoComplete() {
     const deferred = Q.defer();
 
-    Customer.findOneAndUpdate({
-        _id: id
-    }, data, {
-        new: true
-    }, function (error, user) {
-        if (error) {
-            deferred.reject(new errors.InvalidContentError("Not found"));
-            return deferred.promise;
-        } else {
-            deferred.resolve(user);
+    Customer
+        .find({})
+        .select(Serializer.sourceList)
+        .exec(function (error, users) {
+            if (error) {
+                console.error(error);
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+
+                deferred.resolve(users);
+            }
+        });
+
+    return deferred.promise;
+}
+
+function insertOrUpdateBulk(customers) {
+    const deferred = Q.defer();
+
+    let bulk = Customer.collection.initializeOrderedBulkOp();
+    _.each(customers, function (customer) {
+        if (!customer._id) {
+            customer._id = new ObjectId();
+            customer.createdAt = new Date();
         }
+        else {
+            customer.createdAt = new Date(customer.createdAt);
+            customer._id = ObjectId(customer._id);
+            customer.updatedAt = new Date();
+        }
+
+        let item = new Customer(customer);
+
+        bulk.find({_id: ObjectId(item._id)})
+            .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+            .updateOne(item);
     });
 
+    bulk.execute(function (error, results) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(customers);
+        }
+    });
 
     return deferred.promise;
 }
@@ -128,6 +155,29 @@ function save(data) {
     return deferred.promise;
 }
 
+
+/**
+ *
+ * @param id
+ * @returns {*|promise}
+ */
+function remove(id) {
+    const deferred = Q.defer();
+
+    Customer.remove({
+        _id: id
+    }, function (error) {
+        if (error) {
+            console.error(error);
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(true);
+        }
+    });
+
+    return deferred.promise;
+}
+
 /**
  * Cập nhật số lượng lơn dữ liệu.
  * @param {Array} customers
@@ -164,33 +214,12 @@ function updateBulk(customers) {
     return deferred.promise;
 }
 
-/**
- *
- * @param id
- * @returns {*|promise}
- */
-function remove(id) {
-    const deferred = Q.defer();
-
-    Customer.remove({
-        _id: id
-    }, function (error) {
-        if (error) {
-            console.error(error);
-            deferred.reject(new errors.InvalidContentError(error.message));
-        } else {
-            deferred.resolve(true);
-        }
-    });
-
-    return deferred.promise;
-}
-
 module.exports = {
     findById: findById,
     getList: getList,
-    update: update,
+    insertOrUpdateBulk: insertOrUpdateBulk,
     save: save,
     remove: remove,
-    updateBulk: updateBulk
+    updateBulk: updateBulk,
+    getListAutoComplete: getListAutoComplete,
 };

@@ -26,19 +26,12 @@ function create(req, res, next) {
         .done();
 }
 
-/**
- *
- * @param req
- * @param res
- * @param next
- * @returns {*}
- */
-function createBulk(req, res, next) {
-    let data = req.body || {};
+function createMany(req, res, next) {
+    let customers = req.body || {};
 
-    CustomerRepository.updateBulk(data)
-        .then(function (customer) {
-            res.send(201, customer);
+    CustomerRepository.insertOrUpdateBulk(customers)
+        .then(function (customers) {
+            res.send(201, customers);
             next();
         })
         .catch(function (error) {
@@ -55,6 +48,24 @@ function createBulk(req, res, next) {
  */
 function list(req, res, next) {
     CustomerRepository.getList(req.params)
+        .then(function (customers) {
+            res.send(customers);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
+function listAutoComplete(req, res, next) {
+    CustomerRepository.getListAutoComplete()
         .then(function (customers) {
             res.send(customers);
             next();
@@ -95,7 +106,7 @@ function one(req, res, next) {
 function update(req, res, next) {
     let data = req.body || {};
 
-    let _user = AuthorizationService.getUser(req);
+    // let _user = AuthorizationService.getUser(req);
     CustomerRepository.update(data._id, data)
         .then(function () {
             res.send(200);
@@ -128,8 +139,10 @@ function remove(req, res, next) {
 
 module.exports = {
     create: create,
+    createMany: createMany,
     list: list,
     one: one,
     update: update,
     remove: remove,
+    listAutoComplete: listAutoComplete
 };

@@ -8,11 +8,17 @@ module.exports = function (server) {
      * POST
      */
     server.post(prefix, CustomerController.create);
+    server.post(prefix + '/insert/new', CustomerController.createMany);
 
     /**
      * LIST
      */
     server.get(prefix, CustomerController.list);
+
+    /**
+     * LIST
+     */
+    server.get(prefix + '/list/autoComplete', CustomerController.listAutoComplete);
 
     /**
      * GET

@@ -160,7 +160,7 @@ function insertOrUpdateBulk(contracts) {
                     _.each(contracts, function (contract) {
                         if (!contract._id) {
                             contract._id = new ObjectId();
-                            contract.createdAt = new Date(contract.createdAt);
+                            contract.createdAt = new Date();
                         }
                         else {
                             contract.createdAt = new Date(contract.createdAt);
@@ -179,7 +179,7 @@ function insertOrUpdateBulk(contracts) {
                         contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
 
                         let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
-                        contract.dailyMoney = dailyMoney.toFixed();
+                        contract.dailyMoneyPay = dailyMoney.toFixed();
 
                         // if (contract.loanDate > 0) {
                         //     let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
@@ -219,7 +219,7 @@ function updateDailyMoneyBulk(contracts) {
 
     _.each(contracts, function (contract) {
         bulk.find({_id: ObjectId(contract._id)})
-            .update({$set: {dailyMoney: contract.dailyMoney}});
+            .update({$set: {dailyMoney: contract.dailyMoney, dailyMoneyPick: contract.dailyMoneyPick}});
     });
 
     bulk.execute(function (error, results) {

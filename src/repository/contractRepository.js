@@ -160,7 +160,7 @@ function insertOrUpdateBulk(contracts) {
                     _.each(contracts, function (contract) {
                         if (!contract._id) {
                             contract._id = new ObjectId();
-                            contract.createdAt = new Date();
+                            // contract.createdAt = new Date();
                         }
                         else {
                             contract.createdAt = new Date(contract.createdAt);
@@ -220,6 +220,31 @@ function updateDailyMoneyBulk(contracts) {
     _.each(contracts, function (contract) {
         bulk.find({_id: ObjectId(contract._id)})
             .update({$set: {dailyMoney: contract.dailyMoney, dailyMoneyPick: contract.dailyMoneyPick}});
+    });
+
+    bulk.execute(function (error, results) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(contracts);
+        }
+    });
+
+    return deferred.promise;
+}
+
+/**
+ * Cập nhật tổng tiền đóng hàng ngày.
+ * @param {Array} contracts
+ */
+function updateTotalMoney(contracts) {
+    const deferred = Q.defer();
+
+    let bulk = Contract.collection.initializeOrderedBulkOp();
+
+    _.each(contracts, function (contract) {
+        bulk.find({_id: ObjectId(contract._id)})
+            .update({$set: {totalMoneyPaid: contract.totalMoneyPaid}});
     });
 
     bulk.execute(function (error, results) {
@@ -374,6 +399,7 @@ module.exports = {
     countByContractNo: countByContractNo,
     insertOrUpdateBulk: insertOrUpdateBulk,
     updateDailyMoneyBulk: updateDailyMoneyBulk,
-    circulationContract: circulationContract
+    circulationContract: circulationContract,
+    updateTotalMoney: updateTotalMoney
 
 };

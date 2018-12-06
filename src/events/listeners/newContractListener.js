@@ -1,10 +1,11 @@
 "use strict";
 const CustomerRepository = require('../../repository/customerRepository');
+const HdLuuThongRepository = require('../../repository/hdLuuThongRepository');
 const log = require('../../../logger').log;
 // const StringService = require('../../services/stringService');
 
-function newContractListener(customer) {
-    CustomerRepository.save(customer)
+function newContractAddedListener(contracts) {
+    HdLuuThongRepository.insertMany(contracts)
         .catch((error) => {
             log.error(error);
         })
@@ -12,5 +13,5 @@ function newContractListener(customer) {
 }
 
 module.exports = {
-    newContractListener: newContractListener
+    newContractAddedListener: newContractAddedListener
 };

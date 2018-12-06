@@ -2,7 +2,7 @@
 
 const errors = require('restify-errors');
 const ContractRepository = require('../repository/contractRepository');
-const HdLuuThongRepository = require('../repository/hduuThongRepository');
+const HdLuuThongRepository = require('../repository/hdLuuThongRepository');
 const AuthorizationService = require('../services/authorizationService');
 const EventDispatcher = require('../events/dispatcher');
 const _ = require('lodash');
@@ -34,8 +34,7 @@ function list(req, res, next) {
  */
 function listByDate(req, res, next) {
     let date = req.params.date || new Date();
-    let type = req.params.type || -1;
-    HdLuuThongRepository.getListByDate(date, type)
+    HdLuuThongRepository.getListByDate(date)
         .then(function (contracts) {
             res.send(contracts);
             next();
@@ -88,10 +87,35 @@ function update(req, res, next) {
         .done();
 }
 
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateMany(req, res, next) {
+    let data = req.body || {};
+
+    // let _user = AuthorizationService.getUser(req);
+    HdLuuThongRepository.updateMany(data)
+        .then(function (contracts) {
+            // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
+            EventDispatcher.newContractAddedListener(contracts);
+
+            res.send(200);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     list: list,
     listByDate: listByDate,
     one: one,
     update: update,
-
+    updateMany: updateMany,
 };

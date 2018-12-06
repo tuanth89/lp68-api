@@ -26,7 +26,10 @@ function insertOrUpdateBulk(req, res, next) {
         .then((customers) => {
             ContractRepository.insertOrUpdateBulk(data)
                 .then(function (contracts) {
-                    res.send(201, data);
+                    // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
+                    EventDispatcher.newContractAddedListener(contracts);
+
+                    res.send(201, contracts);
                     next();
                 });
         })

@@ -5,29 +5,28 @@ const mongooseStringQuery = require('mongoose-string-query');
 const timestamps = require('mongoose-timestamp');
 const Mixed = mongoose.Schema.Types.Mixed;
 const ObjectId = mongoose.Schema.Types.ObjectId;
-const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
 
 const ContractSchema = new mongoose.Schema({
     contractId: {
         type: ObjectId,
         require: true
     },
-    moneyHavePay: {
-        type: Number
-    },
     moneyPaid: {
         type: Number
     },
-    status: {
-        type: Number,
-        enum: [CONTRACT_OTHER_CONST.STATUS.NORMAL, CONTRACT_OTHER_CONST.STATUS.COMPLETED],
-        default: CONTRACT_OTHER_CONST.STATUS.NORMAL
+    nextPayDate: {
+        type: Date
     }
 
 }, {
     minimize: false
 });
 
+// ContractSchema.index({
+//     phone: 'text',
+//     email: 'text',
+//     disableReason: 'text'
+// });
 
 ContractSchema.plugin(timestamps);
 ContractSchema.plugin(mongooseStringQuery);

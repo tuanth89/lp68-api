@@ -160,7 +160,7 @@ function insertOrUpdateBulk(contracts) {
                     _.each(contracts, function (contract) {
                         if (!contract._id) {
                             contract._id = new ObjectId();
-                            // contract.createdAt = new Date();
+                            contract.createdAt = new Date();
                         }
                         else {
                             contract.createdAt = new Date(contract.createdAt);
@@ -174,6 +174,8 @@ function insertOrUpdateBulk(contracts) {
                             contract.contractNo = `${nowDate.getFullYear()}_${++count}`;
                             contract.noIdentity = count;
                         }
+
+                        contract.contractId = contract._id;
 
                         let startDate = new Date(contract.createdAt);
                         contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));

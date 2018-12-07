@@ -10,6 +10,13 @@ function newContractAddedListener(contracts) {
     eventEmitter.emit('LP_NEW_CONTRACT_EVENT', contracts);
 }
 
+function newContractLuuThongListener(contracts) {
+    eventEmitter.once('LP_NEW_CONTRACT_LUU_THONG_EVENT', NewContractListener.newContractLuuThongListener);
+
+    eventEmitter.emit('LP_NEW_CONTRACT_LUU_THONG_EVENT', contracts);
+}
+
 module.exports = {
-    newContractAddedListener: newContractAddedListener
+    newContractAddedListener: newContractAddedListener,
+    newContractLuuThongListener: newContractLuuThongListener
 };

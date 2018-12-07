@@ -252,7 +252,6 @@ function updateMany(data) {
     let bulkContract = Contract.collection.initializeOrderedBulkOp();
     let bulkHdLuuThong = HdLuuThong.collection.initializeOrderedBulkOp();
     let contracts = [];
-    let nowDate = moment(new Date());
     let dailyMoneyPay = 0, // Số tiền phải đóng hàng ngày (cố định) (tiền lãi, thực thu / số ngày vay)
         totalMoneyHavePayNow = 0, // Tổng số tiền phải đóng tói thời điểm hiện tại
         totalMoneyPaid = 0; // Tổng số tiền đã đóng tới thời điểm hiện tại
@@ -264,7 +263,8 @@ function updateMany(data) {
         totalMoneyPaid += contractItem.moneyPaid;
 
         let contractDate = moment(contractItem.contractDate);
-        let totalDayNow = moment.duration(nowDate.startOf('day').diff(contractDate.startOf('day'))).asDays();
+        let luuThongDate = moment(contractItem.createdAt);
+        let totalDayNow = moment.duration(luuThongDate.startOf('day').diff(contractDate.startOf('day'))).asDays();
         totalMoneyHavePayNow = dailyMoneyPay * totalDayNow;
 
         // Tính tới thời điểm hiện tại:
@@ -284,8 +284,8 @@ function updateMany(data) {
         // luuthong.createdAt = nextPayDate.setDate(nextPayDate.getDate() + 1);
 
         luuthong.contractId = contractItem.contractId;
-        luuthong.totalMoneyPaid = totalMoneyPaid;
-        luuthong.dailyMoneyPay = contractItem.dailyMoneyPay;
+        luuthong._doc.totalMoneyPaid = totalMoneyPaid;
+        luuthong._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
         luuthong.moneyHavePay = dailyMoneyPay;
         luuthong.moneyPaid = dailyMoneyPay;
         luuthong.createdAt = contractItem.createdAt;

@@ -101,7 +101,7 @@ function updateMany(req, res, next) {
     HdLuuThongRepository.updateMany(data)
         .then(function (contracts) {
             // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
-            EventDispatcher.newContractAddedListener(contracts);
+            EventDispatcher.newContractLuuThongListener(contracts);
 
             res.send(200);
             next();

@@ -16,6 +16,7 @@ module.exports = function (server) {
      */
     server.get(prefix, ContractController.list);
     server.get(prefix + '/circulation/all', ContractController.listByDate);
+    server.get(prefix + '/allContract/byType', ContractController.listByType);
 
     /**
      * GET

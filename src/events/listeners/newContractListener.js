@@ -4,7 +4,7 @@ const HdLuuThong = require('../../models/hdLuuThong');
 const CustomerRepository = require('../../repository/customerRepository');
 const HdLuuThongRepository = require('../../repository/hdLuuThongRepository');
 const log = require('../../../logger').log;
-// const StringService = require('../../services/stringService');
+const CONTRACT_OTHER_CONST = require('../../constant/contractOtherConstant');
 
 function newContractAddedListener(contracts) {
     HdLuuThongRepository.insertMany(contracts)
@@ -47,7 +47,37 @@ function newContractLuuThongListener(contracts) {
     });
 }
 
+function updateAndNewLuuThong(hdLuuThongId, contractNew) {
+    let nextPayDate = new Date(contractNew.createdAt);
+    nextPayDate.setDate(nextPayDate.getDate() + 1);
+
+    let luuthong = new HdLuuThong();
+    luuthong.contractId = contractNew._id;
+    luuthong.moneyHavePay = contractNew.dailyMoney;
+    luuthong.moneyPaid = contractNew.dailyMoney;
+    luuthong.createdAt = nextPayDate;
+
+    HdLuuThong.update({_id: hdLuuThongId}, {
+        $set: {
+            status: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+            updatedAt: new Date()
+        }
+    })
+        .then(() => {
+
+        });
+
+    luuthong.save(function (error, item) {
+        if (error) {
+            console.error(error);
+        } else {
+
+        }
+    });
+}
+
 module.exports = {
     newContractAddedListener: newContractAddedListener,
-    newContractLuuThongListener: newContractLuuThongListener
+    newContractLuuThongListener: newContractLuuThongListener,
+    updateAndNewLuuThong: updateAndNewLuuThong
 };

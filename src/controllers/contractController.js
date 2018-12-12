@@ -84,6 +84,25 @@ function listByDate(req, res, next) {
  * @param res
  * @param next
  */
+function listByType(req, res, next) {
+    let type = req.params.type || -1;
+    ContractRepository.getListByType(type)
+        .then(function (contracts) {
+            res.send(contracts);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
 function one(req, res, next) {
     ContractRepository.findById(req.params.contractId)
         .then(function (contract) {
@@ -178,6 +197,7 @@ function circulationContract(req, res, next) {
     // let _user = AuthorizationService.getUser(req);
     ContractRepository.circulationContract(req.params.contractId, data)
         .then(function (contract) {
+            EventDispatcher.updateAndNewLuuThongListener(data._id, contract);
             res.send(201, contract);
             next();
         })
@@ -191,10 +211,10 @@ module.exports = {
     insertOrUpdateBulk: insertOrUpdateBulk,
     list: list,
     listByDate: listByDate,
+    listByType: listByType,
     one: one,
     update: update,
     remove: remove,
     updateDailyMoneyBulk: updateDailyMoneyBulk,
     circulationContract: circulationContract
-
 };

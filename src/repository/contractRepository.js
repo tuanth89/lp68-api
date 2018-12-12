@@ -114,6 +114,48 @@ function getListByDate(date, type) {
 
 /**
  *
+ * @param type
+ * @returns {*|promise}
+ */
+function getListByType(type) {
+    const deferred = Q.defer();
+
+    let query = {};
+    switch (parseInt(type)) {
+        case CONTRACT_CONST.MATURITY:
+            query = {status: CONTRACT_CONST.MATURITY};
+            break;
+        case CONTRACT_CONST.COLLECT:
+            query = {status: CONTRACT_CONST.COLLECT};
+            break;
+        case CONTRACT_CONST.CLOSE_DEAL:
+            query = {status: CONTRACT_CONST.CLOSE_DEAL};
+            break;
+        case CONTRACT_CONST.ESCAPE:
+            query = {status: CONTRACT_CONST.ESCAPE};
+            break;
+        case CONTRACT_CONST.END:
+            query = {status: CONTRACT_CONST.END};
+            break;
+    }
+
+    Contract
+        .find(query)
+        // .select(Serializer.summary)
+        .exec(function (error, contracts) {
+            if (error) {
+                console.error(error);
+                deferred.reject(new errors.InvalidContentError(error.message));
+            } else {
+                deferred.resolve(contracts);
+            }
+        });
+
+    return deferred.promise;
+}
+
+/**
+ *
  * @param id
  * @param data
  * @returns {*|promise}
@@ -160,7 +202,7 @@ function insertOrUpdateBulk(contracts) {
                     _.each(contracts, function (contract) {
                         if (!contract._id) {
                             contract._id = new ObjectId();
-                            contract.createdAt = new Date();
+                            // contract.createdAt = new Date();
                         }
                         else {
                             contract.createdAt = new Date(contract.createdAt);
@@ -338,6 +380,7 @@ function circulationContract(contractId, data) {
     const deferred = Q.defer();
     let newLoanMoney = parseInt(data.totalMoney) || 0;
     let newActuallyCollectedMoney = parseInt(data.newActuallyCollectedMoney) || 0;
+    let newDailyMoney = parseInt(data.newDailyMoney) || 0;
     // let totalMoney = parseInt(data.totalMoney) || 0;
     let newLoanDate = parseInt(data.newLoanDate) || 0;
 
@@ -359,8 +402,10 @@ function circulationContract(contractId, data) {
                 let startDate = nowDate;
                 startDate.setDate(startDate.getDate() + contractNew.loanDate);
                 contractNew.loanEndDate = new Date(startDate);
-                let dailyMoney = contractNew.actuallyCollectedMoney / (contractNew.loanDate === 0 ? 1 : contractNew.loanDate);
-                contractNew.dailyMoney = dailyMoney.toFixed();
+                contractNew.dailyMoney = newDailyMoney;
+                contractNew.status = CONTRACT_CONST.MATURITY;
+                // let dailyMoney = contractNew.actuallyCollectedMoney / (contractNew.loanDate === 0 ? 1 : contractNew.loanDate);
+                // contractNew.dailyMoney = dailyMoney.toFixed();
 
                 Contract.update({_id: contractId}, {
                     $set: {
@@ -378,6 +423,7 @@ function circulationContract(contractId, data) {
                                 deferred.reject(new errors.InvalidContentError(error.message));
                             }
                             else {
+                                item._doc.dailyMoney = newDailyMoney;
                                 deferred.resolve(item);
                             }
                         });
@@ -402,6 +448,7 @@ module.exports = {
     insertOrUpdateBulk: insertOrUpdateBulk,
     updateDailyMoneyBulk: updateDailyMoneyBulk,
     circulationContract: circulationContract,
-    updateTotalMoney: updateTotalMoney
+    updateTotalMoney: updateTotalMoney,
+    getListByType: getListByType
 
 };

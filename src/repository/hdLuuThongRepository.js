@@ -122,6 +122,7 @@ function getListByDate(date) {
                 totalMoneyPaid: "$contract.totalMoneyPaid",
                 loanEndDate: "$contract.loanEndDate",
                 contractDate: "$contract.createdAt",
+                contractStatus: "$contract.status",
                 moneyHavePay: 1,
                 moneyPaid: 1,
                 status: 1,
@@ -262,21 +263,21 @@ function updateMany(data) {
 
         totalMoneyPaid += contractItem.moneyPaid;
 
-        let contractDate = moment(contractItem.contractDate);
-        let luuThongDate = moment(contractItem.createdAt);
-        let totalDayNow = moment.duration(luuThongDate.startOf('day').diff(contractDate.startOf('day'))).asDays();
-        totalMoneyHavePayNow = dailyMoneyPay * totalDayNow;
-
-        // Tính tới thời điểm hiện tại:
-        // Nếu khách nộp nhiều hơn tiền phải đóng hàng ngày thì trừ bớt sang ngày hôm sau
-        if (totalMoneyPaid > totalMoneyHavePayNow) {
-            dailyMoneyPay = Math.max(0, dailyMoneyPay - (totalMoneyPaid - totalMoneyHavePayNow));
-        }
-
-        // Nếu số tiền đóng nhỏ hơn số tiền phải đóng thì cộng dần tiền phải đóng ngày tiếp theo
-        else if (totalMoneyPaid < totalMoneyHavePayNow) {
-            dailyMoneyPay += (totalMoneyHavePayNow - totalMoneyPaid);
-        }
+        // let contractDate = moment(contractItem.contractDate);
+        // let luuThongDate = moment(contractItem.createdAt);
+        // let totalDayNow = moment.duration(luuThongDate.startOf('day').diff(contractDate.startOf('day'))).asDays();
+        // totalMoneyHavePayNow = dailyMoneyPay * totalDayNow;
+        //
+        // // Tính tới thời điểm hiện tại:
+        // // Nếu khách nộp nhiều hơn tiền phải đóng hàng ngày thì trừ bớt sang ngày hôm sau
+        // if (totalMoneyPaid > totalMoneyHavePayNow) {
+        //     dailyMoneyPay = Math.max(0, dailyMoneyPay - (totalMoneyPaid - totalMoneyHavePayNow));
+        // }
+        //
+        // // Nếu số tiền đóng nhỏ hơn số tiền phải đóng thì cộng dần tiền phải đóng ngày tiếp theo
+        // else if (totalMoneyPaid < totalMoneyHavePayNow) {
+        //     dailyMoneyPay += (totalMoneyHavePayNow - totalMoneyPaid);
+        // }
 
         // Tạo bản ghi lưu thông ngày tiếp theo
         let luuthong = new HdLuuThong();

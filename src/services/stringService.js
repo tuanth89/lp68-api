@@ -251,21 +251,6 @@ function randomString() {
     return Math.random().toString(36).slice(-6);
 }
 
-/**
- * Generate ship code for course.
- * @param {Number} length 
- */
-function generateShipCode(length) {
-    // let mask = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~`!@#$%^&*()_+-={}[]:";\'<>?,./|';
-    let mask = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*()_+-={}[]<>?/|';
-    let result = '';
-
-    for (let i = length; i > 0; --i) {
-        result += mask[Math.round(Math.random() * (mask.length - 1))];
-    }
-
-    return result;
-}
 
 function isObjectId(value) {
     try {
@@ -278,6 +263,10 @@ function isObjectId(value) {
     }
 }
 
+function formatNumeric(number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 module.exports = {
     getUrlFriendlyString: getUrlFriendlyString,
     generateCertificateCodeNumber: generateCertificateCodeNumber,
@@ -285,8 +274,8 @@ module.exports = {
     convertViToEn: convertViToEn,
     getClientIpV4: getClientIpV4,
     randomString: randomString,
-    generateShipCode: generateShipCode,
     removeSignInString,
     getRegexSearchString,
-    isObjectId: isObjectId
+    isObjectId: isObjectId,
+    formatNumeric: formatNumeric
 };

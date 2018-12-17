@@ -29,6 +29,9 @@ function insertOrUpdateBulk(req, res, next) {
                     // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
                     EventDispatcher.newContractAddedListener(contracts);
 
+                    // Sinh các bản ghi log lưu vết cho các hợp đồng mới tạo
+                    EventDispatcher.createContractLogListener(contracts);
+
                     res.send(201, contracts);
                     next();
                 });
@@ -68,6 +71,25 @@ function listByDate(req, res, next) {
     let date = req.params.date || new Date();
     let type = req.params.type || -1;
     ContractRepository.getListByDate(date, type)
+        .then(function (contracts) {
+            res.send(contracts);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
+function listByCustomer(req, res, next) {
+    let customerId = req.params.customerId || 0;
+    ContractRepository.getListByCustomer(customerId)
         .then(function (contracts) {
             res.send(contracts);
             next();
@@ -129,6 +151,28 @@ function update(req, res, next) {
 
     // let _user = AuthorizationService.getUser(req);
     ContractRepository.update(data._id, data)
+        .then(function () {
+            res.send(200);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateStatus(req, res, next) {
+    let data = req.body || {};
+
+    // let _user = AuthorizationService.getUser(req);
+    ContractRepository.updateStatus(req.params.contractId, data.status)
         .then(function () {
             res.send(200);
             next();
@@ -212,9 +256,11 @@ module.exports = {
     list: list,
     listByDate: listByDate,
     listByType: listByType,
+    listByCustomer: listByCustomer,
     one: one,
     update: update,
     remove: remove,
     updateDailyMoneyBulk: updateDailyMoneyBulk,
-    circulationContract: circulationContract
+    circulationContract: circulationContract,
+    updateStatus: updateStatus
 };

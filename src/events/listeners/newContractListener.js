@@ -1,10 +1,25 @@
 "use strict";
 
 const HdLuuThong = require('../../models/hdLuuThong');
-const CustomerRepository = require('../../repository/customerRepository');
+const ContractLogRepository = require('../../repository/contractLogRepository');
 const HdLuuThongRepository = require('../../repository/hdLuuThongRepository');
 const log = require('../../../logger').log;
 const CONTRACT_OTHER_CONST = require('../../constant/contractOtherConstant');
+
+function createContractLog(contracts) {
+    ContractLogRepository.insertMany(contracts)
+        .catch((error) => {
+            log.error(error);
+        })
+        .done();
+}
+function addMultiLogToContractLog(contracts) {
+    ContractLogRepository.bulkHistoriesByContractId(contracts)
+        .catch((error) => {
+            log.error(error);
+        })
+        .done();
+}
 
 function newContractAddedListener(contracts) {
     HdLuuThongRepository.insertMany(contracts)
@@ -77,6 +92,8 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
 }
 
 module.exports = {
+    createContractLog: createContractLog,
+    addMultiLogToContractLog: addMultiLogToContractLog,
     newContractAddedListener: newContractAddedListener,
     newContractLuuThongListener: newContractLuuThongListener,
     updateAndNewLuuThong: updateAndNewLuuThong

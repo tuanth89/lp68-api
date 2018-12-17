@@ -4,7 +4,7 @@ const Contract = require('../models/contract');
 const Q = require("q");
 const errors = require('restify-errors');
 const HashService = require('../services/hashService');
-const Serializer = require('../serializers/user');
+const Serializer = require('../serializers/contract');
 const uuid = require('uuid');
 const moment = require('moment');
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -20,7 +20,6 @@ const CONTRACT_CONST = require('../constant/contractConstant');
 function findById(id) {
     const deferred = Q.defer();
 
-    // if (ObjectId.isValid(id)) {
     if (StringService.isObjectId(id)) {
         id = new ObjectId(id);
     }
@@ -156,6 +155,28 @@ function getListByType(type) {
 
 /**
  *
+ * @param customerId
+ * @returns {*|promise}
+ */
+function getListByCustomer(customerId) {
+    const deferred = Q.defer();
+
+    Contract
+        .find({"customer._id": ObjectId(customerId)})
+        .select(Serializer.list)
+        .exec(function (error, contracts) {
+            if (error) {
+                deferred.reject(new errors.InvalidContentError(error.message));
+            } else {
+                deferred.resolve(contracts);
+            }
+        });
+
+    return deferred.promise;
+}
+
+/**
+ *
  * @param id
  * @param data
  * @returns {*|promise}
@@ -173,6 +194,34 @@ function update(id, data) {
             return deferred.promise;
         } else {
             deferred.resolve(user);
+        }
+    });
+
+
+    return deferred.promise;
+}
+
+/**
+ *
+ * @param id
+ * @param status
+ * @returns {*|promise}
+ */
+function updateStatus(id, status) {
+    const deferred = Q.defer();
+
+    Contract.findOneAndUpdate({
+        _id: id
+    }, {
+        $set: {
+            status: status
+        }
+    }, function (error, contract) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError("Not found"));
+            return deferred.promise;
+        } else {
+            deferred.resolve(contract);
         }
     });
 
@@ -391,7 +440,7 @@ function circulationContract(contractId, data) {
 
                 let contractNew = new Contract();
                 contractNew.customer = data.customer;
-                contractNew.createdAt = new Date();
+                contractNew.createdAt = moment(data.contractDate, "YYYYMMDD");
                 contractNew.loanMoney = newLoanMoney;
                 contractNew.actuallyCollectedMoney = newActuallyCollectedMoney;
                 contractNew.loanDate = newLoanDate;
@@ -403,6 +452,7 @@ function circulationContract(contractId, data) {
                 startDate.setDate(startDate.getDate() + contractNew.loanDate);
                 contractNew.loanEndDate = new Date(startDate);
                 contractNew.dailyMoney = newDailyMoney;
+                contractNew.dailyMoneyPay = newDailyMoney;
                 contractNew.status = CONTRACT_CONST.MATURITY;
                 // let dailyMoney = contractNew.actuallyCollectedMoney / (contractNew.loanDate === 0 ? 1 : contractNew.loanDate);
                 // contractNew.dailyMoney = dailyMoney.toFixed();
@@ -449,6 +499,8 @@ module.exports = {
     updateDailyMoneyBulk: updateDailyMoneyBulk,
     circulationContract: circulationContract,
     updateTotalMoney: updateTotalMoney,
-    getListByType: getListByType
+    getListByType: getListByType,
+    updateStatus: updateStatus,
+    getListByCustomer: getListByCustomer
 
 };

@@ -23,6 +23,7 @@ const authenRouter = require('./src/routes/authenRouter');
 const customerRouter = require('./src/routes/customerRouter');
 const contractRouter = require('./src/routes/contractRouter');
 const hdLuuThongRouter = require('./src/routes/hdLuuThongRouter');
+const contractLogRouter = require('./src/routes/contractLogRouter');
 
 const adminRouter = require('./src/routes/adminRouter');
 const rootRouter = require('./src/routes/rootRouter');
@@ -125,6 +126,7 @@ server.listen(config.port, () => {
         customerRouter(server);
         contractRouter(server);
         hdLuuThongRouter(server);
+        contractLogRouter(server);
 
         console.log(`Server is listening on port ${config.port}`);
     })

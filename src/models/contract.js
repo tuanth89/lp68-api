@@ -67,19 +67,6 @@ const ContractSchema = new mongoose.Schema({
     dailyMoneyPay: {
         type: Number
     },
-
-    // /**
-    //  * Số tiền thực đóng hàng ngày.
-    //  */
-    // dailyMoney: {
-    //     type: Number
-    // },
-    // /**
-    //  * Số tiền thực đã nhập (hoặc chọn).
-    //  */
-    // dailyMoneyPick: {
-    //     type: Number
-    // },
     /**
      * Tổng tiền đã đóng.
      */

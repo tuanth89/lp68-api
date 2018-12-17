@@ -17,6 +17,7 @@ module.exports = function (server) {
     server.get(prefix, ContractController.list);
     server.get(prefix + '/circulation/all', ContractController.listByDate);
     server.get(prefix + '/allContract/byType', ContractController.listByType);
+    server.get(prefix + '/:customerId/byCustomer', ContractController.listByCustomer);
 
     /**
      * GET
@@ -27,6 +28,7 @@ module.exports = function (server) {
      * UPDATE
      */
     server.put(prefix + '/:contractId', ContractController.update);
+    server.put(prefix + '/:contractId/changeStatus', ContractController.updateStatus);
 
     /**
      * DELETE

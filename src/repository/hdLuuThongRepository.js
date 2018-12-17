@@ -126,7 +126,8 @@ function getListByDate(date) {
                 moneyHavePay: 1,
                 moneyPaid: 1,
                 status: 1,
-                createdAt: 1
+                createdAt: 1,
+                totalHavePay: { $subtract: [ "$contract.actuallyCollectedMoney", "$contract.totalMoneyPaid" ] }
             }
         }
     ];

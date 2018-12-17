@@ -5,7 +5,8 @@ const ContractRepository = require('../repository/contractRepository');
 const HdLuuThongRepository = require('../repository/hdLuuThongRepository');
 const AuthorizationService = require('../services/authorizationService');
 const EventDispatcher = require('../events/dispatcher');
-const _ = require('lodash');
+const _ = require('lodash')
+// const CONTRACT_CONST = require('../constant/contractOtherConstant');
 
 
 /**
@@ -102,6 +103,9 @@ function updateMany(req, res, next) {
         .then(function (contracts) {
             // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
             EventDispatcher.newContractLuuThongListener(contracts);
+
+            // ghi log lưu vết cho các hợp đồng
+            EventDispatcher.addMultiLogToContractLogListener(data);
 
             res.send(200);
             next();

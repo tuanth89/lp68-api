@@ -52,7 +52,8 @@ const UserSchema = new mongoose.Schema({
     },
     district: {
         type: Mixed
-    }
+    },
+
 }, {
     minimize: false
 });

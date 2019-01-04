@@ -136,6 +136,9 @@ function getListByType(type) {
         case CONTRACT_CONST.END:
             query = {status: CONTRACT_CONST.END};
             break;
+        case CONTRACT_CONST.STAND:
+            query = {status: CONTRACT_CONST.STAND};
+            break;
     }
 
     Contract
@@ -264,6 +267,10 @@ function insertOrUpdateBulk(contracts) {
                             let nowDate = new Date();
                             contract.contractNo = `${nowDate.getFullYear()}_${++count}`;
                             contract.noIdentity = count;
+                        }
+
+                        if (contract.isHdLaiDung) {
+                            contract.status = CONTRACT_CONST.STAND;
                         }
 
                         contract.contractId = contract._id;

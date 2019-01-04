@@ -89,15 +89,26 @@ function listByDate(req, res, next) {
  */
 function listByCustomer(req, res, next) {
     let customerId = req.params.customerId || 0;
-    ContractRepository.getListByCustomer(customerId)
-        .then(function (contracts) {
-            res.send(contracts);
+    Promise.all([
+        CustomerRepository.findById(customerId),
+        ContractRepository.getListByCustomer(customerId),
+    ])
+        .then(function (results) {
+            res.send(results);
             next();
         })
         .catch(function (error) {
             return next(error);
         })
-        .done();
+    // ContractRepository.getListByCustomer(customerId)
+    //     .then(function (contracts) {
+    //         res.send(contracts);
+    //         next();
+    //     })
+    //     .catch(function (error) {
+    //         return next(error);
+    //     })
+    //     .done();
 }
 
 /**

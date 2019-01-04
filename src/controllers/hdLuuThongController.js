@@ -35,7 +35,11 @@ function list(req, res, next) {
  */
 function listByDate(req, res, next) {
     let date = req.params.date || new Date();
-    HdLuuThongRepository.getListByDate(date)
+    let status = parseInt(req.params.status);
+    if (status === undefined || status === null)
+        status = -1;
+
+    HdLuuThongRepository.getListByDate(date, status)
         .then(function (contracts) {
             res.send(contracts);
             next();

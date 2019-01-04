@@ -10,6 +10,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const _ = require('lodash');
 const StringService = require('../services/stringService');
 const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
+const CONTRACT_CONST = require('../constant/contractConstant');
 
 /**
  *
@@ -72,25 +73,26 @@ Date.prototype.addDays = function (days) {
 /**
  *
  * @param date
- * @param type
+ * @param status
  * @returns {*|promise}
  */
-function getListByDate(date) {
+function getListByDate(date, status) {
     const deferred = Q.defer();
     let dateFilter = new Date(date);
 
     let dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth(), dateFilter.getDate(), 0, 0, 0);
     let dateTo = dateFilter.addDays(1);
     dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 0, 0, 0);
-    let conditionFilter = {
-        createdAt: {
-            $gte: dateFrom,
-            $lt: dateTo
-        }
-    };
 
     let query = [
-        {$match: conditionFilter},
+        {
+            $match: {
+                createdAt: {
+                    $gte: dateFrom,
+                    $lt: dateTo
+                }
+            }
+        },
         {
             $lookup: {
                 from: "contracts",
@@ -108,8 +110,13 @@ function getListByDate(date) {
                 status: 1,
                 createdAt: 1
             }
-        },
-        {
+        }
+        , {
+            $match: status > -1 ? {
+                "contract.status": status
+            } : {}
+        }
+        , {
             $project: {
                 _id: 1,
                 contractId: "$contract._id",
@@ -127,9 +134,10 @@ function getListByDate(date) {
                 moneyPaid: 1,
                 status: 1,
                 createdAt: 1,
-                totalHavePay: { $subtract: [ "$contract.actuallyCollectedMoney", "$contract.totalMoneyPaid" ] }
+                totalHavePay: {$subtract: ["$contract.actuallyCollectedMoney", "$contract.totalMoneyPaid"]}
             }
         }
+        , {$sort: {contractStatus: 1}}
     ];
 
     HdLuuThong
@@ -217,12 +225,17 @@ function insertMany(data) {
         let luuthong = new HdLuuThong();
         luuthong.contractId = contractItem.contractId;
 
-        if (totalMoneyPaid > 0) {
-            luuthong.moneyHavePay = contractItem.moneyHavePay;
-            luuthong.moneyPaid = contractItem.moneyPaid;
-        } else {
-            luuthong.moneyHavePay = contractItem.dailyMoneyPay;
-            luuthong.moneyPaid = contractItem.dailyMoneyPay;
+        if (contractItem.status === CONTRACT_CONST.STAND) {
+
+        }
+        else {
+            if (totalMoneyPaid > 0) {
+                luuthong.moneyHavePay = contractItem.moneyHavePay;
+                luuthong.moneyPaid = contractItem.moneyPaid;
+            } else {
+                luuthong.moneyHavePay = contractItem.dailyMoneyPay;
+                luuthong.moneyPaid = contractItem.dailyMoneyPay;
+            }
         }
 
         luuthong.createdAt = nextPayDate;

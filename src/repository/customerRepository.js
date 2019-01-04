@@ -17,15 +17,14 @@ function findById(id) {
     const deferred = Q.defer();
 
     // if (ObjectId.isValid(id)) {
-    if (StringService.isObjectId(id)) {
-        id = new ObjectId(id);
-    }
+    // if (StringService.isObjectId(id)) {
+    //     id = new ObjectId(id);
+    // }
 
     Customer
         .findOne({
             _id: id
         })
-        // .select(Serializer.detail)
         .exec(function (err, user) {
             if (err) {
                 deferred.reject(new errors.InvalidContentError(err.message));
@@ -214,11 +213,37 @@ function updateBulk(customers) {
     return deferred.promise;
 }
 
+/**
+ *
+ * @param id
+ * @param data
+ * @returns {*|promise}
+ */
+function update(id, data) {
+    const deferred = Q.defer();
+
+    Customer.findOneAndUpdate({
+        _id: id
+    }, data, {
+        new: true
+    }, function (error, customer) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError("Not found"));
+            return deferred.promise;
+        } else {
+            deferred.resolve(customer);
+        }
+    });
+
+    return deferred.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
     insertOrUpdateBulk: insertOrUpdateBulk,
     save: save,
+    update: update,
     remove: remove,
     updateBulk: updateBulk,
     getListAutoComplete: getListAutoComplete,

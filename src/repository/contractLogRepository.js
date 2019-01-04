@@ -150,6 +150,7 @@ function bulkHistoriesByContractId(contracts) {
         let history = {};
         history.title = "Đóng " + StringService.formatNumeric(contract.moneyPaid);
         history.start = contract.createdAt;
+        history.stick = true;
 
         bulk.find({contractId: ObjectId(contract.contractId)})
             .update({$push: {histories: history}});

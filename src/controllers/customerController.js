@@ -107,7 +107,7 @@ function update(req, res, next) {
     let data = req.body || {};
 
     // let _user = AuthorizationService.getUser(req);
-    CustomerRepository.update(data._id, data)
+    CustomerRepository.update(req.params.customerId, data)
         .then(function () {
             res.send(200);
             next();

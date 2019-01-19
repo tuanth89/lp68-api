@@ -337,6 +337,42 @@ function updateMany(data) {
     return deferred.promise;
 }
 
+
+/**
+ * @desc chốt lãi đứng
+ * @param contractId
+ * @param data
+ * @returns {*|promise}
+ */
+function updateChotLaiDung(contractId, data) {
+    const deferred = Q.defer();
+
+    // Nếu không chốt đủ tiền thì sinh tiếp bản ghi lưu thông cho ngày tiếp theo
+    if (data.totalMoneyPaid > 0) {
+        let luuthongList = [];
+        let luuthong = new HdLuuThong(data);
+        luuthong.contractId = contractId;
+        luuthong.createdAt = (new Date(date)).addDays(1);
+        luuthongList.push(luuthong);
+
+        HdLuuThong.insertMany(luuthongList, function (error, item) {
+            if (error) {
+                console.error(error);
+
+                deferred.resolve(false);
+                return deferred.promise;
+            } else {
+                deferred.resolve(true);
+            }
+        });
+    }
+    else {
+        deferred.resolve(true);
+    }
+
+    return deferred.promise;
+}
+
 /**
  *
  * @param id
@@ -359,6 +395,34 @@ function remove(id) {
     return deferred.promise;
 }
 
+/**
+ *
+ * @param id
+ * @param status
+ * @returns {*|promise}
+ */
+function updateStatus(id, status) {
+    const deferred = Q.defer();
+
+    HdLuuThong.findOneAndUpdate({
+        _id: id
+    }, {
+        $set: {
+            status: status
+        }
+    }, function (error, item) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError("Not found"));
+            return deferred.promise;
+        } else {
+            deferred.resolve(item);
+        }
+    });
+
+
+    return deferred.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
@@ -368,5 +432,7 @@ module.exports = {
     remove: remove,
     insertMany: insertMany,
     updateMany: updateMany,
+    updateChotLaiDung: updateChotLaiDung,
+    updateStatus: updateStatus
 
 };

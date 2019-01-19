@@ -4,13 +4,12 @@ const mongoose = require('mongoose');
 const timestamps = require('mongoose-timestamp');
 const Mixed = mongoose.Schema.Types.Mixed;
 const ObjectId = mongoose.Schema.Types.ObjectId;
-require('mongoose-type-email');
-const validate = require('mongoose-validator');
+const mongooseStringQuery = require('mongoose-string-query');
 
 const StoreSchema = new mongoose.Schema({
     storeId: {
-        type: mongoose.SchemaTypes.Email,
-        required: [true],
+        type: String,
+        required: true,
         unique: true
     },
     name: {
@@ -22,12 +21,6 @@ const StoreSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    province: {
-        type: Mixed
-    },
-    district: {
-        type: Mixed
-    },
     isActive: {
         type: Boolean,
         default: true
@@ -37,6 +30,7 @@ const StoreSchema = new mongoose.Schema({
 });
 
 StoreSchema.plugin(timestamps);
+StoreSchema.plugin(mongooseStringQuery);
 
 const Store = mongoose.model('Store', StoreSchema);
 

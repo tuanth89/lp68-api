@@ -9,7 +9,8 @@ module.exports = {
      * 3 : thu về -> hẹn ngày cụ thể đóng nốt số còn lại
      * 4 : chốt -> hẹn ngày cụ thể đóng nốt số còn lại
      * 5 : bễ -> hẹn ngày cụ thể đóng nốt số còn lại
-     * 6 : kết thúc
+     * 6 : kết thúc chờ kế toán duyệt
+     * 7 : Kế toán đã kết thúc hợp đồng.
      */
     NEW: 0,
     MATURITY: 1,
@@ -17,5 +18,6 @@ module.exports = {
     COLLECT: 3,
     CLOSE_DEAL: 4,
     ESCAPE: 5,
-    END: 6
+    END: 6,
+    ACCOUNTANT_END: 7
 };

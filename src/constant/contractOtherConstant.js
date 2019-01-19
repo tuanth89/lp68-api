@@ -5,5 +5,7 @@ module.exports = {
         NORMAL: 0,
         COMPLETED: 1
     },
-    LOG_FOR: {LuuThong: 0}
+    LOG_FOR: {
+        LuuThong: 0
+    }
 };

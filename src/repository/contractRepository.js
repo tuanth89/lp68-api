@@ -334,7 +334,7 @@ function updateDailyMoneyBulk(contracts) {
 }
 
 /**
- * Cập nhật tổng tiền đóng hàng ngày.
+ * Cập nhật tổng tiền đóng hàng ngày dạng array.
  * @param {Array} contracts
  */
 function updateTotalMoney(contracts) {
@@ -354,6 +354,33 @@ function updateTotalMoney(contracts) {
             deferred.resolve(contracts);
         }
     });
+
+    return deferred.promise;
+}
+
+/**
+ * Cập nhật tổng tiền đóng hàng ngày dạng bởi Id
+ * @param {String} contractId
+ * @param {int} totalMoneyPaid
+ */
+function updateTotalMoneyPaid(contractId, totalMoneyPaid) {
+    const deferred = Q.defer();
+
+    Contract.update({
+        _id: contractId
+    }, {
+        $set: {
+            totalMoneyPaid: totalMoneyPaid
+        }
+    }, function (error, contract) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError("Not found"));
+            return deferred.promise;
+        } else {
+            deferred.resolve(contract);
+        }
+    });
+
 
     return deferred.promise;
 }
@@ -506,6 +533,7 @@ module.exports = {
     updateDailyMoneyBulk: updateDailyMoneyBulk,
     circulationContract: circulationContract,
     updateTotalMoney: updateTotalMoney,
+    updateTotalMoneyPaid: updateTotalMoneyPaid,
     getListByType: getListByType,
     updateStatus: updateStatus,
     getListByCustomer: getListByCustomer

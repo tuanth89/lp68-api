@@ -6,7 +6,8 @@ const HdLuuThongRepository = require('../repository/hdLuuThongRepository');
 const AuthorizationService = require('../services/authorizationService');
 const EventDispatcher = require('../events/dispatcher');
 const _ = require('lodash')
-// const CONTRACT_CONST = require('../constant/contractOtherConstant');
+const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
+const CONTRACT_CONST = require('../constant/contractConstant');
 
 
 /**
@@ -120,10 +121,64 @@ function updateMany(req, res, next) {
         .done();
 }
 
+/**
+ * @desc Chốt lãi hợp đồng
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function chotLaiUpdate(req, res, next) {
+    let data = req.body || {};
+    let contractId = req.params.contractId;
+
+    if (data.newPayMoney <= 0) {
+        return next(new errors.InvalidContentError("Số tiền đóng không được <= 0"));
+    }
+
+    let _user = AuthorizationService.getUser(req);
+
+    ContractRepository.findById(contractId)
+        .then((contractItem) => {
+            let money = contractItem.actuallyCollectedMoney - data.newPayMoney;
+            data.totalMoneyPaid = money;
+
+            let dataContract = {
+                contractId: money <= 0 ? contractId : "",
+                luuThongId: data._id,
+                contractStatus: money <= 0 ? CONTRACT_CONST.END : -1,
+                luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+                totalMoneyPaid: money
+            };
+            EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+
+            if (money > 0) {
+                HdLuuThongRepository.updateChotLaiDung(contractId, data)
+                    .then(function (contract) {
+                        res.send(201, true);
+                        next();
+                    })
+                    .catch(function (error) {
+                        return next(error);
+                    })
+                    .done();
+            }
+            else {
+                res.send(201, true);
+                next();
+            }
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     list: list,
     listByDate: listByDate,
     one: one,
     update: update,
     updateMany: updateMany,
+    chotLaiUpdate: chotLaiUpdate
 };

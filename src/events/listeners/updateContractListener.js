@@ -21,11 +21,14 @@ function updateStatusLuuThongContract(data) {
                 })
                 .done();
         }
-        ContractRepository.updateStatus(data.contractId, data.contractStatus)
-            .catch((error) => {
-                log.error(error);
-            })
-            .done();
+
+        if (data.contractStatus > 0) {
+            ContractRepository.updateStatus(data.contractId, data.contractStatus)
+                .catch((error) => {
+                    log.error(error);
+                })
+                .done();
+        }
     }
 
     if (data.luuThongId) {

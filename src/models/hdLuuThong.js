@@ -13,10 +13,12 @@ const ContractSchema = new mongoose.Schema({
         require: true
     },
     moneyHavePay: {
-        type: Number
+        type: Number,
+        default: 0
     },
     moneyPaid: {
-        type: Number
+        type: Number,
+        default: 0
     },
     status: {
         type: Number,

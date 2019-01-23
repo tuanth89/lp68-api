@@ -128,32 +128,31 @@ function updateMany(req, res, next) {
  * @param next
  * @returns {*}
  */
-function chotLaiUpdate(req, res, next) {
+function updateChotLai(req, res, next) {
     let data = req.body || {};
     let contractId = req.params.contractId;
-
-    if (data.newPayMoney <= 0) {
+    let newPayMoney = parseInt(data.newPayMoney);
+    if (newPayMoney <= 0) {
         return next(new errors.InvalidContentError("Số tiền đóng không được <= 0"));
     }
-
-    let _user = AuthorizationService.getUser(req);
+    // let _user = AuthorizationService.getUser(req);
 
     ContractRepository.findById(contractId)
         .then((contractItem) => {
-            let money = contractItem.actuallyCollectedMoney - data.newPayMoney;
-            data.totalMoneyPaid = money;
+            let money = contractItem.actuallyCollectedMoney - newPayMoney;
+            data.totalMoneyPaid = newPayMoney;
 
             let dataContract = {
-                contractId: money <= 0 ? contractId : "",
+                contractId: contractId,
                 luuThongId: data._id,
                 contractStatus: money <= 0 ? CONTRACT_CONST.END : -1,
                 luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
-                totalMoneyPaid: money
+                totalMoneyPaid: newPayMoney
             };
             EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
 
             if (money > 0) {
-                HdLuuThongRepository.updateChotLaiDung(contractId, data)
+                HdLuuThongRepository.insertHdLuuThong(contractId, data)
                     .then(function (contract) {
                         res.send(201, true);
                         next();
@@ -174,11 +173,116 @@ function chotLaiUpdate(req, res, next) {
         .done();
 }
 
+/**
+ * @desc Chuyển sang Thu Về
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateThuVe(req, res, next) {
+    let data = req.body || {};
+    let contractId = req.params.contractId;
+    // let _user = AuthorizationService.getUser(req);
+
+    // ContractRepository.findById(contractId)
+    //     .then((contractItem) => {
+    let dataContract = {
+        contractId: contractId,
+        luuThongId: data._id,
+        contractStatus: data.statusContract,
+        luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+    };
+    EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+
+    HdLuuThongRepository.insertHdLuuThong(contractId, data)
+        .then(function (contract) {
+            res.send(201, true);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+    // })
+    // .catch(function (error) {
+    //     return next(error);
+    // })
+    // .done();
+
+}
+
+/**
+ * @desc Chuyển sang Chốt
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateChot(req, res, next) {
+    let data = req.body || {};
+    let contractId = req.params.contractId;
+    // let _user = AuthorizationService.getUser(req);
+
+    let dataContract = {
+        contractId: contractId,
+        luuThongId: data._id,
+        contractStatus: data.statusContract,
+        luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+    };
+    EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+
+    HdLuuThongRepository.insertHdLuuThong(contractId, data)
+        .then(function (contract) {
+            res.send(201, true);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ * @desc Chuyển sang Bễ
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateBe(req, res, next) {
+    let data = req.body || {};
+    let contractId = req.params.contractId;
+    // let _user = AuthorizationService.getUser(req);
+
+    let dataContract = {
+        contractId: contractId,
+        luuThongId: data._id,
+        contractStatus: data.statusContract,
+        luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+    };
+    EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+
+    HdLuuThongRepository.insertHdLuuThong(contractId, data)
+        .then(function (contract) {
+            res.send(201, true);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+
 module.exports = {
     list: list,
     listByDate: listByDate,
     one: one,
     update: update,
     updateMany: updateMany,
-    chotLaiUpdate: chotLaiUpdate
+    updateChotLai: updateChotLai,
+    updateThuVe: updateThuVe,
+    updateChot: updateChot,
+    updateBe: updateBe
 };

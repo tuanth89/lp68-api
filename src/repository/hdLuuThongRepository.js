@@ -351,8 +351,9 @@ function updateChotLaiDung(contractId, data) {
     if (data.totalMoneyPaid > 0) {
         let luuthongList = [];
         let luuthong = new HdLuuThong(data);
+        luuthong._id = new ObjectId();
         luuthong.contractId = contractId;
-        luuthong.createdAt = (new Date(date)).addDays(1);
+        luuthong.createdAt = (new Date()).addDays(1);
         luuthongList.push(luuthong);
 
         HdLuuThong.insertMany(luuthongList, function (error, item) {
@@ -423,6 +424,46 @@ function updateStatus(id, status) {
     return deferred.promise;
 }
 
+/**
+ * @desc Sinh bản ghi lưu thông tiếp theo sau ngày hiện tại
+ * @param {String} contractId
+ * @param {Object} data
+ * @returns {*|promise}
+ */
+function insertHdLuuThong(contractId, data) {
+    const deferred = Q.defer();
+
+    let luuthongList = [];
+    let luuthong = new HdLuuThong(data);
+    luuthong._id = new ObjectId();
+    luuthong.contractId = contractId;
+    if (data.moneyHavePay)
+        luuthong.moneyHavePay = data.moneyHavePay;
+    if (data.moneyPaid)
+        luuthong.moneyPaid = data.moneyPaid;
+
+    if (data.createdAt)
+        luuthong.createdAt = moment.utc(data.createdAt, "DD/MM/YYYY").add(1, 'days');
+
+    // Ngày hẹn
+    if(data.newAppointmentDate)
+        luuthong.createdAt = moment.utc(data.newAppointmentDate, "DD/MM/YYYY");
+
+    luuthongList.push(luuthong);
+    HdLuuThong.insertMany(luuthongList, function (error, item) {
+        if (error) {
+            console.error(error);
+
+            deferred.resolve(false);
+            return deferred.promise;
+        } else {
+            deferred.resolve(true);
+        }
+    });
+
+    return deferred.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
@@ -433,6 +474,7 @@ module.exports = {
     insertMany: insertMany,
     updateMany: updateMany,
     updateChotLaiDung: updateChotLaiDung,
-    updateStatus: updateStatus
+    updateStatus: updateStatus,
+    insertHdLuuThong: insertHdLuuThong
 
 };

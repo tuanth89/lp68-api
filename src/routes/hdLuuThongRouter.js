@@ -24,6 +24,9 @@ module.exports = function (server) {
      * UPDATE
      */
     server.put(prefix + '/contract/updateMany', HdLuuThongController.updateMany);
-    server.put(prefix + '/:contractId/updateLaiDung', HdLuuThongController.chotLaiUpdate);
+    server.put(prefix + '/:contractId/updateLaiDung', HdLuuThongController.updateChotLai);
+    server.put(prefix + '/:contractId/updateThuve', HdLuuThongController.updateThuVe);
+    server.put(prefix + '/:contractId/updateChot', HdLuuThongController.updateChot);
+    server.put(prefix + '/:contractId/updateBe', HdLuuThongController.updateBe);
 
 };

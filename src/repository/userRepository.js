@@ -199,7 +199,7 @@ function save(data) {
         user.activateTokenDate = new Date();
     } else {
         user.activateToken = uuid.v4();
-        user.activateTokenDate = moment().add(1, "days");
+        user.activateTokenDate = moment.utc().add(1, "days");
     }
 
     user.notificationSetting = {

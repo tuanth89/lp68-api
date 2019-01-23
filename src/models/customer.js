@@ -36,12 +36,15 @@ const UserSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    dateOfIssue: {
-        type: Date
-    },
-    placeOfIssue: {
-        type: String,
-        trim: true
+    // dateOfIssue: {
+    //     type: Date
+    // },
+    // placeOfIssue: {
+    //     type: String,
+    //     trim: true
+    // },
+    imgResource: {
+        type: String
     },
     city: {
         type: String,

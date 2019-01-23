@@ -268,11 +268,6 @@ function insertOrUpdateBulk(contracts) {
                             contract.contractNo = `${nowDate.getFullYear()}_${++count}`;
                             contract.noIdentity = count;
                         }
-
-                        if (contract.isHdLaiDung) {
-                            contract.status = CONTRACT_CONST.STAND;
-                        }
-
                         contract.contractId = contract._id;
 
                         let startDate = new Date(contract.createdAt);
@@ -286,6 +281,11 @@ function insertOrUpdateBulk(contracts) {
                         //     // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
                         //     contract.dailyMoney = dailyMoney.toFixed();
                         // }
+
+                        if (contract.isHdLaiDung) {
+                            contract.status = CONTRACT_CONST.STAND;
+                            contract.dailyMoneyPay = 0;
+                        }
 
                         let item = new Contract(contract);
 
@@ -474,7 +474,7 @@ function circulationContract(contractId, data) {
 
                 let contractNew = new Contract();
                 contractNew.customer = data.customer;
-                contractNew.createdAt = moment(data.contractDate, "YYYYMMDD");
+                contractNew.createdAt = moment.utc(data.contractDate, "YYYYMMDD");
                 contractNew.loanMoney = newLoanMoney;
                 contractNew.actuallyCollectedMoney = newActuallyCollectedMoney;
                 contractNew.loanDate = newLoanDate;

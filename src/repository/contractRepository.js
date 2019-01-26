@@ -530,6 +530,14 @@ function getDashboardStatistic() {
     let dateAfter = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
     let query = [
         {
+            $lookup: {
+                from: "hdluuthongs",
+                localField: "_id",
+                foreignField: "contractId",
+                as: "hdLuuThongs"
+            }
+        },
+        {
             $project: {
 //         "soHDMoi": {
 //             "$cond": [
@@ -583,6 +591,19 @@ function getDashboardStatistic() {
                         }
                         , "$totalMoneyPaid", 0
                     ]
+                },
+                totalLuuThong: {
+                    "$filter": {
+                        "input": "$hdLuuThongs",
+                        "as": "hdLuuThong",
+                        cond: {
+                            $and: [
+                                {"$gt": ["$$hdLuuThong.createdAt", ISODate("2019-01-20")]},
+                                {"$lt": ["$$hdLuuThong.createdAt", ISODate("2019-01-27")]},
+                                {"$eq": ["$$hdLuuThong.status", 1]}
+                            ]
+                        }
+                    }
                 }
             }
         },
@@ -590,7 +611,7 @@ function getDashboardStatistic() {
             $group: {
                 _id: null,
                 tongChoVay: {$sum: "$loanMoney"},
-                tongThucThu: {$sum: "$totalMoneyPaid"},
+                tongThucThu: {$sum: {$sum: "$totalLuuThong.moneyPaid"}},
                 hdThuong: {$sum: "$soHDThuong"},
                 hdLaiDung: {$sum: "$soHdLaiDung"}
             }

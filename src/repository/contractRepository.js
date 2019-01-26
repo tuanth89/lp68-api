@@ -566,8 +566,8 @@ function getDashboardStatistic() {
                     "$cond": [
                         {
                             $and: [
-                                {"$gt": ["$createdAt", ISODate("2019-01-20")]},
-                                {"$lt": ["$createdAt", ISODate("2019-01-26")]}
+                                {"$gt": ["$createdAt", dateBefore]},
+                                {"$lt": ["$createdAt", dateAfter]}
                             ]
                         }
                         , "$loanMoney", 0
@@ -577,8 +577,8 @@ function getDashboardStatistic() {
                     "$cond": [
                         {
                             $and: [
-                                {"$gt": ["$createdAt", ISODate("2019-01-20")]},
-                                {"$lt": ["$createdAt", ISODate("2019-01-26")]}
+                                {"$gt": ["$createdAt", dateBefore]},
+                                {"$lt": ["$createdAt", dateAfter]}
                             ]
                         }
                         , "$totalMoneyPaid", 0

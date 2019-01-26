@@ -1,7 +1,7 @@
 "use strict";
 
 const UserController = require("../controllers/userController");
-const ContractController = require("../controllers/ContractController");
+const ContractController = require("../controllers/contractController");
 
 const prefix = "/api/v1/admins";
 

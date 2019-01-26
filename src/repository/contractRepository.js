@@ -526,8 +526,8 @@ function circulationContract(contractId, data) {
 function getDashboardStatistic() {
     const deferred = Q.defer();
     let now = new Date();
-    let dateBefore = new Date(now.getFullYear(),now.getMonth(),now.getDate() - 1,0,0,0);
-    let dateAfter = new Date(now.getFullYear(),now.getMonth(),now.getDate() + 1,0,0,0);
+    let dateBefore = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
+    let dateAfter = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
     let query = [
         {
             $project: {
@@ -562,8 +562,28 @@ function getDashboardStatistic() {
                         , 1, 0
                     ]
                 },
-                loanMoney: 1,
-                totalMoneyPaid: 1
+                loanMoney: {
+                    "$cond": [
+                        {
+                            $and: [
+                                {"$gt": ["$createdAt", ISODate("2019-01-20")]},
+                                {"$lt": ["$createdAt", ISODate("2019-01-26")]}
+                            ]
+                        }
+                        , "$loanMoney", 0
+                    ]
+                },
+                totalMoneyPaid: {
+                    "$cond": [
+                        {
+                            $and: [
+                                {"$gt": ["$createdAt", ISODate("2019-01-20")]},
+                                {"$lt": ["$createdAt", ISODate("2019-01-26")]}
+                            ]
+                        }
+                        , "$totalMoneyPaid", 0
+                    ]
+                }
             }
         },
         {

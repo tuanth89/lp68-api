@@ -598,8 +598,8 @@ function getDashboardStatistic() {
                         "as": "hdLuuThong",
                         cond: {
                             $and: [
-                                {"$gt": ["$$hdLuuThong.createdAt", ISODate("2019-01-20")]},
-                                {"$lt": ["$$hdLuuThong.createdAt", ISODate("2019-01-27")]},
+                                {"$gt": ["$$hdLuuThong.createdAt", dateBefore]},
+                                {"$lt": ["$$hdLuuThong.createdAt", dateAfter]},
                                 {"$eq": ["$$hdLuuThong.status", 1]}
                             ]
                         }

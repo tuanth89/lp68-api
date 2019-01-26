@@ -3,7 +3,6 @@
 const Contract = require('../models/contract');
 const Q = require("q");
 const errors = require('restify-errors');
-const HashService = require('../services/hashService');
 const Serializer = require('../serializers/contract');
 const uuid = require('uuid');
 const moment = require('moment');
@@ -521,6 +520,77 @@ function circulationContract(contractId, data) {
     return deferred.promise;
 }
 
+/**
+ * @returns {*|promise}
+ */
+function getDashboardStatistic() {
+    const deferred = Q.defer();
+    let now = new Date();
+    let dateBefore = new Date(now.getFullYear(),now.getMonth(),now.getDate() - 1,0,0,0);
+    let dateAfter = new Date(now.getFullYear(),now.getMonth(),now.getDate() + 1,0,0,0);
+    let query = [
+        {
+            $project: {
+//         "soHDMoi": {
+//             "$cond": [
+//                 { "$gte": ["$createdAt", ISODate("2019-01-20")] },
+//                1,
+//                0
+//             ]
+//         },
+                soHDThuong: {
+                    "$cond": [
+                        {
+                            $and: [
+                                {"$gt": ["$createdAt", dateBefore]},
+                                {"$lt": ["$createdAt", dateAfter]},
+                                {"$ne": ["$status", CONTRACT_CONST.STAND]}
+                            ]
+                        }
+                        , 1, 0
+                    ]
+                },
+                soHdLaiDung: {
+                    "$cond": [
+                        {
+                            $and: [
+                                {"$gt": ["$createdAt", dateBefore]},
+                                {"$lt": ["$createdAt", dateAfter]},
+                                {"$eq": ["$status", CONTRACT_CONST.STAND]}
+                            ]
+                        }
+                        , 1, 0
+                    ]
+                },
+                loanMoney: 1,
+                totalMoneyPaid: 1
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                tongChoVay: {$sum: "$loanMoney"},
+                tongThucThu: {$sum: "$totalMoneyPaid"},
+                hdThuong: {$sum: "$soHDThuong"},
+                hdLaiDung: {$sum: "$soHdLaiDung"}
+            }
+        }
+    ];
+
+    Contract
+        .aggregate(query)
+        .exec(function (err, result) {
+            if (err) {
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+                deferred.resolve(result);
+            }
+        });
+
+    return deferred.promise;
+}
+
+
 module.exports = {
     findById: findById,
     getList: getList,
@@ -536,6 +606,7 @@ module.exports = {
     updateTotalMoneyPaid: updateTotalMoneyPaid,
     getListByType: getListByType,
     updateStatus: updateStatus,
-    getListByCustomer: getListByCustomer
+    getListByCustomer: getListByCustomer,
+    getDashboardStatistic: getDashboardStatistic
 
 };

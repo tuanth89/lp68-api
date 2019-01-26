@@ -29,6 +29,7 @@ module.exports = function (server) {
      * UPDATE
      */
     server.put(prefix + '/:customerId', CustomerController.update);
+    server.put(prefix + '/:customerId/imgDocs', CustomerController.updateImgDocs);
 
     /**
      * DELETE

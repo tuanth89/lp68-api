@@ -268,7 +268,7 @@ function updateMany(data) {
     let bulkHdLuuThong = HdLuuThong.collection.initializeOrderedBulkOp();
     let contracts = [];
     let dailyMoneyPay = 0, // Số tiền phải đóng hàng ngày (cố định) (tiền lãi, thực thu / số ngày vay)
-        totalMoneyHavePayNow = 0, // Tổng số tiền phải đóng tói thời điểm hiện tại
+        // totalMoneyHavePayNow = 0, // Tổng số tiền phải đóng tói thời điểm hiện tại
         totalMoneyPaid = 0; // Tổng số tiền đã đóng tới thời điểm hiện tại
 
     data.forEach((contractItem) => {
@@ -293,18 +293,20 @@ function updateMany(data) {
         //     dailyMoneyPay += (totalMoneyHavePayNow - totalMoneyPaid);
         // }
 
-        // Tạo bản ghi lưu thông ngày tiếp theo
-        let luuthong = new HdLuuThong();
-        // let nextPayDate = new Date(contractItem.createdAt);
-        // luuthong.createdAt = nextPayDate.setDate(nextPayDate.getDate() + 1);
+        if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
+            // Tạo bản ghi lưu thông ngày tiếp theo
+            let luuthong = new HdLuuThong();
+            // let nextPayDate = new Date(contractItem.createdAt);
+            // luuthong.createdAt = nextPayDate.setDate(nextPayDate.getDate() + 1);
 
-        luuthong.contractId = contractItem.contractId;
-        luuthong._doc.totalMoneyPaid = totalMoneyPaid;
-        luuthong._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
-        luuthong.moneyHavePay = dailyMoneyPay;
-        luuthong.moneyPaid = dailyMoneyPay;
-        luuthong.createdAt = contractItem.createdAt;
-        contracts.push(luuthong);
+            luuthong.contractId = contractItem.contractId;
+            luuthong._doc.totalMoneyPaid = totalMoneyPaid;
+            luuthong._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
+            luuthong.moneyHavePay = dailyMoneyPay;
+            luuthong.moneyPaid = dailyMoneyPay;
+            luuthong.createdAt = contractItem.createdAt;
+            contracts.push(luuthong);
+        }
 
         bulkHdLuuThong.find({_id: ObjectId(contractItem._id)})
             .update({
@@ -446,7 +448,7 @@ function insertHdLuuThong(contractId, data) {
         luuthong.createdAt = moment.utc(data.createdAt, "DD/MM/YYYY").add(1, 'days');
 
     // Ngày hẹn
-    if(data.newAppointmentDate)
+    if (data.newAppointmentDate)
         luuthong.createdAt = moment.utc(data.newAppointmentDate, "DD/MM/YYYY");
 
     luuthongList.push(luuthong);

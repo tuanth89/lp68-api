@@ -43,8 +43,8 @@ const UserSchema = new mongoose.Schema({
     //     type: String,
     //     trim: true
     // },
-    imgResource: {
-        type: String
+    imgDocs: {
+        type: Array
     },
     city: {
         type: String,

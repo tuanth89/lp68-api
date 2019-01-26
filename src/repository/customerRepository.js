@@ -238,6 +238,32 @@ function update(id, data) {
     return deferred.promise;
 }
 
+/**
+ *
+ * @param id
+ * @param imgDocs
+ * @param isAdd
+ * @returns {*|promise}
+ */
+function updateImgDocs(id, imgDocs, isAdd) {
+    const deferred = Q.defer();
+
+    let updateImgDocs = isAdd > 0 ? {"$push": {"imgDocs": {"$each": imgDocs}}} : {"$pull": {"imgDocs": imgDocs}};
+
+    Customer.findOneAndUpdate({
+        _id: id
+    }, updateImgDocs, function (error, customer) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError("Not found"));
+            return deferred.promise;
+        } else {
+            deferred.resolve(customer);
+        }
+    });
+
+    return deferred.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
@@ -247,4 +273,5 @@ module.exports = {
     remove: remove,
     updateBulk: updateBulk,
     getListAutoComplete: getListAutoComplete,
+    updateImgDocs: updateImgDocs
 };

@@ -137,6 +137,27 @@ function remove(req, res, next) {
         .done();
 }
 
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateImgDocs(req, res, next) {
+    let data = req.body || {};
+
+    CustomerRepository.updateImgDocs(req.params.customerId, data.imgDocs, data.isAdd)
+        .then(function (customer) {
+            res.send(200, customer);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     create: create,
     createMany: createMany,
@@ -144,5 +165,6 @@ module.exports = {
     one: one,
     update: update,
     remove: remove,
-    listAutoComplete: listAutoComplete
+    listAutoComplete: listAutoComplete,
+    updateImgDocs: updateImgDocs
 };

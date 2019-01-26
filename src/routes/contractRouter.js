@@ -4,12 +4,6 @@ const ContractController = require('../controllers/contractController');
 
 module.exports = function (server) {
     let prefix = '/api/v1/contracts';
-    /**
-     * POST
-     */
-    server.post(prefix, ContractController.insertOrUpdateBulk);
-    server.put(prefix + '/circulation/update', ContractController.updateDailyMoneyBulk);
-    server.post(prefix + '/:contractId/circulationContract', ContractController.circulationContract);
 
     /**
      * LIST
@@ -18,6 +12,13 @@ module.exports = function (server) {
     server.get(prefix + '/circulation/all', ContractController.listByDate);
     server.get(prefix + '/allContract/byType', ContractController.listByType);
     server.get(prefix + '/:customerId/byCustomer', ContractController.listByCustomer);
+
+    /**
+     * POST
+     */
+    server.post(prefix, ContractController.insertOrUpdateBulk);
+    server.put(prefix + '/circulation/update', ContractController.updateDailyMoneyBulk);
+    server.post(prefix + '/:contractId/circulationContract', ContractController.circulationContract);
 
     /**
      * GET

@@ -262,6 +262,25 @@ function circulationContract(req, res, next) {
         .done();
 }
 
+/**
+ * @desc Thống kê cho màn hình dashboard
+ * @param req
+ * @param res
+ * @param next
+ */
+function dashboardStatistic(req, res, next) {
+    ContractRepository.getDashboardStatistic()
+        .then(function (result) {
+            res.send(result[0]);
+            next();
+        })
+        .catch(function (error) {
+            console.log(error);
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     insertOrUpdateBulk: insertOrUpdateBulk,
     list: list,
@@ -273,5 +292,6 @@ module.exports = {
     remove: remove,
     updateDailyMoneyBulk: updateDailyMoneyBulk,
     circulationContract: circulationContract,
-    updateStatus: updateStatus
+    updateStatus: updateStatus,
+    dashboardStatistic: dashboardStatistic
 };

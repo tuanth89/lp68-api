@@ -1,26 +1,25 @@
 "use strict";
 
 const UserController = require("../controllers/userController");
+const ContractController = require("../controllers/ContractController");
 
-const prefixUrl = "/api/v1/admins";
+const prefix = "/api/v1/admins";
 
 module.exports = function (server) {
     /**
      * Cập nhật tài khoản hệ thống
      */
-    server.put(prefixUrl + "/:username",
+    server.put(prefix + "/:username",
         UserController.update
     );
 
+    server.get(prefix + '/dashboard', ContractController.dashboardStatistic);
 
-    // server.get(prefixUrl + "/:username/dashboard",
-    //     UserController.dashboardInformation
-    // );
     /**
      * DELETE
      */
 
-    server.del(prefixUrl + "/:user_id",
+    server.del(prefix + "/:user_id",
         UserController.remove
     );
 };

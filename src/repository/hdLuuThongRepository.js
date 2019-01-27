@@ -208,11 +208,11 @@ function save(data) {
 }
 
 /**
- *
- * @param data
+ * Thêm mới hàng loạt theo contracts
+ * @param contracts
  * @returns {*|promise}
  */
-function insertMany(data) {
+function insertMany(contracts) {
     const deferred = Q.defer();
 
     let luuthongList = [];
@@ -236,6 +236,26 @@ function insertMany(data) {
                 luuthong.moneyHavePay = contractItem.dailyMoneyPay;
                 luuthong.moneyPaid = contractItem.dailyMoneyPay;
             }
+
+            // Nếu là tạo hợp đồng vay mới
+            if (contractItem.createContractNew) {
+                // Tính luôn lưu thông của ngày tạo hợp đồng mới
+                let luuthongCurrent = new HdLuuThong();
+                luuthongCurrent.contractId = contractItem.contractId;
+                luuthongCurrent.createdAt = contractItem.createdAt;
+                luuthongCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+                if (totalMoneyPaid > 0) {
+                    luuthongCurrent.moneyHavePay = contractItem.moneyHavePay;
+                    luuthongCurrent.moneyPaid = contractItem.moneyPaid;
+                } else {
+                    luuthongCurrent.moneyHavePay = contractItem.dailyMoneyPay;
+                    luuthongCurrent.moneyPaid = contractItem.dailyMoneyPay;
+                }
+                luuthongList.push(luuthongCurrent);
+
+                // Update tổng tiền đã dóng vào hợp đồng
+                ContractRepository.updateTotalMoneyPaid(contractItem._id, luuthongCurrent.moneyPaid);
+            }
         }
 
         luuthong.createdAt = nextPayDate;
@@ -255,6 +275,29 @@ function insertMany(data) {
 
     return deferred.promise;
 }
+
+/**
+ * Thêm mới hàng loạt các hdLuuThong list
+ * @param data
+ * @returns {*|promise}
+ */
+function saveMany(data) {
+    const deferred = Q.defer();
+
+    HdLuuThong.insertMany(data, function (error, item) {
+        if (error) {
+            console.error(error);
+            deferred.reject(
+                new errors.InvalidContentError(error.message)
+            );
+        } else {
+            deferred.resolve(true);
+        }
+    });
+
+    return deferred.promise;
+}
+
 
 /**
  *
@@ -474,6 +517,7 @@ module.exports = {
     save: save,
     remove: remove,
     insertMany: insertMany,
+    saveMany: saveMany,
     updateMany: updateMany,
     updateChotLaiDung: updateChotLaiDung,
     updateStatus: updateStatus,

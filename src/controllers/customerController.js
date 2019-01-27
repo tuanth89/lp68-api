@@ -158,6 +158,32 @@ function updateImgDocs(req, res, next) {
         .done();
 }
 
+/**
+ * @desc Kiểm tra tồn tại CMT hoặc sổ hộ khảu trong hệ thống.
+ * @param req
+ * @param res
+ * @param next
+ */
+function checkExists(req, res, next) {
+    let data = req.body || {};
+
+    CustomerRepository.checkExists(req.params.customerId, data)
+        .then(function (customer) {
+            let response = false;
+            if (customer)
+                response = true;
+
+            res.send(response);
+            next();
+        })
+        .catch(function (error) {
+            console.log(error);
+            return next(error);
+        })
+        .done()
+    ;
+}
+
 module.exports = {
     create: create,
     createMany: createMany,
@@ -166,5 +192,6 @@ module.exports = {
     update: update,
     remove: remove,
     listAutoComplete: listAutoComplete,
-    updateImgDocs: updateImgDocs
+    updateImgDocs: updateImgDocs,
+    checkExists: checkExists
 };

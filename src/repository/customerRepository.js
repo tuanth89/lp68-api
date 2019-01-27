@@ -264,6 +264,35 @@ function updateImgDocs(id, imgDocs, isAdd) {
     return deferred.promise;
 }
 
+/**
+ * @desc Kiểm tra tồn tại CMT hoặc sổ hộ khảu trong hệ thống.
+ * @param customerId
+ * @param data
+ * @returns {*|promise}
+ */
+function checkExists(customerId, data) {
+    const deferred = Q.defer();
+    let query = {};
+
+    if (data.numberId)
+        query = {numberId: data.numberId, _id: {$ne: ObjectId(customerId)}};
+
+    if (data.houseHolderNo)
+        query = {houseHolderNo: data.houseHolderNo, _id: {$ne: ObjectId(customerId)}};
+
+    Customer
+        .findOne(query)
+        .exec(function (err, user) {
+            if (err) {
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+                deferred.resolve(user);
+            }
+        });
+
+    return deferred.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
@@ -273,5 +302,6 @@ module.exports = {
     remove: remove,
     updateBulk: updateBulk,
     getListAutoComplete: getListAutoComplete,
-    updateImgDocs: updateImgDocs
+    updateImgDocs: updateImgDocs,
+    checkExists: checkExists
 };

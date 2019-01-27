@@ -94,7 +94,12 @@ const ContractSchema = new mongoose.Schema({
     },
     lastUserUpdate: {
         type: ObjectId
+    },
+    // Là khách mới hay cũ
+    isCustomerNew: {
+        type: Boolean
     }
+
 }, {
     minimize: false
 });

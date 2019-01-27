@@ -10,6 +10,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const _ = require('lodash');
 const StringService = require('../services/stringService');
 const CONTRACT_CONST = require('../constant/contractConstant');
+const CONTRACT_OTHER_CONTANST = require('../constant/contractOtherConstant');
 
 /**
  *
@@ -262,7 +263,6 @@ function insertOrUpdateBulk(contracts) {
                         }
 
                         if (!contract.contractNo) {
-                            // contract.noIdentity = ++count;
                             let nowDate = new Date();
                             contract.contractNo = `${nowDate.getFullYear()}_${++count}`;
                             contract.noIdentity = count;
@@ -284,6 +284,10 @@ function insertOrUpdateBulk(contracts) {
                         if (contract.isHdLaiDung) {
                             contract.status = CONTRACT_CONST.STAND;
                             contract.dailyMoneyPay = 0;
+                        }
+                        else {
+                            // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
+                            contract.createContractNew = true;
                         }
 
                         let item = new Contract(contract);
@@ -453,7 +457,7 @@ function remove(id) {
 }
 
 /**
- *
+ * Đáo hợp đồng
  * @param contractId
  * @param data
  * @returns {*|promise}
@@ -487,11 +491,16 @@ function circulationContract(contractId, data) {
                 contractNew.dailyMoney = newDailyMoney;
                 contractNew.dailyMoneyPay = newDailyMoney;
                 contractNew.status = CONTRACT_CONST.MATURITY;
+
+                contractNew.isDaoHd = true;
                 // let dailyMoney = contractNew.actuallyCollectedMoney / (contractNew.loanDate === 0 ? 1 : contractNew.loanDate);
                 // contractNew.dailyMoney = dailyMoney.toFixed();
 
+                let totalPaid = data.totalMoneyPaid + data.moneyPaid
+                // Thay đổi trạng thái hợp đồng cũ là kết thúc và cập nhật số tiền lưu thông đã đóng ngày hôm đó
                 Contract.update({_id: contractId}, {
                     $set: {
+                        totalMoneyPaid: totalPaid,
                         status: CONTRACT_CONST.END,
                         updatedAt: new Date()
                     }
@@ -600,7 +609,7 @@ function getDashboardStatistic() {
                             $and: [
                                 {"$gt": ["$$hdLuuThong.createdAt", dateBefore]},
                                 {"$lt": ["$$hdLuuThong.createdAt", dateAfter]},
-                                {"$eq": ["$$hdLuuThong.status", 1]}
+                                {"$eq": ["$$hdLuuThong.status", CONTRACT_OTHER_CONTANST.STATUS.COMPLETED]}
                             ]
                         }
                     }

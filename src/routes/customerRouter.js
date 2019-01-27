@@ -9,6 +9,7 @@ module.exports = function (server) {
      */
     server.post(prefix, CustomerController.create);
     server.post(prefix + '/insert/new', CustomerController.createMany);
+    server.post(prefix + '/:customerId/checkExists', CustomerController.checkExists);
 
     /**
      * LIST

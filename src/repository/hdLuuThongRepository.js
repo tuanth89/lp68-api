@@ -209,10 +209,10 @@ function save(data) {
 
 /**
  * Thêm mới hàng loạt theo contracts
- * @param contracts
+ * @param data
  * @returns {*|promise}
  */
-function insertMany(contracts) {
+function insertMany(data) {
     const deferred = Q.defer();
 
     let luuthongList = [];

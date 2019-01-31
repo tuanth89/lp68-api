@@ -3,30 +3,30 @@
 const UserController = require('../controllers/userController');
 
 module.exports = function (server) {
-
+    let prefix = '/api/admin/v1/users';
     /**
      * POST
      */
-    server.post('/api/v1/users', UserController.create);
+    server.post(prefix, UserController.create);
 
     /**
      * LIST
      */
-    server.get('/api/v1/users', UserController.list);
+    server.get(prefix, UserController.list);
 
     /**
      * GET
      */
-    server.get('/api/v1/users/:username', UserController.one);
+    server.get(prefix + '/:username', UserController.one);
 
     /**
      * UPDATE
      */
-    server.put('/api/v1/users/:user_id', UserController.update);
+    server.put(prefix + '/:user_id', UserController.update);
 
     /**
      * DELETE
      */
-    server.del('/api/v1/users/:user_id', UserController.remove);
+    server.del(prefix + '/:user_id', UserController.remove);
 
 };

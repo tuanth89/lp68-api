@@ -491,6 +491,7 @@ function circulationContract(contractId, data) {
                 contractNew.dailyMoney = newDailyMoney;
                 contractNew.dailyMoneyPay = newDailyMoney;
                 contractNew.status = CONTRACT_CONST.MATURITY;
+                contractNew.transferDate = nowDate;
 
                 contractNew.isDaoHd = true;
                 // let dailyMoney = contractNew.actuallyCollectedMoney / (contractNew.loanDate === 0 ? 1 : contractNew.loanDate);

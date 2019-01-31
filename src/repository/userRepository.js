@@ -182,32 +182,6 @@ function save(data) {
     user.password = hashed.passwordHash;
     user.salt = hashed.salt;
 
-    if (user.fullName) {
-        if (!user.firstName || !user.lastName) {
-            let splitName = user.fullName.trim().split(" ");
-            user.firstName = splitName[splitName.length - 1];
-            user.lastName = user.fullName.substr(0, user.fullName.length - user.firstName.length).trim();
-        }
-
-        user.firstName = StringService.stripHtmlTag(user.firstName);
-        user.lastName = StringService.stripHtmlTag(user.lastName);
-        user.fullName = StringService.stripHtmlTag(user.fullName);
-    }
-
-    if (user.enabled) {
-        user.activateToken = "";
-        user.activateTokenDate = new Date();
-    } else {
-        user.activateToken = uuid.v4();
-        user.activateTokenDate = moment.utc().add(1, "days");
-    }
-
-    user.notificationSetting = {
-        notReceiveAnnouncements: !data.receiveNotify,
-        receiveInstructorAnnouncements: data.receiveNotify,
-        receivePromotions: data.receiveNotify
-    };
-
     user.save(function (error, user) {
         if (error) {
             console.error(error);
@@ -277,6 +251,92 @@ function findByUsernameOrEmail(usernameOrEmail) {
     return deferred.promise;
 }
 
+/**
+ *
+ * @param filter
+ * @returns {*|promise}
+ */
+function getListUserSystem(filter) {
+    const d = Q.defer();
+
+    let query = [];
+
+    if (filter.search) {
+        filter.search = StringService.getRegexSearchString(filter.search);
+        query.push({
+            $or: [
+                {
+                    name: {
+                        $regex: filter.search,
+                        $options: "i"
+                    }
+                },
+                {
+                    nameE: {
+                        $regex: filter.search,
+                        $options: "i"
+                    }
+                }
+            ]
+        });
+    }
+
+    query.push({
+        roles: {$nin: filter.roles}
+    });
+
+    let startRow = (filter.page - 1) * filter.per_page;
+
+    let aggregate = [
+        {
+            $match: query.length ? {
+                $and: query
+            } : {}
+        }
+
+    ];
+
+    aggregate.push({
+        $group: {
+            _id: null,
+            total: {
+                $sum: 1
+            },
+            docs: {
+                $push: '$$ROOT'
+            }
+        }
+    });
+
+    aggregate.push({
+        $project: {
+            total: 1,
+            docs: {
+                $slice: ['$docs', startRow, filter.per_page]
+            }
+        }
+    });
+
+    User.aggregate(aggregate).then(result => {
+        if (result.length === 0) {
+            d.resolve({
+                docs: [],
+                total: 0
+            });
+        }
+        result = result[0];
+        result.page = filter.page;
+        result.limit = filter.per_page;
+        result.pages = Math.ceil(result.total / filter.per_page);
+
+        d.resolve(result);
+    }).catch(err => {
+        d.reject(err);
+    });
+
+    return d.promise;
+}
+
 module.exports = {
     findById: findById,
     findByUsername: findByUsername,
@@ -286,4 +346,5 @@ module.exports = {
     remove: remove,
     findByEmail: findByEmail,
     findByUsernameOrEmail: findByUsernameOrEmail,
+    getListUserSystem: getListUserSystem
 };

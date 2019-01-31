@@ -2,10 +2,12 @@
 
 const errors = require('restify-errors');
 const UserRepository = require('../repository/userRepository');
+const UserConstant = require('../constant/userConstant');
 const AuthorizationService = require('../services/authorizationService');
 const path = require('path');
 const config = require('../../config');
 const uuid = require('uuid');
+const moment = require('moment');
 
 /**
  *
@@ -163,10 +165,92 @@ function remove(req, res, next) {
     ;
 }
 
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function createUserSystem(req, res, next) {
+    let data = req.body || {};
+    UserRepository.save(data)
+        .then(function (user) {
+            res.send(201);
+            next();
+        })
+        .catch(function (error) {
+            res.send(201,error);
+            next();
+            // return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateUserSystem(req, res, next) {
+    let data = req.body || {};
+
+    if (!data._id) {
+        data = Object.assign({}, data, {_id: req.params.user_id});
+    }
+
+    if (!data.birthday) {
+        return next(new errors.InvalidContentError("Ngày sinh không được để trống!"));
+    }
+
+    // if (data.birthday && data.birthday.includes('/')) {
+    //     data.birthday = moment(data.birthday, "DD/MM/YYYY").format("YYYY-MM-DD");
+    // }
+
+    let _user = AuthorizationService.getUser(req);
+    UserRepository.findById(_user.id)
+        .then(function (user) {
+            UserRepository.update(data._id, data)
+                .then(function () {
+                    res.send(200, user);
+                    next();
+                })
+                .catch(function (error) {
+                    return next(error);
+                })
+                .done();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+function listUserSystem(req, res, next) {
+    req.params.page = parseInt(req.params.page, 10) || config.pagination.page;
+    req.params.per_page = parseInt(req.params.per_page, 10) || config.pagination.limit;
+    req.params.roles = [UserConstant.ROLE_ROOT];
+
+    UserRepository.getListUserSystem(req.params)
+        .then(function (users) {
+            res.send(users);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     create: create,
     list: list,
     one: one,
     update: update,
     remove: remove,
+    createUserSystem: createUserSystem,
+    updateUserSystem: updateUserSystem,
+    listUserSystem: listUserSystem
 };

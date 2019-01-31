@@ -3,7 +3,7 @@
 const StoreController = require('../controllers/storeController');
 
 module.exports = function (server) {
-    let prefix = '/api/v1/stores';
+    let prefix = '/api/admin/v1/stores';
 
     /**
      * POST

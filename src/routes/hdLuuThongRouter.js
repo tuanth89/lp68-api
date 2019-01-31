@@ -3,7 +3,7 @@
 const HdLuuThongController = require('../controllers/hdLuuThongController');
 
 module.exports = function (server) {
-    let prefix = '/api/v1/hdLuuThongs';
+    let prefix = '/api/admin/v1/hdLuuThongs';
 
     /**
      * LIST

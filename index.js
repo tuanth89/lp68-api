@@ -13,6 +13,7 @@ const corsMiddleware = require('restify-cors-middleware');
 const log = require('./logger').log;
 const filterJsonRequest = require('./src/middlewares/filterJsonRequest');
 const filterUnauthorizedRequest = require('./src/middlewares/filterUnauthorizedRequest');
+const middleFeatureAccess = require('./src/middlewares/middlelFeatureAccess');
 /** ---------------------------END MODULE DEPENDENCIES -------------------------------*/
 
 /** --------------------------START ROUTERS -----------------------------------------*/
@@ -28,6 +29,8 @@ const storeRouter = require('./src/routes/storeRouter');
 
 const adminRouter = require('./src/routes/adminRouter');
 const rootRouter = require('./src/routes/rootRouter');
+const featureAccessRouter = require('./src/routes/featureAccessRouter');
+const roleRouter = require('./src/routes/roleRouter');
 
 /** ---------------------------END ROUTERS -----------------------------------------*/
 
@@ -86,7 +89,7 @@ server.use(filterUnauthorizedRequest.unless({
 }));
 
 server.use(filterJsonRequest);
-
+server.use(middleFeatureAccess);
 
 /** -----------------------------END MIDDLEWARE -----------------------------------*/
 
@@ -129,6 +132,8 @@ server.listen(config.port, () => {
         hdLuuThongRouter(server);
         contractLogRouter(server);
         storeRouter(server);
+        featureAccessRouter(server);
+        roleRouter(server);
 
         console.log(`Server is listening on port ${config.port}`);
     })

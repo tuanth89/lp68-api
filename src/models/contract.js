@@ -98,6 +98,10 @@ const ContractSchema = new mongoose.Schema({
     // Là khách mới hay cũ
     isCustomerNew: {
         type: Boolean
+    },
+    // Ngày chuyển
+    transferDate: {
+        type: Date
     }
 
 }, {

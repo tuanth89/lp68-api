@@ -1,7 +1,7 @@
 "use strict";
 
 const UserController = require('../controllers/userController');
-const prefix = '/api/v1/roots';
+const prefix = '/api/admin/v1/roots';
 
 module.exports = function (server) {
     /**

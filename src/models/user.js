@@ -15,15 +15,15 @@ const UserSchema = new mongoose.Schema({
     },
     username: {
         type: String,
-        validate: {
-            validator: function (v) {
-                // return /[a-zA-Z0-9]+[a-zA-Z0-9_\.]/.test(v);
-                return /^[a-zA-Z0-9.\-_$@*!]*$/.test(v);
-            },
-            message: 'Tên đăng nhập bao gồm: chữ cái không dấu, chữ số, dấu gạch chân và dấu chấm.'
-        },
-        required: true,
-        unique: true,
+        // validate: {
+        //     validator: function (v) {
+        //         // return /[a-zA-Z0-9]+[a-zA-Z0-9_\.]/.test(v);
+        //         return /^[a-zA-Z0-9.\-_$@*!]*$/.test(v);
+        //     },
+        //     message: 'Tên đăng nhập bao gồm: chữ cái không dấu, chữ số, dấu gạch chân và dấu chấm.'
+        // },
+        // required: true,
+        // unique: true,
         trim: true
     },
     password: {

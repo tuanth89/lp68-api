@@ -3,7 +3,7 @@
 const ContractLogController = require('../controllers/contractLogController');
 
 module.exports = function (server) {
-    let prefix = '/api/v1/contractLogs';
+    let prefix = '/api/admin/v1/contractLogs';
 
     /**
      * LIST

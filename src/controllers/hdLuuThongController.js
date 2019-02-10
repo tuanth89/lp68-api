@@ -35,12 +35,20 @@ function list(req, res, next) {
  * @param next
  */
 function listByDate(req, res, next) {
-    let date = req.params.date || new Date();
-    let status = parseInt(req.params.status);
-    if (status === undefined || status === null)
-        status = -1;
+    // let date = req.params.date || new Date();
+    // let status = parseInt(req.params.status);
+    // if (status === undefined || status === null)
+    //     status = -1;
 
-    HdLuuThongRepository.getListByDate(date, status)
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+    req.params.roles = _user.userRoles;
+
+    HdLuuThongRepository.getListByDate(req.params)
         .then(function (contracts) {
             res.send(contracts);
             next();
@@ -151,21 +159,21 @@ function updateChotLai(req, res, next) {
             };
             EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
 
-            if (money > 0) {
-                HdLuuThongRepository.insertHdLuuThong(contractId, data)
-                    .then(function (contract) {
-                        res.send(201, true);
-                        next();
-                    })
-                    .catch(function (error) {
-                        return next(error);
-                    })
-                    .done();
-            }
-            else {
-                res.send(201, true);
-                next();
-            }
+            // if (money > 0) {
+            //     HdLuuThongRepository.insertHdLuuThong(contractId, data)
+            //         .then(function (contract) {
+            //             res.send(201, true);
+            //             next();
+            //         })
+            //         .catch(function (error) {
+            //             return next(error);
+            //         })
+            //         .done();
+            // }
+            // else {
+            res.send(201, true);
+            next();
+            // }
         })
         .catch(function (error) {
             return next(error);
@@ -193,17 +201,21 @@ function updateThuVe(req, res, next) {
         contractStatus: data.statusContract,
         luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED
     };
+
     EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
 
-    HdLuuThongRepository.insertHdLuuThong(contractId, data)
-        .then(function (contract) {
-            res.send(201, true);
-            next();
-        })
-        .catch(function (error) {
-            return next(error);
-        })
-        .done();
+    res.send(201, true);
+    next();
+
+    // HdLuuThongRepository.insertHdLuuThong(contractId, data)
+    //     .then(function (contract) {
+    //         res.send(201, true);
+    //         next();
+    //     })
+    //     .catch(function (error) {
+    //         return next(error);
+    //     })
+    //     .done();
     // })
     // .catch(function (error) {
     //     return next(error);

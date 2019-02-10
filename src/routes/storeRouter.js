@@ -1,6 +1,7 @@
 "use strict";
 
 const StoreController = require('../controllers/storeController');
+const UserController = require('../controllers/userController');
 
 module.exports = function (server) {
     let prefix = '/api/admin/v1/stores';
@@ -14,6 +15,8 @@ module.exports = function (server) {
      * LIST
      */
     server.get(prefix, StoreController.list);
+    server.get(prefix + '/listForUser', StoreController.listForUser);
+    server.get(prefix + '/listUser', UserController.listUser);
 
     /**
      * GET

@@ -6,6 +6,8 @@ const {actions} = require("../constant/permission");
 module.exports = function (server) {
     let prefix = '/api/admin/v1/customers';
     const resource = "customer";
+    const resourceContract = "contract";
+
     /**
      * POST
      */
@@ -29,7 +31,7 @@ module.exports = function (server) {
      */
     server.get({
         path: prefix + '/list/autoComplete',
-        actions: [`${resource}.${actions.list}`]
+        actions: [`${resourceContract}.${actions.list}`]
     }, CustomerController.listAutoComplete);
 
     /**

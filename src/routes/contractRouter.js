@@ -17,8 +17,13 @@ module.exports = function (server) {
      * POST
      */
     server.post(prefix, ContractController.insertOrUpdateBulk);
-    server.put(prefix + '/circulation/update', ContractController.updateDailyMoneyBulk);
     server.post(prefix + '/:contractId/circulationContract', ContractController.circulationContract);
+
+    /**
+     * PUT
+     */
+    server.put(prefix + '/:contractId/updateTotalMoneyPaid', ContractController.updateTotalMoneyPaid);
+    server.put(prefix + '/circulation/update', ContractController.updateDailyMoneyBulk);
 
     /**
      * GET

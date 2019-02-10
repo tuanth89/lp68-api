@@ -89,12 +89,6 @@ const ContractSchema = new mongoose.Schema({
         default: CONTRACT_CONST.NEW,
         required: true
     },
-    creator: {
-        type: ObjectId
-    },
-    lastUserUpdate: {
-        type: ObjectId
-    },
     // Là khách mới hay cũ
     isCustomerNew: {
         type: Boolean
@@ -102,7 +96,18 @@ const ContractSchema = new mongoose.Schema({
     // Ngày chuyển
     transferDate: {
         type: Date
-    }
+    },
+    // Thuộc cửa hàng nào
+    storeId: {
+        type: ObjectId
+    },
+    // Người tạo
+    creator: {
+        type: ObjectId
+    },
+    lastUserUpdate: {
+        type: ObjectId
+    },
 
 }, {
     minimize: false

@@ -24,6 +24,16 @@ const StoreSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    staffs: [{
+        type: ObjectId,
+        ref: "User"
+    }],
+    ownStore: {
+        type: ObjectId
+    },
+    accountant: {
+        type: ObjectId
     }
 }, {
     minimize: false

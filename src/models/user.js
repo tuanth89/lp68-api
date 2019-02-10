@@ -38,16 +38,15 @@ const UserSchema = new mongoose.Schema({
         default: '',
         trim: true
     },
-    storeId: {
-        type: ObjectId
-    },
     enabled: {
         type: Boolean,
         default: true
     },
+    title: {
+        type: String
+    },
     address: {
-        type: String,
-        default: '',
+        type: String
     },
     phone: {
         type: Number
@@ -55,9 +54,19 @@ const UserSchema = new mongoose.Schema({
     photo: {
         type: String
     },
+    dateIn: {
+        type: Date
+    },
     roles: {
         type: Array,
         default: []
+    },
+    gender: {
+        type: Number
+    },
+    isAccountant: {
+        type: Boolean,
+        default: false
     }
 }, {
     minimize: false

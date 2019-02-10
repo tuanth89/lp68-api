@@ -2,8 +2,10 @@
 
 const errors = require('restify-errors');
 const StoreRepository = require('../repository/storeRepository');
+const UserRepository = require('../repository/userRepository');
 const AuthorizationService = require('../services/authorizationService');
 const config = require('../../config');
+const UserConstant = require('../constant/userConstant');
 
 /**
  *
@@ -66,6 +68,38 @@ function list(req, res, next) {
  * @param res
  * @param next
  */
+function listForUser(req, res, next) {
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+
+    UserRepository.findById(_user.id)
+        .then((userItem) => {
+            StoreRepository.getListForUser(userItem._id, userItem.isAccountant, userItem.roles.indexOf(UserConstant.ROLE_ROOT) >= 0)
+                .then(function (stores) {
+                    res.send(stores);
+                    next();
+                })
+                .catch(function (error) {
+                    return next(error);
+                })
+                .done();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
 function one(req, res, next) {
     StoreRepository.findById(req.params.storeId)
         .then(function (user) {
@@ -91,6 +125,12 @@ function update(req, res, next) {
     let data = req.body || {};
 
     let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+
     StoreRepository.findById(data._id)
         .then(function (user) {
 
@@ -154,6 +194,7 @@ function remove(req, res, next) {
 module.exports = {
     create: create,
     list: list,
+    listForUser: listForUser,
     one: one,
     update: update,
     remove: remove,

@@ -11,6 +11,7 @@ const _ = require('lodash');
 const StringService = require('../services/stringService');
 const CONTRACT_CONST = require('../constant/contractConstant');
 const CONTRACT_OTHER_CONTANST = require('../constant/contractOtherConstant');
+const USER_CONSTANT = require('../constant/userConstant');
 
 /**
  *
@@ -71,11 +72,15 @@ Date.prototype.addDays = function (days) {
 };
 /**
  *
- * @param date
- * @param type
+ * @param params
  * @returns {*|promise}
  */
-function getListByDate(date, type) {
+function getListByDate(params) {
+    let date = params.date || new Date();
+    let type = params.type || -1;
+    let storeId = params.storeId || "";
+    let role = params.roles || [];
+
     const deferred = Q.defer();
     let dateFilter = new Date(date);
     let dateFrom = "";
@@ -96,6 +101,10 @@ function getListByDate(date, type) {
             break;
     }
 
+    if (storeId && role.indexOf(USER_CONSTANT.ROLE_ROOT) < 0) {
+        query = Object.assign({}, query, {storeId: ObjectId(storeId)});
+    }
+
     Contract
         .find(query)
         // .select(Serializer.summary)
@@ -113,11 +122,14 @@ function getListByDate(date, type) {
 
 /**
  *
- * @param type
+ * @param params
  * @returns {*|promise}
  */
-function getListByType(type) {
+function getListByType(params) {
     const deferred = Q.defer();
+    let type = params.type || -1;
+    let storeId = params.storeId || "";
+    let role = params.roles;
 
     let query = {};
     switch (parseInt(type)) {
@@ -133,12 +145,28 @@ function getListByType(type) {
         case CONTRACT_CONST.ESCAPE:
             query = {status: CONTRACT_CONST.ESCAPE};
             break;
-        case CONTRACT_CONST.END:
-            query = {status: CONTRACT_CONST.END};
-            break;
         case CONTRACT_CONST.STAND:
             query = {status: CONTRACT_CONST.STAND};
             break;
+        case CONTRACT_CONST.END:
+            query = {
+                $or: [{
+                    status: CONTRACT_CONST.END
+                }, {
+                    status: CONTRACT_CONST.MATURITY_END
+                }]
+            };
+            break;
+        case CONTRACT_CONST.ACCOUNTANT_END:
+            query = {status: CONTRACT_CONST.ACCOUNTANT_END};
+            break;
+        default:
+            query = {status: -1};
+            break;
+    }
+
+    if (storeId && role.indexOf(USER_CONSTANT.ROLE_ROOT) < 0) {
+        query.storeId = ObjectId(storeId);
     }
 
     Contract
@@ -207,17 +235,48 @@ function update(id, data) {
 /**
  *
  * @param id
- * @param status
+ * @param data
  * @returns {*|promise}
  */
-function updateStatus(id, status) {
+function updateStatus(id, data) {
     const deferred = Q.defer();
 
     Contract.findOneAndUpdate({
         _id: id
     }, {
         $set: {
-            status: status
+            status: data.status,
+            transferDate: moment.utc(new Date(), "YYYYMMDD"),
+            lastUserUpdate: data.userId
+        }
+    }, function (error, contract) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError("Not found"));
+            return deferred.promise;
+        } else {
+            deferred.resolve(contract);
+        }
+    });
+
+    return deferred.promise;
+}
+
+
+/**
+ *
+ * @param id
+ * @param status
+ * @returns {*|promise}
+ */
+function updateStatusTransferDate(id, status) {
+    const deferred = Q.defer();
+
+    Contract.findOneAndUpdate({
+        _id: id
+    }, {
+        $set: {
+            status: status,
+            transferDate: moment.utc(new Date(), "YYYYMMDD")
         }
     }, function (error, contract) {
         if (error) {
@@ -235,8 +294,9 @@ function updateStatus(id, status) {
 /**
  * Tạo mới hoặc Cập nhật số lượng lớn dữ liệu.
  * @param {Array} contracts
+ * @param {String} creatorId
  */
-function insertOrUpdateBulk(contracts) {
+function insertOrUpdateBulk(contracts, creatorId) {
     const deferred = Q.defer();
 
     let bulk = Contract.collection.initializeOrderedBulkOp();
@@ -255,6 +315,8 @@ function insertOrUpdateBulk(contracts) {
                         if (!contract._id) {
                             contract._id = new ObjectId();
                             // contract.createdAt = new Date();
+
+                            contract.creator = ObjectId(creatorId);
                         }
                         else {
                             contract.createdAt = new Date(contract.createdAt);
@@ -362,7 +424,7 @@ function updateTotalMoney(contracts) {
 }
 
 /**
- * Cập nhật tổng tiền đóng hàng ngày dạng bởi Id
+ * Cập nhật tổng tiền đóng hàng ngày bởi Id
  * @param {String} contractId
  * @param {int} totalMoneyPaid
  */
@@ -383,6 +445,52 @@ function updateTotalMoneyPaid(contractId, totalMoneyPaid) {
             deferred.resolve(contract);
         }
     });
+
+
+    return deferred.promise;
+}
+
+/**
+ * Cập nhật tổng tiền đóng hàng ngày bởi Id
+ * @param {String} contractId
+ * @param {int} totalMoneyPaid
+ * @param {String} lastUserUpdate
+ */
+function updateTotalMoneyPaidByUser(contractId, totalMoneyPaid, lastUserUpdate) {
+    const deferred = Q.defer();
+
+    Contract
+        .findOne({
+            _id: contractId
+        })
+        .exec(function (err, contract) {
+            if (err) {
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+                let totalMoney = contract.totalMoneyPaid + totalMoneyPaid;
+                let updateSet = {
+                    totalMoneyPaid: totalMoney,
+                    lastUserUpdate: lastUserUpdate
+                };
+
+                if (totalMoney < contract.actuallyCollectedMoney) {
+                    updateSet.status = CONTRACT_CONST.END;
+                }
+
+                Contract.update({
+                    _id: contractId
+                }, {
+                    $set: updateSet
+                }, function (error, contract) {
+                    if (error) {
+                        deferred.reject(new errors.InvalidContentError("Not found"));
+                        return deferred.promise;
+                    } else {
+                        deferred.resolve(contract);
+                    }
+                });
+            }
+        });
 
 
     return deferred.promise;
@@ -655,8 +763,10 @@ module.exports = {
     circulationContract: circulationContract,
     updateTotalMoney: updateTotalMoney,
     updateTotalMoneyPaid: updateTotalMoneyPaid,
+    updateTotalMoneyPaidByUser: updateTotalMoneyPaidByUser,
     getListByType: getListByType,
     updateStatus: updateStatus,
+    updateStatusTransferDate: updateStatusTransferDate,
     getListByCustomer: getListByCustomer,
     getDashboardStatistic: getDashboardStatistic
 

@@ -48,9 +48,10 @@ module.exports = {
 
         //Quản lý hợp đồng
         "contract.list",
-        "contract.create",
+        // "contract.create",
         "contract.update",
         "contract.remove",
+        'contract.viewDate',
 
         //Quản lý cửa hàng
         "store.list",

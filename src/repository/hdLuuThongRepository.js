@@ -11,6 +11,7 @@ const _ = require('lodash');
 const StringService = require('../services/stringService');
 const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
 const CONTRACT_CONST = require('../constant/contractConstant');
+const USER_CONSTANT = require('../constant/userConstant');
 
 /**
  *
@@ -72,12 +73,18 @@ Date.prototype.addDays = function (days) {
 };
 /**
  *
- * @param date
- * @param status
+ * @param params
  * @returns {*|promise}
  */
-function getListByDate(date, status) {
+function getListByDate(params) {
     const deferred = Q.defer();
+    let date = params.date || new Date();
+    let status = parseInt(params.status);
+    if (status === undefined || status === null)
+        status = -1;
+    let storeId = params.storeId || "";
+    let role = params.roles || [];
+
     let dateFilter = new Date(date);
 
     let dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth(), dateFilter.getDate(), 0, 0, 0);
@@ -130,6 +137,7 @@ function getListByDate(date, status) {
                 loanEndDate: "$contract.loanEndDate",
                 contractDate: "$contract.createdAt",
                 contractStatus: "$contract.status",
+                storeId: "$contract.storeId",
                 moneyHavePay: 1,
                 moneyPaid: 1,
                 status: 1,
@@ -137,8 +145,14 @@ function getListByDate(date, status) {
                 totalHavePay: {$subtract: ["$contract.actuallyCollectedMoney", "$contract.totalMoneyPaid"]}
             }
         }
-        , {$sort: {contractStatus: 1}}
+        // , {$sort: {contractStatus: 1}}
     ];
+
+    if (storeId && role.indexOf(USER_CONSTANT.ROLE_ROOT) < 0) {
+        query.push({$match: {storeId: ObjectId(storeId)}});
+    }
+
+    query.push({$sort: {contractStatus: 1}});
 
     HdLuuThong
         .aggregate(query)
@@ -336,6 +350,8 @@ function updateMany(data) {
         //     dailyMoneyPay += (totalMoneyHavePayNow - totalMoneyPaid);
         // }
 
+        let contractUpdateSet = {totalMoneyPaid: totalMoneyPaid};
+
         if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
             // Tạo bản ghi lưu thông ngày tiếp theo
             let luuthong = new HdLuuThong();
@@ -350,6 +366,10 @@ function updateMany(data) {
             luuthong.createdAt = contractItem.createdAt;
             contracts.push(luuthong);
         }
+        else // Nếu tiền đóng đủ và hết
+        {
+            contractUpdateSet.status = CONTRACT_CONST.END;
+        }
 
         bulkHdLuuThong.find({_id: ObjectId(contractItem._id)})
             .update({
@@ -361,7 +381,7 @@ function updateMany(data) {
             });
 
         bulkContract.find({_id: ObjectId(contractItem.contractId)})
-            .update({$set: {totalMoneyPaid: totalMoneyPaid}});
+            .update({$set: contractUpdateSet});
     });
 
 

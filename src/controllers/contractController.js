@@ -15,16 +15,22 @@ const _ = require('lodash');
  * @returns {*}
  */
 function insertOrUpdateBulk(req, res, next) {
-    let data = req.body || {};
-    let customerArr = [];
+    let data = req.body;
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
 
+    let customerArr = [];
     _.forEach(data, (item) => {
         customerArr.push(item.customer);
     });
 
     CustomerRepository.updateBulk(customerArr)
         .then((customers) => {
-            ContractRepository.insertOrUpdateBulk(data)
+            ContractRepository.insertOrUpdateBulk(data, _user.id)
                 .then(function (contracts) {
                     // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
                     EventDispatcher.newContractAddedListener(contracts);
@@ -68,9 +74,17 @@ function list(req, res, next) {
  * @param next
  */
 function listByDate(req, res, next) {
-    let date = req.params.date || new Date();
-    let type = req.params.type || -1;
-    ContractRepository.getListByDate(date, type)
+    // let date = req.params.date || new Date();
+    // let type = req.params.type || -1;
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+    req.params.roles = _user.userRoles;
+
+    ContractRepository.getListByDate(req.params)
         .then(function (contracts) {
             res.send(contracts);
             next();
@@ -118,8 +132,15 @@ function listByCustomer(req, res, next) {
  * @param next
  */
 function listByType(req, res, next) {
-    let type = req.params.type || -1;
-    ContractRepository.getListByType(type)
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+    req.params.roles = _user.userRoles;
+
+    ContractRepository.getListByType(req.params)
         .then(function (contracts) {
             res.send(contracts);
             next();
@@ -182,8 +203,15 @@ function update(req, res, next) {
 function updateStatus(req, res, next) {
     let data = req.body || {};
 
-    // let _user = AuthorizationService.getUser(req);
-    ContractRepository.updateStatus(req.params.contractId, data.status)
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+    data.userId = _user.id;
+
+    ContractRepository.updateStatus(req.params.contractId, data)
         .then(function () {
             res.send(200);
             next();
@@ -281,6 +309,34 @@ function dashboardStatistic(req, res, next) {
         .done();
 }
 
+/**
+ * Cập nhật tổng tiền khách hàng đã đóng
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateTotalMoneyPaid(req, res, next) {
+    let data = req.body || {};
+
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+
+    ContractRepository.updateTotalMoneyPaidByUser(req.params.contractId, data.totalMoneyPaid, _user.id)
+        .then(function () {
+            res.send(200);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     insertOrUpdateBulk: insertOrUpdateBulk,
     list: list,
@@ -293,5 +349,6 @@ module.exports = {
     updateDailyMoneyBulk: updateDailyMoneyBulk,
     circulationContract: circulationContract,
     updateStatus: updateStatus,
-    dashboardStatistic: dashboardStatistic
+    dashboardStatistic: dashboardStatistic,
+    updateTotalMoneyPaid: updateTotalMoneyPaid
 };

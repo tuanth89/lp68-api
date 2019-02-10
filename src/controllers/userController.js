@@ -75,9 +75,6 @@ function list(req, res, next) {
 function one(req, res, next) {
     UserRepository.findByUsername(req.params.username)
         .then(function (user) {
-            if (user && user.meduRateScore > 0) {
-                user.rateScore = user.meduRateScore;
-            }
 
             res.send(user);
             next();
@@ -244,6 +241,18 @@ function listUserSystem(req, res, next) {
         .done();
 }
 
+function listUser(req, res, next) {
+    UserRepository.getListUser()
+        .then(function (users) {
+            res.send(users);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     create: create,
     list: list,
@@ -252,5 +261,6 @@ module.exports = {
     remove: remove,
     createUserSystem: createUserSystem,
     updateUserSystem: updateUserSystem,
-    listUserSystem: listUserSystem
+    listUserSystem: listUserSystem,
+    listUser: listUser
 };

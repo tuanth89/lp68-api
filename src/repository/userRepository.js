@@ -145,16 +145,16 @@ function update(id, data) {
         User.findOneAndUpdate({
             _id: id
         }, data, {
-                new: true,
-                runValidators: true
-            }, function (error, user) {
-                if (error) {
-                    deferred.reject(new errors.InvalidContentError("Not found"));
-                    return deferred.promise;
-                } else {
-                    deferred.resolve(user);
-                }
-            });
+            new: true,
+            runValidators: true
+        }, function (error, user) {
+            if (error) {
+                deferred.reject(new errors.InvalidContentError("Not found"));
+                return deferred.promise;
+            } else {
+                deferred.resolve(user);
+            }
+        });
     } catch (err) {
         deferred.resolve(user);
     }
@@ -237,6 +237,7 @@ function findByUsernameOrEmail(usernameOrEmail) {
                 email: usernameOrEmail
             }]
         })
+        // .findOne({email: usernameOrEmail})
         .exec(function (err, user) {
             if (err) {
                 console.error(err);
@@ -337,6 +338,25 @@ function getListUserSystem(filter) {
     return d.promise;
 }
 
+/**
+ *
+ * @returns {*|promise}
+ */
+function getListUser() {
+    const d = Q.defer();
+
+    User
+        .find()
+        .select(Serializer.forStore)
+        .then(result => {
+            d.resolve(result);
+        }).catch(err => {
+        d.reject(err);
+    });
+
+    return d.promise;
+}
+
 module.exports = {
     findById: findById,
     findByUsername: findByUsername,
@@ -346,5 +366,6 @@ module.exports = {
     remove: remove,
     findByEmail: findByEmail,
     findByUsernameOrEmail: findByUsernameOrEmail,
-    getListUserSystem: getListUserSystem
+    getListUserSystem: getListUserSystem,
+    getListUser: getListUser
 };

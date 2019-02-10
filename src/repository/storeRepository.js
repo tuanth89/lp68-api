@@ -5,6 +5,7 @@ const Q = require("q");
 const errors = require('restify-errors');
 const ObjectId = require('mongoose').Types.ObjectId;
 const _ = require('lodash');
+const Serializer = require('../serializers/store');
 const StringService = require('../services/stringService');
 
 /**
@@ -63,12 +64,12 @@ function getList(filter) {
 
     let query = [];
 
-    // filter by status
-    if (filter.status) {
-        query.push({
-            status: filter.status
-        });
-    }
+    // // filter by status
+    // if (filter.status) {
+    //     query.push({
+    //         status: filter.status
+    //     });
+    // }
 
     let startRow = (filter.page - 1) * filter.per_page;
 
@@ -78,9 +79,9 @@ function getList(filter) {
                 $and: query
             } : {}
         },
-        // {
-        //     $sort: sort
-        // },
+        {
+            $sort: {createdAt: -1}
+        },
         {
             $group: {
                 _id: null,
@@ -119,6 +120,40 @@ function getList(filter) {
         })
         .catch(err => {
             deferred.reject(err);
+        });
+
+    return deferred.promise;
+}
+
+/**
+ * @param userId
+ * @param isAccountant
+ * @param isRoot
+ * @returns {*|promise}
+ */
+function getListForUser(userId, isAccountant, isRoot) {
+    const deferred = Q.defer();
+
+    let query = {isActive: true};
+    if (isAccountant) {
+        query = Object.assign({}, query, {accountant: userId});
+    }
+    else if (isRoot) {
+        
+    }
+    else {
+        query = Object.assign({}, query, {staffs: userId});
+    }
+
+    Store
+        .find(query)
+        .select(Serializer.list)
+        .exec(function (err, stores) {
+            if (err) {
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+                deferred.resolve(stores);
+            }
         });
 
     return deferred.promise;
@@ -243,6 +278,7 @@ function remove(id) {
 module.exports = {
     findById: findById,
     getList: getList,
+    getListForUser: getListForUser,
     update: update,
     save: save,
     remove: remove

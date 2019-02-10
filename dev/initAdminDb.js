@@ -92,14 +92,15 @@ let featureAccesses = [
         "name": "Hợp đồng",
         "friendlyName": "contract",
         "priority": 0,
-        "actions": [{
-            "routeName": "contract.list",
-            "roles": [
-                "super-admin"
-            ]
-        },
+        "actions": [
             {
-                "routeName": "contract.create",
+                "routeName": "contract.list",
+                "roles": [
+                    "super-admin"
+                ]
+            },
+            {
+                "routeName": "contract.viewDate",
                 "roles": [
                     "super-admin"
                 ]

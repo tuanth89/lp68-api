@@ -160,6 +160,27 @@ function getListForUser(userId, isAccountant, isRoot) {
 }
 
 /**
+ * @returns {*|promise}
+ */
+function getListActive() {
+    const deferred = Q.defer();
+
+    let query = {isActive: true};
+    Store
+        .find(query)
+        .select(Serializer.listActive)
+        .exec(function (err, stores) {
+            if (err) {
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+                deferred.resolve(stores);
+            }
+        });
+
+    return deferred.promise;
+}
+
+/**
  *
  * @param id
  * @param data
@@ -275,10 +296,33 @@ function remove(id) {
     return deferred.promise;
 }
 
+/**
+ * @param storeId
+ * @returns {*|promise}
+ */
+function getListUserByStore(storeId) {
+    const d = Q.defer();
+    let query = {_id: storeId};
+
+    Store
+        .findOne(query)
+        .populate("staffs", '_id fullName')
+        .select(Serializer.listByStore)
+        .then(result => {
+            d.resolve(result);
+        }).catch(err => {
+        d.reject(err);
+    });
+
+    return d.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
     getListForUser: getListForUser,
+    getListActive: getListActive,
+    getListUserByStore: getListUserByStore,
     update: update,
     save: save,
     remove: remove

@@ -6,6 +6,7 @@ const Mixed = mongoose.Schema.Types.Mixed;
 const ObjectId = mongoose.Schema.Types.ObjectId;
 require('mongoose-type-email');
 const validate = require('mongoose-validator');
+const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
 
 const UserSchema = new mongoose.Schema({
     email: {
@@ -67,6 +68,15 @@ const UserSchema = new mongoose.Schema({
     isAccountant: {
         type: Boolean,
         default: false
+    },
+    limitMoney: {
+        type: Number,
+        enum: [
+            CONTRACT_OTHER_CONST.LIMIT_MONEY.CMT_SOHK_PHOTO,
+            CONTRACT_OTHER_CONST.LIMIT_MONEY.CMT_REAL,
+            CONTRACT_OTHER_CONST.LIMIT_MONEY.CMT_SOHK_REAL,
+            CONTRACT_OTHER_CONST.LIMIT_MONEY.CMT_SOHK_DRIVE_LICENSE_REAL
+        ]
     }
 }, {
     minimize: false

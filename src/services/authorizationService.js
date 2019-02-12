@@ -19,7 +19,7 @@ function isAuthorized(currentUser, username) {
 
     if (
         !currentUser.hasOwnProperty('id') ||
-        !currentUser.hasOwnProperty('username') ||
+        // !currentUser.hasOwnProperty('username') ||
         !currentUser.hasOwnProperty('email') ||
         !currentUser.hasOwnProperty('userRoles')
     ) {

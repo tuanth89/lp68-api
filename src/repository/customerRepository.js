@@ -39,13 +39,15 @@ function findById(id) {
 }
 
 /**
+ * @param params
  * @returns {*|promise}
  */
-function getList() {
+function getList(params) {
     const deferred = Q.defer();
+    let storeId = params.storeId;
 
     Customer
-        .find({})
+        .find({storeId: storeId})
         // .select(Serializer.summary)
         .exec(function (error, users) {
             if (error) {
@@ -60,13 +62,15 @@ function getList() {
 }
 
 /**
+ * @param params
  * @returns {*|promise}
  */
-function getListAutoComplete() {
+function getListAutoComplete(params) {
     const deferred = Q.defer();
+    let storeId = params.storeId;
 
     Customer
-        .find({})
+        .find({storeId: storeId})
         .select(Serializer.sourceList)
         .exec(function (error, users) {
             if (error) {
@@ -198,7 +202,7 @@ function updateBulk(customers) {
         let customerItem = new Customer(item);
 
         bulk.find({_id: ObjectId(customerItem._id)})
-            .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+            // .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
             .updateOne(customerItem);
     });
 

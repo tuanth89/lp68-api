@@ -55,7 +55,7 @@ module.exports = {
 
         //Quản lý cửa hàng
         "store.list",
-        "store.create",
+        // "store.create",
         "store.update",
         "store.remove",
 

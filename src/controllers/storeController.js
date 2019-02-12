@@ -51,8 +51,8 @@ function list(req, res, next) {
     req.params.per_page = parseInt(req.params.per_page) || config.pagination.limit;
 
     StoreRepository.getList(req.params)
-        .then(function (users) {
-            res.send(users);
+        .then(function (stores) {
+            res.send(stores);
             next();
         })
         .catch(function (error) {
@@ -102,8 +102,8 @@ function listForUser(req, res, next) {
  */
 function one(req, res, next) {
     StoreRepository.findById(req.params.storeId)
-        .then(function (user) {
-            res.send(user);
+        .then(function (store) {
+            res.send(store);
             next();
         })
         .catch(function (error) {
@@ -133,10 +133,9 @@ function update(req, res, next) {
 
     StoreRepository.findById(data._id)
         .then(function (user) {
-
-            if (!AuthorizationService.isAuthorized(_user, user.username)) {
-                return next(new errors.ForbiddenError('Resource not found or you do not have enough right'))
-            }
+            // if (!AuthorizationService.isAuthorized(_user, user.username)) {
+            //     return next(new errors.ForbiddenError('Resource not found or you do not have enough right'))
+            // }
             StoreRepository.update(data._id, data)
                 .then(function () {
                     res.send(200, user);
@@ -191,10 +190,37 @@ function remove(req, res, next) {
     ;
 }
 
+function listActive(req, res, next) {
+    StoreRepository.getListActive()
+        .then(function (stores) {
+            res.send(stores);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+function listUserByStore(req, res, next) {
+    let storeId = req.params.storeId || "";
+    StoreRepository.getListUserByStore(storeId)
+        .then(function (stores) {
+            res.send(stores);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     create: create,
     list: list,
     listForUser: listForUser,
+    listActive: listActive,
+    listUserByStore: listUserByStore,
     one: one,
     update: update,
     remove: remove,

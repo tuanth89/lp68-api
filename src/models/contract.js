@@ -43,6 +43,10 @@ const ContractSchema = new mongoose.Schema({
     customer: {
         type: Mixed
     },
+    customerId: {
+        type: ObjectId,
+        ref: "Customer"
+    },
     /**
      * Số tiền vay.
      */
@@ -96,10 +100,6 @@ const ContractSchema = new mongoose.Schema({
     // Ngày chuyển
     transferDate: {
         type: Date
-    },
-    // Thuộc cửa hàng nào
-    storeId: {
-        type: ObjectId
     },
     // Người tạo
     creator: {

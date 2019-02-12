@@ -58,7 +58,8 @@ module.exports = function (server) {
                                 fullName: user.fullName,
                                 email: user.email,
                                 phone: user.phone,
-                                photo: user.photo
+                                photo: user.photo,
+                                isAccountant: user.isAccountant
                             });
                             next();
                         }
@@ -112,7 +113,8 @@ module.exports = function (server) {
                             fullName: userNewest.fullName,
                             email: userNewest.email,
                             phone: userNewest.phone,
-                            photo: userNewest.photo
+                            photo: userNewest.photo,
+                            isAccountant: userNewest.isAccountant
                         });
                         next();
                     })

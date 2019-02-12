@@ -56,7 +56,22 @@ const UserSchema = new mongoose.Schema({
     district: {
         type: Mixed
     },
-
+    storeId: {
+        type: ObjectId,
+        ref: "Store"
+    },
+    visitor: {
+        type: ObjectId,
+        ref: "User"
+    },
+    creator: {
+        type: ObjectId,
+        ref: "User"
+    },
+    lastUserUpdate: {
+        type: ObjectId,
+        ref: "User"
+    }
 }, {
     minimize: false
 });

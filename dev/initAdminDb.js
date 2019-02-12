@@ -256,12 +256,12 @@ let featureAccesses = [
                 "super-admin"
             ]
         },
-            {
-                "routeName": "store.create",
-                "roles": [
-                    "super-admin"
-                ]
-            },
+            // {
+            //     "routeName": "store.create",
+            //     "roles": [
+            //         "super-admin"
+            //     ]
+            // },
             {
                 "routeName": "store.update",
                 "roles": [

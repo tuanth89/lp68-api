@@ -65,7 +65,7 @@ function list(req, res, next) {
  * @param next
  */
 function listAutoComplete(req, res, next) {
-    CustomerRepository.getListAutoComplete()
+    CustomerRepository.getListAutoComplete(req.params)
         .then(function (customers) {
             res.send(customers);
             next();

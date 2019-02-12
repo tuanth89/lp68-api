@@ -22,7 +22,7 @@ module.exports = function (server) {
      * LIST
      */
     server.get({
-        path: prefix,
+        path: prefix + '/:storeId/list',
         actions: [`${resource}.${actions.list}`]
     }, CustomerController.list);
 

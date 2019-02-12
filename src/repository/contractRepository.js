@@ -294,9 +294,8 @@ function updateStatusTransferDate(id, status) {
 /**
  * Tạo mới hoặc Cập nhật số lượng lớn dữ liệu.
  * @param {Array} contracts
- * @param {String} creatorId
  */
-function insertOrUpdateBulk(contracts, creatorId) {
+function insertOrUpdateBulk(contracts) {
     const deferred = Q.defer();
 
     let bulk = Contract.collection.initializeOrderedBulkOp();
@@ -315,8 +314,7 @@ function insertOrUpdateBulk(contracts, creatorId) {
                         if (!contract._id) {
                             contract._id = new ObjectId();
                             // contract.createdAt = new Date();
-
-                            contract.creator = ObjectId(creatorId);
+                            // contract.creator = ObjectId(creatorId);
                         }
                         else {
                             contract.createdAt = new Date(contract.createdAt);

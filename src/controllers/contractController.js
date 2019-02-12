@@ -28,24 +28,28 @@ function insertOrUpdateBulk(req, res, next) {
         customerArr.push(item.customer);
     });
 
-    CustomerRepository.updateBulk(customerArr)
-        .then((customers) => {
-            ContractRepository.insertOrUpdateBulk(data, _user.id)
-                .then(function (contracts) {
-                    // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
-                    EventDispatcher.newContractAddedListener(contracts);
+    // CustomerRepository.updateBulk(customerArr)
+    //     .then((customers) => {
+    ContractRepository.insertOrUpdateBulk(data)
+        .then(function (contracts) {
+            // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
+            EventDispatcher.newContractAddedListener(contracts);
 
-                    // Sinh các bản ghi log lưu vết cho các hợp đồng mới tạo
-                    EventDispatcher.createContractLogListener(contracts);
+            // Sinh các bản ghi log lưu vết cho các hợp đồng mới tạo
+            EventDispatcher.createContractLogListener(contracts);
 
-                    res.send(201, contracts);
-                    next();
-                });
+            res.send(201, contracts);
+            next();
         })
         .catch((error) => {
             return next(error);
         })
         .done();
+    // })
+    // .catch((error) => {
+    //     return next(error);
+    // })
+    // .done();
 
 }
 

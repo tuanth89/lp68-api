@@ -101,6 +101,10 @@ const ContractSchema = new mongoose.Schema({
     transferDate: {
         type: Date
     },
+    // Thuộc cửa hàng nào
+    storeId: {
+        type: ObjectId
+    },
     // Người tạo
     creator: {
         type: ObjectId

@@ -63,15 +63,15 @@ const UserSchema = new mongoose.Schema({
     visitor: {
         type: ObjectId,
         ref: "User"
-    },
-    creator: {
-        type: ObjectId,
-        ref: "User"
-    },
-    lastUserUpdate: {
-        type: ObjectId,
-        ref: "User"
     }
+    // creator: {
+    //     type: ObjectId,
+    //     ref: "User"
+    // },
+    // lastUserUpdate: {
+    //     type: ObjectId,
+    //     ref: "User"
+    // }
 }, {
     minimize: false
 });

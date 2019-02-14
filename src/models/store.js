@@ -17,6 +17,9 @@ const StoreSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    nameUnsign: {
+        type: String,
+    },
     description: {
         type: String,
         trim: true

@@ -55,13 +55,13 @@ module.exports = {
 
         //Quản lý cửa hàng
         "store.list",
-        // "store.create",
+        "store.create",
         "store.update",
         "store.remove",
 
         //Quản lý khách hàng
         "customer.list",
-        "customer.create",
+        // "customer.create",
         "customer.update",
         "customer.remove",
 
@@ -71,11 +71,11 @@ module.exports = {
         "store.update",
         "store.remove",
 
-        // Quản lý phế
-        "tinhphe.list",
-        "tinhphe.create",
-        "tinhphe.update",
-        "tinhphe.remove",
+        // Quản lý cấu hình phế
+        "pheConfig.list",
+        "pheConfig.create",
+        "pheConfig.update",
+        "pheConfig.remove",
 
         // Thống kê
         "statistic.list"

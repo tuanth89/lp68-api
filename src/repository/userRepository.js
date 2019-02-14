@@ -141,6 +141,10 @@ function update(id, data) {
         data.salt = hashed.salt;
     }
 
+    if (data.fullName) {
+        data.fullNameUnsign = StringService.removeSignInString(data.fullName);
+    }
+
     try {
         User.findOneAndUpdate({
             _id: id
@@ -176,6 +180,10 @@ function save(data) {
     if (!user.fullName || !user.password || !user.email) {
         deferred.reject(new errors.InvalidContentError('"name", "password" và "email" không được để trống!'));
         return deferred.promise;
+    }
+
+    if (user.fullName) {
+        user.fullNameUnsign = StringService.removeSignInString(user.fullName);
     }
 
     let hashed = HashService.saltHashPassword(user.password);
@@ -267,13 +275,13 @@ function getListUserSystem(filter) {
         query.push({
             $or: [
                 {
-                    name: {
+                    fullName: {
                         $regex: filter.search,
                         $options: "i"
                     }
                 },
                 {
-                    nameE: {
+                    fullNameUnsign: {
                         $regex: filter.search,
                         $options: "i"
                     }

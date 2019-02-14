@@ -131,12 +131,12 @@ let featureAccesses = [
                 "super-admin"
             ]
         },
-            {
-                "routeName": "customer.create",
-                "roles": [
-                    "super-admin"
-                ]
-            },
+            // {
+            //     "routeName": "customer.create",
+            //     "roles": [
+            //         "super-admin"
+            //     ]
+            // },
             {
                 "routeName": "customer.update",
                 "roles": [
@@ -256,12 +256,12 @@ let featureAccesses = [
                 "super-admin"
             ]
         },
-            // {
-            //     "routeName": "store.create",
-            //     "roles": [
-            //         "super-admin"
-            //     ]
-            // },
+            {
+                "routeName": "store.create",
+                "roles": [
+                    "super-admin"
+                ]
+            },
             {
                 "routeName": "store.update",
                 "roles": [
@@ -281,7 +281,7 @@ let featureAccesses = [
         "name": "Quản lý nhóm quyền",
         "friendlyName": "role",
         "priority": 6,
-        "hidden": true,
+        // "hidden": true,
         "actions": [
             {
                 "routeName": "role.list",
@@ -303,6 +303,38 @@ let featureAccesses = [
             },
             {
                 "routeName": "role.remove",
+                "roles": [
+                    "super-admin"
+                ]
+            }
+        ]
+    },
+    {
+        "groupName": "Cấu hình phế",
+        "name": "Cấu hình phế",
+        "friendlyName": "pheConfig",
+        "priority": 7,
+        "actions": [
+            {
+                "routeName": "pheConfig.list",
+                "roles": [
+                    "super-admin"
+                ]
+            },
+            {
+                "routeName": "pheConfig.create",
+                "roles": [
+                    "super-admin"
+                ]
+            },
+            {
+                "routeName": "pheConfig.update",
+                "roles": [
+                    "super-admin"
+                ]
+            },
+            {
+                "routeName": "pheConfig.remove",
                 "roles": [
                     "super-admin"
                 ]

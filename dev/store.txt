@@ -1,0 +1,107 @@
+[
+    {
+    		"storeId": "TD",
+    		"name": "Thủ Dầu",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "Q11",
+    		"name": "Quận 11",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "HM",
+    		"name": "Hóc Môn",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "Q1-5",
+    		"name": "Quận 1-5",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "BC",
+    		"name": "Bình Chánh",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "LA",
+    		"name": "Long An",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "LT",
+    		"name": "Long Thành",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "TĐ",
+    		"name": "Thủ Đức",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "BP",
+    		"name": "Bình Phước",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "Q2",
+    		"name": "Quận 2",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "CC",
+    		"name": "Củ Chi",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "TT",
+    		"name": "Tam Trinh",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "TL",
+    		"name": "Từ Liêm",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "NB",
+    		"name": "Nhà Bè",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "Q8",
+    		"name": "Quận 8",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "Q7",
+    		"name": "Quận 7",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "Q12",
+    		"name": "Quận 12",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "BR",
+    		"name": "Bà Rịa",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "DA",
+    		"name": "Dĩ An",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "BT",
+    		"name": "Bình Thạnh",
+    		"isActive": "1"
+    	},
+    	{
+    		"storeId": "XM",
+    		"name": "Xuyên Mộc",
+    		"isActive": "1"
+    	}
+]

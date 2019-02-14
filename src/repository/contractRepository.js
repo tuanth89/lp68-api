@@ -324,7 +324,7 @@ function insertOrUpdateBulk(contracts) {
 
                         if (!contract.contractNo) {
                             let nowDate = new Date();
-                            contract.contractNo = `${nowDate.getFullYear()}_${++count}`;
+                            contract.contractNo = `${nowDate.getFullYear().toString().substr(-2)}${++count}`;
                             contract.noIdentity = count;
                         }
                         contract.contractId = contract._id;

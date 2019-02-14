@@ -39,6 +39,9 @@ const UserSchema = new mongoose.Schema({
         default: '',
         trim: true
     },
+    fullNameUnsign:{
+        type: String
+    },
     enabled: {
         type: Boolean,
         default: true

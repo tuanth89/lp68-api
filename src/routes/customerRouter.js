@@ -13,7 +13,7 @@ module.exports = function (server) {
      */
     server.post({
         path: prefix,
-        actions: [`${resource}.${actions.create}`]
+        actions: [`${resource}.${actions.update}`]
     }, CustomerController.create);
     server.post(prefix + '/insert/new', CustomerController.createMany);
     server.post(prefix + '/:customerId/checkExists', CustomerController.checkExists);

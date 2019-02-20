@@ -22,7 +22,7 @@ module.exports = function (server) {
      * LIST
      */
     server.get({
-        path: prefix + '/:storeId/list',
+        path: prefix + '/list',
         actions: [`${resource}.${actions.list}`]
     }, CustomerController.list);
 
@@ -52,7 +52,7 @@ module.exports = function (server) {
      * DELETE
      */
     server.del({
-        path: prefix + '/:customerId',
+        path: prefix + '/:contractId',
         actions: [`${resource}.${actions.remove}`]
     }, CustomerController.remove);
 

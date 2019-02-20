@@ -232,6 +232,9 @@ function insertMany(data) {
     let luuthongList = [];
 
     data.forEach((contractItem) => {
+        let count = 1; // Khách vay đóng luôn vài ngày
+
+        let createdDate = new Date(contractItem.createdAt);
         let nextPayDate = new Date(contractItem.createdAt);
         nextPayDate.setDate(nextPayDate.getDate() + 1);
 
@@ -253,6 +256,8 @@ function insertMany(data) {
 
             // Nếu là tạo hợp đồng vay mới
             if (contractItem.createContractNew) {
+                let numOfPayDay = 0;
+
                 // Tính luôn lưu thông của ngày tạo hợp đồng mới
                 let luuthongCurrent = new HdLuuThong();
                 luuthongCurrent.contractId = contractItem.contractId;
@@ -265,10 +270,35 @@ function insertMany(data) {
                     luuthongCurrent.moneyHavePay = contractItem.dailyMoneyPay;
                     luuthongCurrent.moneyPaid = contractItem.dailyMoneyPay;
                 }
+                totalMoneyPaid += parseInt(luuthongCurrent.moneyPaid);
                 luuthongList.push(luuthongCurrent);
 
-                // Update tổng tiền đã dóng vào hợp đồng
-                ContractRepository.updateTotalMoneyPaid(contractItem._id, luuthongCurrent.moneyPaid);
+                // Nếu khách đóng luôn vài ngày khi tạo hợp đồng
+                if (!isNaN(parseFloat(contractItem.numOfPayDay)) && isFinite(contractItem.numOfPayDay)) {
+                    numOfPayDay = parseInt(contractItem.numOfPayDay);
+                    let payPaid = new HdLuuThong();
+                    while (count <= numOfPayDay) {
+                        let luuthongPaid = Object.assign({}, payPaid);
+                        luuthongPaid.contractId = contractItem.contractId;
+
+                        let date = new Date(createdDate);
+                        date.setDate(date.getDate() + count);
+                        luuthongPaid.createdAt = date;
+
+                        luuthongPaid.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+                        luuthongPaid.moneyHavePay = contractItem.dailyMoneyPay;
+                        luuthongPaid.moneyPaid = contractItem.dailyMoneyPay;
+                        totalMoneyPaid += parseInt(luuthongPaid.moneyPaid);
+
+                        luuthongList.push(luuthongPaid);
+                        count++;
+                    }
+
+                    nextPayDate.setDate(createdDate.getDate() + count);
+                }
+
+                // Update tổng tiền đã đóng vào hợp đồng
+                ContractRepository.updateTotalMoneyPaid(contractItem._id, totalMoneyPaid);
             }
         }
 
@@ -463,6 +493,28 @@ function remove(id) {
 
 /**
  *
+ * @param contractId
+ * @returns {*|promise}
+ */
+function removeByContractId(contractId) {
+    const deferred = Q.defer();
+
+    HdLuuThong.remove({
+        contractId: contractId
+    }, function (error) {
+        if (error) {
+            console.error(error);
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(true);
+        }
+    });
+
+    return deferred.promise;
+}
+
+/**
+ *
  * @param id
  * @param status
  * @returns {*|promise}
@@ -536,6 +588,7 @@ module.exports = {
     update: update,
     save: save,
     remove: remove,
+    removeByContractId: removeByContractId,
     insertMany: insertMany,
     saveMany: saveMany,
     updateMany: updateMany,

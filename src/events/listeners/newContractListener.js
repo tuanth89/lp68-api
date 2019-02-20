@@ -77,18 +77,18 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
 
     luuthongList.push(luuthong);
 
-    if (contractNew.isDaoHd) {
-        let luuThongDaoCurrent = new HdLuuThong();
-        luuThongDaoCurrent.contractId = contractNew._id;
-        luuThongDaoCurrent.createdAt = contractNew.createdAt;
-        luuThongDaoCurrent.moneyHavePay = contractNew.dailyMoney;
-        luuThongDaoCurrent.moneyPaid = contractNew.dailyMoney;
-        luuThongDaoCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
-        luuthongList.push(luuThongDaoCurrent);
-
-        // Update tổng tiền đã dóng vào hợp đồng
-        ContractRepository.updateTotalMoneyPaid(contractNew._id, luuThongDaoCurrent.moneyPaid);
-    }
+    // if (contractNew.isDaoHd) {
+    //     let luuThongDaoCurrent = new HdLuuThong();
+    //     luuThongDaoCurrent.contractId = contractNew._id;
+    //     luuThongDaoCurrent.createdAt = contractNew.createdAt;
+    //     luuThongDaoCurrent.moneyHavePay = contractNew.dailyMoney;
+    //     luuThongDaoCurrent.moneyPaid = contractNew.dailyMoney;
+    //     luuThongDaoCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+    //     luuthongList.push(luuThongDaoCurrent);
+    //
+    //     // Update tổng tiền đã dóng vào hợp đồng
+    //     ContractRepository.updateTotalMoneyPaid(contractNew._id, luuThongDaoCurrent.moneyPaid);
+    // }
 
     HdLuuThong.update({_id: hdLuuThongId}, {
         $set: {
@@ -115,10 +115,19 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
     // });
 }
 
+function removeAllByContract(contractId) {
+    HdLuuThongRepository.removeByContractId(contractId)
+        .catch((error) => {
+            log.error(error);
+        })
+        .done();
+}
+
 module.exports = {
     createContractLog: createContractLog,
     addMultiLogToContractLog: addMultiLogToContractLog,
     newContractAddedListener: newContractAddedListener,
     newContractLuuThongListener: newContractLuuThongListener,
-    updateAndNewLuuThong: updateAndNewLuuThong
+    updateAndNewLuuThong: updateAndNewLuuThong,
+    removeAllByContract: removeAllByContract
 };

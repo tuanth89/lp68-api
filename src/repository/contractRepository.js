@@ -193,7 +193,7 @@ function getListByCustomer(customerId) {
     const deferred = Q.defer();
 
     Contract
-        .find({"customer._id": ObjectId(customerId)})
+        .find({"customerId": ObjectId(customerId)})
         .select(Serializer.list)
         .exec(function (error, contracts) {
             if (error) {
@@ -348,6 +348,10 @@ function insertOrUpdateBulk(contracts) {
                         else {
                             // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
                             contract.createContractNew = true;
+                        }
+
+                        if (contract.customer) {
+                            contract.customer._id = ObjectId(contract.customer._id);
                         }
 
                         let item = new Contract(contract);
@@ -583,7 +587,8 @@ function circulationContract(contractId, data) {
 
                 let contractNew = new Contract();
                 contractNew.customer = data.customer;
-                contractNew.createdAt = moment.utc(data.contractDate, "YYYYMMDD");
+                contractNew.customerId = contractItem.customerId;
+                contractNew.createdAt = moment(data.contractDate, "YYYYMMDD").utc().format("YYYY-MM-DD");
                 contractNew.loanMoney = newLoanMoney;
                 contractNew.actuallyCollectedMoney = newActuallyCollectedMoney;
                 contractNew.loanDate = newLoanDate;
@@ -591,24 +596,27 @@ function circulationContract(contractId, data) {
                 contractNew.contractHistory.push(contractId);
                 contractNew.contractNo = `${nowDate.getFullYear()}_${++countIndetity}`;
                 contractNew.noIdentity = countIndetity;
-                let startDate = nowDate;
+                let startDate = new Date();
                 startDate.setDate(startDate.getDate() + contractNew.loanDate);
                 contractNew.loanEndDate = new Date(startDate);
                 contractNew.dailyMoney = newDailyMoney;
                 contractNew.dailyMoneyPay = newDailyMoney;
-                contractNew.status = CONTRACT_CONST.MATURITY;
+                contractNew.status = CONTRACT_CONST.NEW;
+                contractNew.storeId = contractItem.storeId;
+                contractNew.creator = contractItem.creator;
+                contractNew.isCustomerNew = contractItem.isCustomerNew;
                 contractNew.transferDate = nowDate;
 
-                contractNew.isDaoHd = true;
+                // contractNew.isDaoHd = true;
                 // let dailyMoney = contractNew.actuallyCollectedMoney / (contractNew.loanDate === 0 ? 1 : contractNew.loanDate);
                 // contractNew.dailyMoney = dailyMoney.toFixed();
 
-                let totalPaid = data.totalMoneyPaid + data.moneyPaid
-                // Thay đổi trạng thái hợp đồng cũ là kết thúc và cập nhật số tiền lưu thông đã đóng ngày hôm đó
+                let totalPaid = data.totalMoneyPaid + data.moneyPaid;
+                // Thay đổi trạng thái hợp đồng cũ là đáo.
                 Contract.update({_id: contractId}, {
                     $set: {
                         totalMoneyPaid: totalPaid,
-                        status: CONTRACT_CONST.END,
+                        status: CONTRACT_CONST.MATURITY,
                         updatedAt: new Date()
                     }
                 }, function (error, user) {
@@ -747,6 +755,55 @@ function getDashboardStatistic() {
     return deferred.promise;
 }
 
+/**
+ * @desc Kiểm tra khách hàng đã có hợp đồng nào chưa để xóa khách hàng
+ * @param customerId
+ */
+function checkCustomerContractToDel(customerId) {
+    const deferred = Q.defer();
+    let query = {};
+    if (StringService.isObjectId(customerId))
+        query = {customerId: customerId};
+
+    Contract.findOne(query, function (error, contract) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(contract);
+        }
+    });
+
+    return deferred.promise;
+}
+
+/**
+ * @desc Kiểm tra hợp đồng có đáo, .... ==> để xóa hợp đồng
+ * @param contractId
+ */
+function checkContractToDel(contractId) {
+    const deferred = Q.defer();
+    // let query = {$or: [
+    //     {
+    //         contractId: contractId,
+    //         contractHistory: { "$in" : [ObjectId(contractId)]}
+    //     }
+    // ]};
+
+    let query = {
+        _id: contractId,
+        contractHistory: {$exists: true, $ne: []}
+    };
+
+    Contract.findOne(query, function (error, contract) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(contract);
+        }
+    });
+
+    return deferred.promise;
+}
 
 module.exports = {
     findById: findById,
@@ -766,6 +823,8 @@ module.exports = {
     updateStatus: updateStatus,
     updateStatusTransferDate: updateStatusTransferDate,
     getListByCustomer: getListByCustomer,
-    getDashboardStatistic: getDashboardStatistic
+    getDashboardStatistic: getDashboardStatistic,
+    checkCustomerContractToDel: checkCustomerContractToDel,
+    checkContractToDel: checkContractToDel
 
 };

@@ -214,37 +214,37 @@ let featureAccesses = [
         }
         ]
     },
-    {
-        "groupName": "Tính phế",
-        "name": "Tính phế",
-        "friendlyName": "tinhphe",
-        "priority": 4,
-        "actions": [{
-            "routeName": "tinhphe.list",
-            "roles": [
-                "super-admin"
-            ]
-        },
-            {
-                "routeName": "tinhphe.create",
-                "roles": [
-                    "super-admin"
-                ]
-            },
-            {
-                "routeName": "tinhphe.update",
-                "roles": [
-                    "super-admin"
-                ]
-            },
-            {
-                "routeName": "tinhphe.remove",
-                "roles": [
-                    "super-admin"
-                ]
-            }
-        ]
-    },
+    // {
+    //     "groupName": "Tính phế",
+    //     "name": "Tính phế",
+    //     "friendlyName": "pheConfig",
+    //     "priority": 4,
+    //     "actions": [{
+    //         "routeName": "pheConfig.list",
+    //         "roles": [
+    //             "super-admin"
+    //         ]
+    //     },
+    //         {
+    //             "routeName": "pheConfig.create",
+    //             "roles": [
+    //                 "super-admin"
+    //             ]
+    //         },
+    //         {
+    //             "routeName": "pheConfig.update",
+    //             "roles": [
+    //                 "super-admin"
+    //             ]
+    //         },
+    //         {
+    //             "routeName": "pheConfig.remove",
+    //             "roles": [
+    //                 "super-admin"
+    //             ]
+    //         }
+    //     ]
+    // },
     {
         "groupName": "Cửa hàng",
         "name": "Cửa hàng",

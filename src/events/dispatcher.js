@@ -40,6 +40,12 @@ function updateStatusContractAndLuuThongListener(contract) {
     eventEmitter.emit('LP_UPDATE_CONTRACT_LUUTHONG_EVENT', contract);
 }
 
+function removeAllByContractListener(contract) {
+    eventEmitter.once('LP_REMOVE_ALL_BY_CONTRACT_EVENT', NewContractListener.removeAllByContract);
+
+    eventEmitter.emit('LP_REMOVE_ALL_BY_CONTRACT_EVENT', contract);
+}
+
 module.exports = {
     createContractLogListener: createContractLogListener,
     addMultiLogToContractLogListener: addMultiLogToContractLogListener,
@@ -47,4 +53,5 @@ module.exports = {
     newContractLuuThongListener: newContractLuuThongListener,
     updateAndNewLuuThongListener: updateAndNewLuuThongListener,
     updateStatusContractAndLuuThongListener: updateStatusContractAndLuuThongListener,
+    removeAllByContractListener: removeAllByContractListener
 };

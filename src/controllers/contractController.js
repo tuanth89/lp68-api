@@ -23,10 +23,10 @@ function insertOrUpdateBulk(req, res, next) {
         );
     }
 
-    let customerArr = [];
-    _.forEach(data, (item) => {
-        customerArr.push(item.customer);
-    });
+    // let customerArr = [];
+    // _.forEach(data, (item) => {
+    //     customerArr.push(item.customer);
+    // });
 
     // CustomerRepository.updateBulk(customerArr)
     //     .then((customers) => {
@@ -256,15 +256,29 @@ function updateDailyMoneyBulk(req, res, next) {
  */
 function remove(req, res, next) {
     // let _user = req.user;
-    ContractRepository.remove(req.params.user_id)
-        .then(function (deleted) {
-            res.send(204);
-            next();
+
+    let contractId = req.params.contractId;
+
+    ContractRepository.checkContractToDel(contractId)
+        .then((contract) => {
+            if (!contract) {
+                ContractRepository.remove(contractId)
+                    .then(function (deleted) {
+                        EventDispatcher.removeAllByContractListener(contractId);
+                        res.send(200, {removed: true});
+                        next();
+                    });
+            }
+            else {
+                res.send(200, {removed: false});
+                next();
+            }
         })
         .catch(function (error) {
             return next(error);
         })
         .done();
+
 }
 
 /**

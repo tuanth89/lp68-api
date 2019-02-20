@@ -34,9 +34,10 @@ const ContractSchema = new mongoose.Schema({
     /**
      * Lịch sử hợp đồng (_id contracts)
      */
-    contractHistory: {
-        type: Array
-    },
+    contractHistory: [{
+        type: ObjectId,
+        ref: "Contract"
+    }],
     // contractDate: {
     //     type: Date
     // },
@@ -111,8 +112,7 @@ const ContractSchema = new mongoose.Schema({
     },
     lastUserUpdate: {
         type: ObjectId
-    },
-
+    }
 }, {
     minimize: false
 });
@@ -122,6 +122,13 @@ const ContractSchema = new mongoose.Schema({
 //     email: 'text',
 //     disableReason: 'text'
 // });
+
+//Trạng thái của học viên: 1: Chưa kích hoạt, 2: Hoạt động, 3: Bị khóa
+ContractSchema.virtual('totalMoneyNeedPay').get(function () {
+   return this.actuallyCollectedMoney - this.totalMoneyPaid;
+});
+
+ContractSchema.set('toObject', { getters: true });
 
 ContractSchema.plugin(timestamps);
 ContractSchema.plugin(mongooseStringQuery);

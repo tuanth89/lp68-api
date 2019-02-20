@@ -10,6 +10,7 @@ const moment = require('moment');
 const ObjectId = require('mongoose').Types.ObjectId;
 const _ = require('lodash');
 const StringService = require('../services/stringService');
+const USER_CONSTANT = require('../constant/userConstant');
 
 /**
  *
@@ -301,8 +302,10 @@ function getListUserSystem(filter) {
             $match: query.length ? {
                 $and: query
             } : {}
+        },
+        {
+            $sort: {createdAt: -1}
         }
-
     ];
 
     aggregate.push({
@@ -354,7 +357,7 @@ function getListUser() {
     const d = Q.defer();
 
     User
-        .find()
+        .find({roles: {$nin: [USER_CONSTANT.ROLE_ROOT]}})
         .select(Serializer.forStore)
         .then(result => {
             d.resolve(result);

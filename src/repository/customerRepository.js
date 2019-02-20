@@ -7,6 +7,8 @@ const Serializer = require('../serializers/customer');
 const ObjectId = require('mongoose').Types.ObjectId;
 const _ = require('lodash');
 const StringService = require('../services/stringService');
+const USER_CONSTANT = require('../constant/userConstant');
+
 
 /**
  *
@@ -45,9 +47,13 @@ function findById(id) {
 function getList(params) {
     const deferred = Q.defer();
     let storeId = params.storeId;
+    let query = {};
+
+    if (StringService.isObjectId(storeId))
+        query = {storeId: storeId};
 
     Customer
-        .find({storeId: storeId})
+        .find(query)
         // .select(Serializer.summary)
         .exec(function (error, users) {
             if (error) {
@@ -68,9 +74,16 @@ function getList(params) {
 function getListAutoComplete(params) {
     const deferred = Q.defer();
     let storeId = params.storeId;
+    let role = params.roles;
+    // let isAccountant = params.isAccountant;
+    let query = {};
+
+    if (storeId) {
+        query.storeId = storeId;
+    }
 
     Customer
-        .find({storeId: storeId})
+        .find(query)
         .select(Serializer.sourceList)
         .exec(function (error, users) {
             if (error) {
@@ -202,7 +215,7 @@ function updateBulk(customers) {
         let customerItem = new Customer(item);
 
         bulk.find({_id: ObjectId(customerItem._id)})
-            // .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+        // .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
             .updateOne(customerItem);
     });
 
@@ -297,6 +310,27 @@ function checkExists(customerId, data) {
     return deferred.promise;
 }
 
+/**
+ * @desc Kiểm tra cửa hàng đã có khách hàng nào được nhập chưa ==> để xóa cửa hàng.
+ * @param storeId
+ */
+function checkCustomerByStore(storeId) {
+    const deferred = Q.defer();
+    let query = {};
+    if (StringService.isObjectId(storeId))
+        query = {storeId: storeId};
+
+    Customer.findOne(query, function (error, customer) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(customer);
+        }
+    });
+
+    return deferred.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
@@ -307,5 +341,6 @@ module.exports = {
     updateBulk: updateBulk,
     getListAutoComplete: getListAutoComplete,
     updateImgDocs: updateImgDocs,
-    checkExists: checkExists
+    checkExists: checkExists,
+    checkCustomerByStore: checkCustomerByStore
 };

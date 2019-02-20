@@ -3,7 +3,8 @@
 const errors = require('restify-errors');
 const CustomerRepository = require('../repository/customerRepository');
 const AuthorizationService = require('../services/authorizationService');
-const config = require('../../config');
+const UserRepository = require('../repository/userRepository');
+const ContractRepository = require('../repository/contractRepository');
 
 /**
  *
@@ -65,6 +66,17 @@ function list(req, res, next) {
  * @param next
  */
 function listAutoComplete(req, res, next) {
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+    req.params.roles = _user.userRoles;
+
+    // UserRepository.findById(_user.id)
+    //     .then((userItem) => {
+    //         req.params.isAccountant = userItem.isAccountant;
     CustomerRepository.getListAutoComplete(req.params)
         .then(function (customers) {
             res.send(customers);
@@ -73,7 +85,11 @@ function listAutoComplete(req, res, next) {
         .catch(function (error) {
             return next(error);
         })
-        .done();
+    // })
+    // .catch(function (error) {
+    //     return next(error);
+    // })
+    // .done();
 }
 
 /**
@@ -125,11 +141,22 @@ function update(req, res, next) {
  * @param next
  */
 function remove(req, res, next) {
-    let _user = req.user;
-    CustomerRepository.remove(req.params.customerId)
-        .then(function (deleted) {
-            res.send(204);
-            next();
+    // let _user = req.user;
+    let customerId = req.params.customerId;
+
+    ContractRepository.checkCustomerContractToDel(customerId)
+        .then((contract) => {
+            if (!contract) {
+                CustomerRepository.remove(customerId)
+                    .then(function (deleted) {
+                        res.send(200, {removed: true});
+                        next();
+                    });
+            }
+            else {
+                res.send(200, {removed: false});
+                next();
+            }
         })
         .catch(function (error) {
             return next(error);

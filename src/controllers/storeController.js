@@ -3,6 +3,7 @@
 const errors = require('restify-errors');
 const StoreRepository = require('../repository/storeRepository');
 const UserRepository = require('../repository/userRepository');
+const CustomerRepository = require('../repository/customerRepository');
 const AuthorizationService = require('../services/authorizationService');
 const config = require('../../config');
 const UserConstant = require('../constant/userConstant');
@@ -159,35 +160,27 @@ function update(req, res, next) {
  * @param next
  */
 function remove(req, res, next) {
-    let _user = req.user;
-    StoreRepository.findById(req.params.storeId)
-        .then(function (user) {
+    // let _user = req.user;
+    let storeId = req.params.storeId || "";
 
-            if (!AuthorizationService.isAuthorized(_user, user._id.toString())) {
-                return next(new errors.ForbiddenError('Resource not found or you do not have enough right'))
+    CustomerRepository.checkCustomerByStore(storeId)
+        .then((customer) => {
+            if (!customer) {
+                StoreRepository.remove(storeId)
+                    .then(function (deleted) {
+                        res.send(200, {removed: true});
+                        next();
+                    });
             }
-
-            return user;
-        }, function (error) {
-            throw error
-        })
-        .then(function (user) {
-            StoreRepository.remove(req.params.storeId)
-                .then(function (deleted) {
-                    res.send(204);
-                    next();
-                })
-                .catch(function (error) {
-                    throw error;
-                })
-        }, function (error) {
-            throw error;
+            else {
+                res.send(200, {removed: false});
+                next();
+            }
         })
         .catch(function (error) {
             return next(error);
         })
-        .done()
-    ;
+        .done();
 }
 
 function listActive(req, res, next) {

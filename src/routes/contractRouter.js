@@ -1,9 +1,11 @@
 "use strict";
 
 const ContractController = require('../controllers/contractController');
+const {actions} = require("../constant/permission");
 
 module.exports = function (server) {
     let prefix = '/api/admin/v1/contracts';
+    const resource = "contract";
 
     /**
      * LIST
@@ -39,6 +41,9 @@ module.exports = function (server) {
     /**
      * DELETE
      */
-    server.del(prefix + '/:contractId', ContractController.remove);
+    server.del({
+            path: prefix  + '/:contractId',
+            actions: [`${resource}.${actions.remove}`]
+        }, ContractController.remove);
 
 };

@@ -47,10 +47,18 @@ function findById(id) {
 function getList(params) {
     const deferred = Q.defer();
     let storeId = params.storeId;
+    let userId = params.userId;
+    let isAccountant = params.isAccountant;
+    let isRoot = params.isRoot;
     let query = {};
 
-    if (StringService.isObjectId(storeId))
-        query = {storeId: storeId};
+    if (isAccountant || !isRoot)
+        if (StringService.isObjectId(storeId))
+            query = {storeId: storeId};
+
+    if (userId && !isAccountant && !isRoot) {
+        query = Object.assign({}, query, {visitor: ObjectId(userId)});
+    }
 
     Customer
         .find(query)
@@ -74,12 +82,18 @@ function getList(params) {
 function getListAutoComplete(params) {
     const deferred = Q.defer();
     let storeId = params.storeId;
-    let role = params.roles;
-    // let isAccountant = params.isAccountant;
+    let isRoot = params.isRoot;
+    let isAccountant = params.isAccountant;
+    let userId = params.userId;
     let query = {};
 
-    if (storeId) {
-        query.storeId = storeId;
+    if (isAccountant || !isRoot) {
+        if (storeId)
+            query.storeId = storeId;
+    }
+
+    if (userId && !isAccountant && !isRoot) {
+        query = Object.assign({}, query, {visitor: userId});
     }
 
     Customer
@@ -90,7 +104,6 @@ function getListAutoComplete(params) {
                 console.error(error);
                 deferred.reject(new errors.InvalidContentError(err.message));
             } else {
-
                 deferred.resolve(users);
             }
         });

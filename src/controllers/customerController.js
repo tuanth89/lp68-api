@@ -5,6 +5,7 @@ const CustomerRepository = require('../repository/customerRepository');
 const AuthorizationService = require('../services/authorizationService');
 const UserRepository = require('../repository/userRepository');
 const ContractRepository = require('../repository/contractRepository');
+const UserConstant = require('../constant/userConstant');
 
 /**
  *
@@ -48,10 +49,22 @@ function createMany(req, res, next) {
  * @param next
  */
 function list(req, res, next) {
-    CustomerRepository.getList(req.params)
-        .then(function (customers) {
-            res.send(customers);
-            next();
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+    req.params.userId = _user.id;
+    UserRepository.findById(_user.id)
+        .then((userItem) => {
+            req.params.isRoot = userItem.roles.indexOf(UserConstant.ROLE_ROOT) >= 0;
+            req.params.isAccountant = userItem.isAccountant;
+            CustomerRepository.getList(req.params)
+                .then(function (customers) {
+                    res.send(customers);
+                    next();
+                });
         })
         .catch(function (error) {
             return next(error);
@@ -72,24 +85,22 @@ function listAutoComplete(req, res, next) {
             new errors.UnauthorizedError("No token provided or token expired !")
         );
     }
-    req.params.roles = _user.userRoles;
 
-    // UserRepository.findById(_user.id)
-    //     .then((userItem) => {
-    //         req.params.isAccountant = userItem.isAccountant;
-    CustomerRepository.getListAutoComplete(req.params)
-        .then(function (customers) {
-            res.send(customers);
-            next();
+    UserRepository.findById(_user.id)
+        .then((userItem) => {
+            req.params.isAccountant = userItem.isAccountant;
+            req.params.isRoot = userItem.roles.indexOf(UserConstant.ROLE_ROOT) >= 0;
+            req.params.userId = userItem._id;
+            CustomerRepository.getListAutoComplete(req.params)
+                .then(function (customers) {
+                    res.send(customers);
+                    next();
+                })
         })
         .catch(function (error) {
             return next(error);
         })
-    // })
-    // .catch(function (error) {
-    //     return next(error);
-    // })
-    // .done();
+        .done();
 }
 
 /**

@@ -55,7 +55,10 @@ function list(req, res, next) {
             new errors.UnauthorizedError("No token provided or token expired !")
         );
     }
-    req.params.userId = _user.id;
+
+    // if (!req.params.userId)
+    //     req.params.userId = _user.id;
+
     UserRepository.findById(_user.id)
         .then((userItem) => {
             req.params.isRoot = userItem.roles.indexOf(UserConstant.ROLE_ROOT) >= 0;
@@ -90,7 +93,8 @@ function listAutoComplete(req, res, next) {
         .then((userItem) => {
             req.params.isAccountant = userItem.isAccountant;
             req.params.isRoot = userItem.roles.indexOf(UserConstant.ROLE_ROOT) >= 0;
-            req.params.userId = userItem._id;
+            if (!req.params.userId)
+                req.params.userId = userItem._id;
             CustomerRepository.getListAutoComplete(req.params)
                 .then(function (customers) {
                     res.send(customers);

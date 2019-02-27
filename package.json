@@ -47,12 +47,11 @@
     "restify-errors": "^6.0.0",
     "restify-plugins": "^1.6.0",
     "rotating-file-stream": "^1.3.6",
-    "ua-parser-js": "^0.7.18",
-    "xlsx": "^0.14.0"
+    "ua-parser-js": "^0.7.18"
   },
   "devDependencies": {
     "jest": "^23.2.0",
     "mongoose-paginate": "^5.0.3",
-    "xlsx": "^0.14.0"
+    "xlsx": "^0.14.1"
   }
 }

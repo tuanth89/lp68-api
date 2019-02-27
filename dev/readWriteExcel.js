@@ -4,9 +4,10 @@
 const mongoose = require('mongoose');
 const config = require('../config');
 const _ = require('lodash');
-const StringService = require('../src/services/stringService');
+const XLSX = require('xlsx');
+const Q = require('q');
 
-const UserModel = require('../src/models/user');
+const PheConfig = require('../src/models/pheConfig');
 
 // establish connection to mongodb
 mongoose.Promise = global.Promise;
@@ -38,23 +39,62 @@ db.on('error', (err) => {
     process.exit(1);
 });
 
+let dropPheConfig = function () {
+    const deferred = Q.defer();
+
+    PheConfig.remove({}, function (error) {
+        if (error) {
+            console.error(error);
+            deferred.reject(
+                new errors.InvalidContentError(error.message)
+            );
+        } else {
+            deferred.resolve(true);
+        }
+    });
+
+    return deferred.promise;
+};
+
 db.once('open', () => {
-    UserModel.find({}).select("_id fullName").exec((err, res) => {
-        res.forEach(item => {
-            if (item.fullName) {
-                item.fullNameUnsign = StringService.removeSignInString(item.fullName);
+    let workbook = XLSX.readFile('dev/cuahang.xlsx');
+    let sheet_name_list = workbook.SheetNames;
+    let data = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+    // console.log(arrKhachMoi);
+
+    let arrayKhachMoi = [];
+
+    _.forEach(data, (item) => {
+        let money = item.money;
+        _.each(item, function (value, key) {
+            let itemKM = Object.assign({});
+            if (key === "money") {
+                return;
             }
+            itemKM.day = key;
+            itemKM.loanMoneyPack = money;
+            itemKM.receive = value;
+            itemKM.isNewCustomer = true;
+            arrayKhachMoi.push(itemKM);
+            // console.log(arrayKhachMoi);
+        });
 
-            UserModel.findOneAndUpdate({
-                _id: item._id
-            }, item, (err, resp) => {
-                if (err) {
-                    console.log(err.message);
-                } else {
-                    console.log("update partner item successed:" + item._id);
-                }
+        // let itemKM = Object.assign({});
+        // itemKM.day = 15;
+        // itemKM.money = item.money;
+        // itemKM.receive = item.ngay15;
+        // arrayKhachMoi.push(itemKM);
+    });
+
+    // console.log(arrayKhachMoi);
+
+    Promise.all([dropPheConfig()]).then(function (results) {
+        PheConfig.insertMany(arrayKhachMoi)
+            .then((result) => {
+                // console.log("result ", result);
+            })
+            .catch(err => {
+                console.error("error ", err);
             });
-
-        })
-    })
+    });
 });

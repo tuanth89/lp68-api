@@ -11,58 +11,13 @@ const PheConfigSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    isNewCustomer:{
+    isNewCustomer: {
         type: Boolean
     },
-    15: {
+    day: {
         type: Number
     },
-    20: {
-        type: Number,
-    },
-    21: {
-        type: Number,
-    },
-    22: {
-        type: Number
-    },
-    24: {
-        type: Number
-    },
-    25: {
-        type: Number
-    },
-    26: {
-        type: Number
-    },
-    27: {
-        type: Number
-    },
-    30: {
-        type: Number
-    },
-    31: {
-        type: Number
-    },
-    32: {
-        type: Number
-    },
-    33: {
-        type: Number
-    },
-    40: {
-        type: Number
-    },
-    41: {
-        type: Number
-    },
-    42: {
-        type: Number
-    },
-    43: {
-        type: Number
-    },
-    44: {
+    receive: {
         type: Number
     }
 }, {

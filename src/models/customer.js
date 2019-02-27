@@ -20,7 +20,7 @@ const UserSchema = new mongoose.Schema({
         type: String
     },
     phone: {
-        type: Number
+        type: String
     },
     /**
      * Số sổ hộ khẩu

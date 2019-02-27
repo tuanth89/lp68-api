@@ -52,7 +52,7 @@ module.exports = function (server) {
      * DELETE
      */
     server.del({
-        path: prefix + '/:contractId',
+        path: prefix + '/:customerId',
         actions: [`${resource}.${actions.remove}`]
     }, CustomerController.remove);
 

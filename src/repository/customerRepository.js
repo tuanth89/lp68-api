@@ -56,7 +56,8 @@ function getList(params) {
         if (StringService.isObjectId(storeId))
             query = {storeId: storeId};
 
-    if (userId && !isAccountant && !isRoot) {
+    // if (userId && !isAccountant && !isRoot) {
+    if (userId && !isRoot) {
         query = Object.assign({}, query, {visitor: ObjectId(userId)});
     }
 
@@ -92,7 +93,7 @@ function getListAutoComplete(params) {
             query.storeId = storeId;
     }
 
-    if (userId && !isAccountant && !isRoot) {
+    if (userId && !isRoot) {
         query = Object.assign({}, query, {visitor: userId});
     }
 

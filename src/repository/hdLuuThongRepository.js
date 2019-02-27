@@ -274,8 +274,8 @@ function insertMany(data) {
                 luuthongList.push(luuthongCurrent);
 
                 // Nếu khách đóng luôn vài ngày khi tạo hợp đồng
-                if (!isNaN(parseFloat(contractItem.numOfPayDay)) && isFinite(contractItem.numOfPayDay)) {
-                    numOfPayDay = parseInt(contractItem.numOfPayDay);
+                if (!isNaN(parseFloat(contractItem.numOfPayDay)) && isFinite(contractItem.numOfPayDay) && contractItem.numOfPayDay > 0) {
+                    numOfPayDay = parseInt(contractItem.numOfPayDay) - 1;
                     let payPaid = new HdLuuThong();
                     while (count <= numOfPayDay) {
                         let luuthongPaid = Object.assign({}, payPaid);

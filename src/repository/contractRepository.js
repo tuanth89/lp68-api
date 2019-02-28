@@ -129,7 +129,9 @@ function getListByType(params) {
     const deferred = Q.defer();
     let type = params.type || -1;
     let storeId = params.storeId || "";
+    let userId = params.userId || "";
     let role = params.roles;
+    let isRoot = role.indexOf(USER_CONSTANT.ROLE_ROOT) >= 0;
 
     let query = {};
     switch (parseInt(type)) {
@@ -165,8 +167,12 @@ function getListByType(params) {
             break;
     }
 
-    if (storeId && role.indexOf(USER_CONSTANT.ROLE_ROOT) < 0) {
+    if (storeId && !isRoot) {
         query.storeId = ObjectId(storeId);
+    }
+
+    if (userId && !isRoot) {
+        query.creator = ObjectId(userId);
     }
 
     Contract

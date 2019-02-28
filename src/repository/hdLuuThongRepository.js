@@ -83,7 +83,9 @@ function getListByDate(params) {
     if (status === undefined || status === null)
         status = -1;
     let storeId = params.storeId || "";
+    let userId = params.userId || "";
     let role = params.roles || [];
+    let isRoot = role.indexOf(USER_CONSTANT.ROLE_ROOT) >= 0;
 
     let dateFilter = new Date(date);
 
@@ -138,6 +140,7 @@ function getListByDate(params) {
                 contractDate: "$contract.createdAt",
                 contractStatus: "$contract.status",
                 storeId: "$contract.storeId",
+                creator: "$contract.creator",
                 moneyHavePay: 1,
                 moneyPaid: 1,
                 status: 1,
@@ -148,8 +151,12 @@ function getListByDate(params) {
         // , {$sort: {contractStatus: 1}}
     ];
 
-    if (storeId && role.indexOf(USER_CONSTANT.ROLE_ROOT) < 0) {
+    if (storeId && !isRoot) {
         query.push({$match: {storeId: ObjectId(storeId)}});
+    }
+
+    if (userId && !isRoot) {
+        query.push({$match: {creator: ObjectId(userId)}});
     }
 
     query.push({$sort: {contractStatus: 1}});

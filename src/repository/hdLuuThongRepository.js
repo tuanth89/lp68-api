@@ -141,6 +141,7 @@ function getListByDate(params) {
                 contractStatus: "$contract.status",
                 storeId: "$contract.storeId",
                 creator: "$contract.creator",
+                contractCreatedAt: "$contract.createdAt",
                 moneyHavePay: 1,
                 moneyPaid: 1,
                 status: 1,
@@ -263,46 +264,53 @@ function insertMany(data) {
 
             // Nếu là tạo hợp đồng vay mới
             if (contractItem.createContractNew) {
-                let numOfPayDay = 0;
-
                 // Tính luôn lưu thông của ngày tạo hợp đồng mới
                 let luuthongCurrent = new HdLuuThong();
                 luuthongCurrent.contractId = contractItem.contractId;
                 luuthongCurrent.createdAt = contractItem.createdAt;
                 luuthongCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
-                if (totalMoneyPaid > 0) {
-                    luuthongCurrent.moneyHavePay = contractItem.moneyHavePay;
-                    luuthongCurrent.moneyPaid = contractItem.moneyPaid;
-                } else {
+
+                // Nếu khách đóng trước 1 khoản tiền
+                if (parseInt(contractItem.payNow) > 0) {
+                    luuthongCurrent.moneyPaid = parseInt(contractItem.payNow);
                     luuthongCurrent.moneyHavePay = contractItem.dailyMoneyPay;
-                    luuthongCurrent.moneyPaid = contractItem.dailyMoneyPay;
                 }
+                else {
+                    if (totalMoneyPaid > 0) {
+                        luuthongCurrent.moneyHavePay = contractItem.moneyHavePay;
+                        luuthongCurrent.moneyPaid = contractItem.moneyPaid;
+                    } else {
+                        luuthongCurrent.moneyHavePay = contractItem.dailyMoneyPay;
+                        luuthongCurrent.moneyPaid = contractItem.dailyMoneyPay;
+                    }
+                }
+
                 totalMoneyPaid += parseInt(luuthongCurrent.moneyPaid);
                 luuthongList.push(luuthongCurrent);
 
-                // Nếu khách đóng luôn vài ngày khi tạo hợp đồng
-                if (!isNaN(parseFloat(contractItem.numOfPayDay)) && isFinite(contractItem.numOfPayDay) && contractItem.numOfPayDay > 0) {
-                    numOfPayDay = parseInt(contractItem.numOfPayDay) - 1;
-                    let payPaid = new HdLuuThong();
-                    while (count <= numOfPayDay) {
-                        let luuthongPaid = Object.assign({}, payPaid);
-                        luuthongPaid.contractId = contractItem.contractId;
-
-                        let date = new Date(createdDate);
-                        date.setDate(date.getDate() + count);
-                        luuthongPaid.createdAt = date;
-
-                        luuthongPaid.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
-                        luuthongPaid.moneyHavePay = contractItem.dailyMoneyPay;
-                        luuthongPaid.moneyPaid = contractItem.dailyMoneyPay;
-                        totalMoneyPaid += parseInt(luuthongPaid.moneyPaid);
-
-                        luuthongList.push(luuthongPaid);
-                        count++;
-                    }
-
-                    nextPayDate.setDate(createdDate.getDate() + count);
-                }
+                // // Nếu khách đóng luôn vài ngày khi tạo hợp đồng
+                // if (!isNaN(parseFloat(contractItem.numOfPayDay)) && isFinite(contractItem.numOfPayDay) && contractItem.numOfPayDay > 0) {
+                //     numOfPayDay = parseInt(contractItem.numOfPayDay) - 1;
+                //     let payPaid = new HdLuuThong();
+                //     while (count <= numOfPayDay) {
+                //         let luuthongPaid = Object.assign({}, payPaid);
+                //         luuthongPaid.contractId = contractItem.contractId;
+                //
+                //         let date = new Date(createdDate);
+                //         date.setDate(date.getDate() + count);
+                //         luuthongPaid.createdAt = date;
+                //
+                //         luuthongPaid.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+                //         luuthongPaid.moneyHavePay = contractItem.dailyMoneyPay;
+                //         luuthongPaid.moneyPaid = contractItem.dailyMoneyPay;
+                //         totalMoneyPaid += parseInt(luuthongPaid.moneyPaid);
+                //
+                //         luuthongList.push(luuthongPaid);
+                //         count++;
+                //     }
+                //
+                //     nextPayDate.setDate(createdDate.getDate() + count);
+                // }
 
                 // Update tổng tiền đã đóng vào hợp đồng
                 ContractRepository.updateTotalMoneyPaid(contractItem._id, totalMoneyPaid);
@@ -569,9 +577,17 @@ function insertHdLuuThong(contractId, data) {
     if (data.createdAt)
         luuthong.createdAt = moment.utc(data.createdAt, "DD/MM/YYYY").add(1, 'days');
 
-    // Ngày hẹn
-    if (data.newAppointmentDate)
-        luuthong.createdAt = moment.utc(data.newAppointmentDate, "DD/MM/YYYY");
+    // // Ngày hẹn
+    // if (data.newAppointmentDate)
+    //     luuthong.appointmentDate = moment.utc(data.newAppointmentDate, "YYYYMMDD");
+    //
+    // // Hẹn đóng
+    // if (data.newPayMoney)
+    //     luuthong.newPayMoney = data.newPayMoney;
+
+    // Ngày chuyển
+    if (data.newTransferDate)
+        luuthong.transferDate = moment.utc(data.newTransferDate, "YYYYMMDD");
 
     luuthongList.push(luuthong);
     HdLuuThong.insertMany(luuthongList, function (error, item) {

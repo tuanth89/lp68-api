@@ -3,6 +3,8 @@
 const errors = require('restify-errors');
 const ContractRepository = require('../repository/contractRepository');
 const CustomerRepository = require('../repository/customerRepository');
+const HdLuuThongRepository = require('../repository/hdLuuThongRepository');
+const CONTRACT_OTHER_CONTANST = require('../constant/contractOtherConstant');
 const AuthorizationService = require('../services/authorizationService');
 const EventDispatcher = require('../events/dispatcher');
 const _ = require('lodash');
@@ -38,7 +40,7 @@ function insertOrUpdateBulk(req, res, next) {
             // Sinh các bản ghi log lưu vết cho các hợp đồng mới tạo
             EventDispatcher.createContractLogListener(contracts);
 
-            res.send(201, contracts);
+            res.send(201, data);
             next();
         })
         .catch((error) => {
@@ -215,10 +217,13 @@ function updateStatus(req, res, next) {
     }
     data.userId = _user.id;
 
-    ContractRepository.updateStatus(req.params.contractId, data)
-        .then(function () {
-            res.send(200);
-            next();
+    HdLuuThongRepository.updateStatus(data.luuThongId, CONTRACT_OTHER_CONTANST.STATUS.COMPLETED)
+        .then(() => {
+            ContractRepository.updateStatus(req.params.contractId, data)
+                .then(function () {
+                    res.send(200);
+                    next();
+                })
         })
         .catch(function (error) {
             return next(error);

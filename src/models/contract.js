@@ -102,6 +102,14 @@ const ContractSchema = new mongoose.Schema({
     transferDate: {
         type: Date
     },
+    // Ngày hẹn
+    appointmentDate: {
+        type: Date
+    },
+    // Hẹn đóng
+    payMoney: {
+        type: Number
+    },
     // Thuộc cửa hàng nào
     storeId: {
         type: ObjectId

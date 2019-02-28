@@ -240,19 +240,26 @@ function updateChot(req, res, next) {
         contractId: contractId,
         luuThongId: data._id,
         contractStatus: data.statusContract,
-        luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+        luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+        newTransferDate: data.newTransferDate,
+        newAppointmentDate: data.newAppointmentDate,
+        payMoney: data.moneyHavePay
+
     };
     EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
 
-    HdLuuThongRepository.insertHdLuuThong(contractId, data)
-        .then(function (contract) {
-            res.send(201, true);
-            next();
-        })
-        .catch(function (error) {
-            return next(error);
-        })
-        .done();
+    res.send(201, true);
+    next();
+
+    // HdLuuThongRepository.insertHdLuuThong(contractId, data)
+    //     .then(function (contract) {
+    //         res.send(201, true);
+    //         next();
+    //     })
+    //     .catch(function (error) {
+    //         return next(error);
+    //     })
+    //     .done();
 }
 
 /**

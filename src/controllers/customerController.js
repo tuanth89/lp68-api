@@ -32,8 +32,8 @@ function createMany(req, res, next) {
     let customers = req.body || {};
 
     CustomerRepository.insertOrUpdateBulk(customers)
-        .then(function (customers) {
-            res.send(201, customers);
+        .then(function (results) {
+            res.send(201, results);
             next();
         })
         .catch(function (error) {

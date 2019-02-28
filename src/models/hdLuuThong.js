@@ -10,6 +10,7 @@ const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
 const ContractSchema = new mongoose.Schema({
     contractId: {
         type: ObjectId,
+        ref: "Contract",
         require: true
     },
     moneyHavePay: {

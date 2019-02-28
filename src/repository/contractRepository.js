@@ -271,19 +271,34 @@ function updateStatus(id, data) {
 /**
  *
  * @param id
- * @param status
+ * @param data
  * @returns {*|promise}
  */
-function updateStatusTransferDate(id, status) {
+function updateStatusTransferDate(id, data) {
     const deferred = Q.defer();
+    let contractItem = {
+        status: data.contractStatus
+        // transferDate: moment.utc(new Date(), "YYYYMMDD")
+    };
+
+    // Ngày chuyển
+    if (data.newTransferDate)
+        contractItem.transferDate = moment(data.newTransferDate, "DD/MM/YYYY").format("YYYY-MM-DD");
+    // contractItem.transferDate = new Date(data.newTransferDate);
+
+    // Ngày hẹn
+    if (data.newAppointmentDate)
+        contractItem.appointmentDate = moment(data.newAppointmentDate, "DD/MM/YYYY").format("YYYY-MM-DD");
+
+    // Hẹn đóng
+    if (data.payMoney > 0) {
+        contractItem.payMoney = data.payMoney;
+    }
 
     Contract.findOneAndUpdate({
         _id: id
     }, {
-        $set: {
-            status: status,
-            transferDate: moment.utc(new Date(), "YYYYMMDD")
-        }
+        $set: contractItem
     }, function (error, contract) {
         if (error) {
             deferred.reject(new errors.InvalidContentError("Not found"));

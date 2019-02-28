@@ -125,6 +125,7 @@ function insertOrUpdateBulk(customers) {
             customer.createdAt = new Date(customer.createdAt);
             customer._id = ObjectId(customer._id);
             customer.updatedAt = new Date();
+            customer.needRemove = true;
         }
 
         let item = new Customer(customer);
@@ -138,6 +139,10 @@ function insertOrUpdateBulk(customers) {
         if (error) {
             deferred.reject(new errors.InvalidContentError(error.message));
         } else {
+            _.remove(customers, (item) => {
+                return item.needRemove;
+            });
+
             deferred.resolve(customers);
         }
     });

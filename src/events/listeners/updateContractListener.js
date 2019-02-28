@@ -20,7 +20,7 @@ function updateStatusLuuThongContract(data) {
         }
 
         if (data.contractStatus > 0) {
-            ContractRepository.updateStatusTransferDate(data.contractId, data.contractStatus)
+            ContractRepository.updateStatusTransferDate(data.contractId, data)
                 .catch((error) => {
                     log.error(error);
                 })

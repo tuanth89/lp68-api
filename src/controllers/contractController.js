@@ -295,15 +295,33 @@ function remove(req, res, next) {
  */
 function circulationContract(req, res, next) {
     let data = req.body || {};
+    let contractId = req.params.contractId || "";
 
     if (data.newLoanMoney <= 0) {
         return next(new errors.InvalidContentError("Số tiền vay không được <= 0"));
     }
 
     // let _user = AuthorizationService.getUser(req);
-    ContractRepository.circulationContract(req.params.contractId, data)
+    ContractRepository.circulationContract(contractId, data)
         .then(function (contract) {
             EventDispatcher.updateAndNewLuuThongListener(data._id, contract);
+
+            let contractLogs = [];
+            let contractLogItem = {
+                contractId: contractId,
+                customerId: data.customer._id,
+                createdAt: data.createdAt,
+                isDaoHan: true
+            };
+            contractLogs.push(contractLogItem);
+
+            let contractNewLogItem = Object.assign(contract);
+            contractNewLogItem.contractId = contract._id;
+            contractLogs.push(contractNewLogItem);
+
+            // Sinh các bản ghi log vào lịch
+            EventDispatcher.insertOrUpdateBulkContractLogListener(contractLogs);
+
             res.send(201, contract);
             next();
         })

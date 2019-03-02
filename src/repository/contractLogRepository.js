@@ -148,7 +148,8 @@ function bulkHistoriesByContractId(contracts) {
 
     _.each(contracts, function (contract) {
         let history = {};
-        history.title = "Đóng " + StringService.formatNumeric(contract.moneyPaid);
+        let moneyPaid = contract.moneyPaid !== undefined ? StringService.formatNumeric(contract.moneyPaid) : 0;
+        history.title = "Đóng " + moneyPaid;
         history.start = contract.createdAt;
         history.stick = true;
 
@@ -179,20 +180,76 @@ function insertMany(data) {
 
     data.forEach((contractItem) => {
         let contractLog = new ContractLog();
+        let history = {};
+        if (contractItem.isDaoHan) {
+            history.title = "Đáo hạn";
+        }
+        else {
+            let moneyPaid = contractItem.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contractItem.dailyMoneyPay)) : 0;
+            history.title = "Đóng " + moneyPaid;
+        }
+
+        history.start = moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString()+'Z';
+        history.stick = true;
+
+        contractLog.histories = [];
+        contractLog.histories.push(history);
+
         contractLog.contractId = contractItem.contractId;
-        contractLog.customerId = contractItem.customer._id;
+        contractLog.customerId = contractItem.customerId;
         contractLog.createdAt = new Date();
         contractLogList.push(contractLog);
     });
 
     ContractLog.insertMany(contractLogList, function (error, item) {
         if (error) {
-            console.error(error);
+            console.log(error);
             deferred.reject(
                 new errors.InvalidContentError(error.message)
             );
         } else {
             deferred.resolve(contractLogList);
+        }
+    });
+
+    return deferred.promise;
+}
+
+function insertOrUpdateBulkContractLog(contracts) {
+    const deferred = Q.defer();
+
+    let bulk = ContractLog.collection.initializeOrderedBulkOp();
+    _.each(contracts, function (contractItem) {
+        let contractLog = new ContractLog();
+        let history = {};
+        if (contractItem.isDaoHan) {
+            history.title = "Đáo hạn";
+        }
+        else {
+            let moneyPaid = contractItem.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contractItem.dailyMoneyPay)) : 0;
+            history.title = "Đóng " + moneyPaid;
+        }
+
+        history.start = moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString()+'Z';
+        history.stick = true;
+
+        contractLog.histories = [];
+        contractLog.histories.push(history);
+
+        contractLog.contractId = contractItem.contractId;
+        contractLog.customerId = contractItem.customerId;
+        contractLog.createdAt = new Date();
+
+        bulk.find({contractId: ObjectId(contractLog.contractId)})
+            .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+            .updateOne(contractLog);
+    });
+
+    bulk.execute(function (error, results) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(contracts);
         }
     });
 
@@ -211,7 +268,7 @@ function remove(id) {
         _id: id
     }, function (error) {
         if (error) {
-            console.error(error);
+            console.log(error);
             deferred.reject(new errors.InvalidContentError(error.message));
         } else {
             deferred.resolve(true);
@@ -228,6 +285,7 @@ module.exports = {
     addHistory: addHistory,
     addHistories: addHistories,
     bulkHistoriesByContractId: bulkHistoriesByContractId,
+    insertOrUpdateBulkContractLog: insertOrUpdateBulkContractLog,
     remove: remove
 
 };

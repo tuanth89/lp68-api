@@ -65,6 +65,10 @@ function newContractLuuThongListener(contracts) {
 
 function updateAndNewLuuThong(hdLuuThongId, contractNew) {
     let luuthongList = [];
+    let updateLuuThong = {
+        status: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+        updatedAt: new Date()
+    };
 
     let nextPayDate = new Date(contractNew.createdAt);
     nextPayDate.setDate(nextPayDate.getDate() + 1);
@@ -77,24 +81,25 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
 
     luuthongList.push(luuthong);
 
-    // if (contractNew.isDaoHd) {
-    //     let luuThongDaoCurrent = new HdLuuThong();
-    //     luuThongDaoCurrent.contractId = contractNew._id;
-    //     luuThongDaoCurrent.createdAt = contractNew.createdAt;
-    //     luuThongDaoCurrent.moneyHavePay = contractNew.dailyMoney;
-    //     luuThongDaoCurrent.moneyPaid = contractNew.dailyMoney;
-    //     luuThongDaoCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
-    //     luuthongList.push(luuThongDaoCurrent);
-    //
-    //     // Update tổng tiền đã dóng vào hợp đồng
-    //     ContractRepository.updateTotalMoneyPaid(contractNew._id, luuThongDaoCurrent.moneyPaid);
-    // }
+    if (contractNew.isDaoHd) {
+        let luuThongDaoCurrent = new HdLuuThong();
+        luuThongDaoCurrent.contractId = contractNew._id;
+        luuThongDaoCurrent.createdAt = contractNew.createdAt;
+        luuThongDaoCurrent.moneyHavePay = contractNew.dailyMoney;
+        luuThongDaoCurrent.moneyPaid = contractNew.dailyMoney;
+        luuThongDaoCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+        luuthongList.push(luuThongDaoCurrent);
+
+        // Update tổng tiền đã dóng vào hợp đồng
+        ContractRepository.updateTotalMoneyPaid(contractNew._id, luuThongDaoCurrent.moneyPaid);
+
+        // Khi đáo sẽ ko mặc định trừ tiền đóng ngày hôm đó của HĐ cũ
+        // HĐ đáo tự động trừ tiền đóng ngày hôm đó
+        updateLuuThong.moneyPaid = 0;
+    }
 
     HdLuuThong.update({_id: hdLuuThongId}, {
-        $set: {
-            status: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
-            updatedAt: new Date()
-        }
+        $set: updateLuuThong
     })
         .then(() => {
 
@@ -105,18 +110,18 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
             log.error(error);
         })
         .done();
-
-    // luuthong.save(function (error, item) {
-    //     if (error) {
-    //         console.error(error);
-    //     } else {
-    //
-    //     }
-    // });
 }
 
 function removeAllByContract(contractId) {
     HdLuuThongRepository.removeByContractId(contractId)
+        .catch((error) => {
+            log.error(error);
+        })
+        .done();
+}
+
+function insertOrUpdateBulkContractLog(contracts) {
+    ContractLogRepository.insertOrUpdateBulkContractLog(contracts)
         .catch((error) => {
             log.error(error);
         })
@@ -129,5 +134,6 @@ module.exports = {
     newContractAddedListener: newContractAddedListener,
     newContractLuuThongListener: newContractLuuThongListener,
     updateAndNewLuuThong: updateAndNewLuuThong,
-    removeAllByContract: removeAllByContract
+    removeAllByContract: removeAllByContract,
+    insertOrUpdateBulkContractLog: insertOrUpdateBulkContractLog
 };

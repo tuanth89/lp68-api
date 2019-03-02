@@ -40,5 +40,8 @@ ContractLogSchema.plugin(timestamps);
 ContractLogSchema.plugin(mongooseStringQuery);
 
 const ContractLog = mongoose.model('ContractLog', ContractLogSchema);
-
+// ContractLog.collection.ensureIndex(function (err, results) {
+//     //ensureIndex
+//     // Handle errors
+// });
 module.exports = ContractLog;

@@ -160,7 +160,7 @@ function getListByDate(params) {
         query.push({$match: {creator: ObjectId(userId)}});
     }
 
-    query.push({$sort: {contractStatus: 1}});
+    query.push({$sort: {contractStatus: 1, "customer.name": 1}});
 
     HdLuuThong
         .aggregate(query)

@@ -5,11 +5,18 @@ const eventEmitter = new events.EventEmitter();
 const NewContractListener = require('./listeners/newContractListener');
 const UpdateContractListener = require('./listeners/updateContractListener');
 
+function insertOrUpdateBulkContractLogListener(contracts) {
+    eventEmitter.once('LP_BATCH_LOG_LOG_EVENT', NewContractListener.insertOrUpdateBulkContractLog);
+
+    eventEmitter.emit('LP_BATCH_LOG_LOG_EVENT', contracts);
+}
+
 function createContractLogListener(contracts) {
     eventEmitter.once('LP_NEW_CONTRACT_LOG_EVENT', NewContractListener.createContractLog);
 
     eventEmitter.emit('LP_NEW_CONTRACT_LOG_EVENT', contracts);
 }
+
 function addMultiLogToContractLogListener(contracts) {
     eventEmitter.once('LP_ADD_LOG_TO_CONTRACT_LOG_EVENT', NewContractListener.addMultiLogToContractLog);
 
@@ -47,6 +54,7 @@ function removeAllByContractListener(contract) {
 }
 
 module.exports = {
+    insertOrUpdateBulkContractLogListener: insertOrUpdateBulkContractLogListener,
     createContractLogListener: createContractLogListener,
     addMultiLogToContractLogListener: addMultiLogToContractLogListener,
     newContractAddedListener: newContractAddedListener,

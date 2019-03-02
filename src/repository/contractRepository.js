@@ -609,7 +609,7 @@ function circulationContract(contractId, data) {
                 let contractNew = new Contract();
                 contractNew.customer = data.customer;
                 contractNew.customerId = contractItem.customerId;
-                contractNew.createdAt = moment(data.contractDate, "YYYYMMDD").utc().format("YYYY-MM-DD");
+                contractNew.createdAt = data.createdAt;
                 contractNew.loanMoney = newLoanMoney;
                 contractNew.actuallyCollectedMoney = newActuallyCollectedMoney;
                 contractNew.loanDate = newLoanDate;
@@ -617,27 +617,28 @@ function circulationContract(contractId, data) {
                 contractNew.contractHistory.push(contractId);
                 contractNew.contractNo = `${nowDate.getFullYear()}_${++countIndetity}`;
                 contractNew.noIdentity = countIndetity;
-                let startDate = new Date();
-                startDate.setDate(startDate.getDate() + contractNew.loanDate);
-                contractNew.loanEndDate = new Date(startDate);
+                // let startDate = new Date(data.createdAt);
+                // startDate.setDate(startDate.getDate() + contractNew.loanDate);
+                contractNew.loanEndDate = moment(data.createdAt, "YYYY-MM-DD").add(contractNew.loanDate, "days").format("YYYY-MM-DD");
                 contractNew.dailyMoney = newDailyMoney;
                 contractNew.dailyMoneyPay = newDailyMoney;
                 contractNew.status = CONTRACT_CONST.NEW;
                 contractNew.storeId = contractItem.storeId;
                 contractNew.creator = contractItem.creator;
                 contractNew.isCustomerNew = contractItem.isCustomerNew;
-                contractNew.transferDate = nowDate;
+                // contractNew.transferDate = moment(nowDate).format("YYYY-MM-DD");
 
-                // contractNew.isDaoHd = true;
+                contractNew.isDaoHd = true;
                 // let dailyMoney = contractNew.actuallyCollectedMoney / (contractNew.loanDate === 0 ? 1 : contractNew.loanDate);
                 // contractNew.dailyMoney = dailyMoney.toFixed();
 
-                let totalPaid = data.totalMoneyPaid + data.moneyPaid;
+                // let totalPaid = data.totalMoneyPaid + data.moneyPaid;
                 // Thay đổi trạng thái hợp đồng cũ là đáo.
                 Contract.update({_id: contractId}, {
                     $set: {
-                        totalMoneyPaid: totalPaid,
+                        // totalMoneyPaid: totalPaid,
                         status: CONTRACT_CONST.MATURITY,
+                        transferDate: moment(nowDate).format("YYYY-MM-DD"),
                         updatedAt: new Date()
                     }
                 }, function (error, user) {

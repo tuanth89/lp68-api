@@ -9,6 +9,7 @@ const Mixed = mongoose.Schema.Types.Mixed;
 const ObjectId = mongoose.Schema.Types.ObjectId;
 require('mongoose-type-email');
 const CONTRACT_CONST = require('../constant/contractConstant');
+const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
 
 // let connection = null;
 //
@@ -27,6 +28,16 @@ const ContractSchema = new mongoose.Schema({
         type: String,
         unique: true,
         required: false
+    },
+    storeCode: {
+        type: String
+    },
+    customerCode: {
+        type: String
+    },
+    typeCode: {
+        type: String,
+        enum: [CONTRACT_OTHER_CONST.TYPE_CODE.XUAT_MOI, CONTRACT_OTHER_CONST.TYPE_CODE.XUAT_DAO]
     },
     noIdentity: {
         type: Number
@@ -133,10 +144,10 @@ const ContractSchema = new mongoose.Schema({
 
 //Trạng thái của học viên: 1: Chưa kích hoạt, 2: Hoạt động, 3: Bị khóa
 ContractSchema.virtual('totalMoneyNeedPay').get(function () {
-   return this.actuallyCollectedMoney - this.totalMoneyPaid;
+    return this.actuallyCollectedMoney - this.totalMoneyPaid;
 });
 
-ContractSchema.set('toObject', { getters: true });
+ContractSchema.set('toObject', {getters: true});
 
 ContractSchema.plugin(timestamps);
 ContractSchema.plugin(mongooseStringQuery);

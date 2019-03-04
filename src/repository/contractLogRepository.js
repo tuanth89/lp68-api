@@ -189,7 +189,7 @@ function insertMany(data) {
             history.title = "Đóng " + moneyPaid;
         }
 
-        history.start = moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString()+'Z';
+        history.start = moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
         history.stick = true;
 
         contractLog.histories = [];
@@ -220,36 +220,16 @@ function insertOrUpdateBulkContractLog(contracts) {
 
     let bulk = ContractLog.collection.initializeOrderedBulkOp();
     _.each(contracts, function (contractItem) {
-        let contractLog = new ContractLog();
-        let history = {};
-        if (contractItem.isDaoHan) {
-            history.title = "Đáo hạn";
-        }
-        else {
-            let moneyPaid = contractItem.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contractItem.dailyMoneyPay)) : 0;
-            history.title = "Đóng " + moneyPaid;
-        }
-
-        history.start = moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString()+'Z';
-        history.stick = true;
-
-        contractLog.histories = [];
-        contractLog.histories.push(history);
-
-        contractLog.contractId = contractItem.contractId;
-        contractLog.customerId = contractItem.customerId;
-        contractLog.createdAt = new Date();
-
-        bulk.find({contractId: ObjectId(contractLog.contractId)})
+        bulk.find({contractId: contractItem.contractId})
             .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
-            .updateOne(contractLog);
+            .updateOne(contractItem);
     });
 
     bulk.execute(function (error, results) {
         if (error) {
             deferred.reject(new errors.InvalidContentError(error.message));
         } else {
-            deferred.resolve(contracts);
+            deferred.resolve(true);
         }
     });
 

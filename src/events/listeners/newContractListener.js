@@ -1,11 +1,15 @@
 "use strict";
 
 const HdLuuThong = require('../../models/hdLuuThong');
+const ContractLog = require('../../models/contractLog');
 const ContractLogRepository = require('../../repository/contractLogRepository');
 const ContractRepository = require('../../repository/contractRepository');
 const HdLuuThongRepository = require('../../repository/hdLuuThongRepository');
 const log = require('../../../logger').log;
 const CONTRACT_OTHER_CONST = require('../../constant/contractOtherConstant');
+const StringService = require('../../services/stringService');
+const moment = require('moment');
+const _ = require('lodash');
 
 function createContractLog(contracts) {
     ContractLogRepository.insertMany(contracts)

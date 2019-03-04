@@ -1,13 +1,17 @@
 "use strict";
 
 const errors = require('restify-errors');
+const ContractLogRepository = require('../repository/contractLogRepository');
 const ContractRepository = require('../repository/contractRepository');
 const CustomerRepository = require('../repository/customerRepository');
 const HdLuuThongRepository = require('../repository/hdLuuThongRepository');
 const CONTRACT_OTHER_CONTANST = require('../constant/contractOtherConstant');
 const AuthorizationService = require('../services/authorizationService');
 const EventDispatcher = require('../events/dispatcher');
+const StringService = require('../services/stringService');
 const _ = require('lodash');
+const moment = require('moment');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 /**
  *
@@ -306,24 +310,40 @@ function circulationContract(req, res, next) {
         .then(function (contract) {
             EventDispatcher.updateAndNewLuuThongListener(data._id, contract);
 
-            let contractLogs = [];
-            let contractLogItem = {
-                contractId: contractId,
-                customerId: data.customer._id,
-                createdAt: data.createdAt,
-                isDaoHan: true
-            };
-            contractLogs.push(contractLogItem);
+            ContractLogRepository.findByContractId(contractId)
+                .then((contractLog) => {
+                    let contractLogs = [];
+                    let contractLogItem = {
+                        histories: contractLog ? contractLog.histories : [],
+                        contractId: ObjectId(contractId),
+                        customerId: ObjectId(data.customer._id),
+                        createdAt: new Date(data.createdAt)
+                    };
+                    let history = {};
+                    history.title = "Đáo hạn";
+                    history.start = moment(data.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+                    history.stick = true;
+                    contractLogItem.histories.push(history);
+                    contractLogs.push(contractLogItem);
 
-            let contractNewLogItem = Object.assign(contract);
-            contractNewLogItem.contractId = contract._id;
-            contractLogs.push(contractNewLogItem);
+                    let contractNewLogItem = Object.assign({}, contractLogItem);
+                    contractNewLogItem.contractId = contract._id;
+                    contractNewLogItem.histories = [];
+                    contractNewLogItem.createdAt = new Date();
+                    let moneyPaid = contract.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contract.dailyMoneyPay)) : 0;
+                    let historyNew = {};
+                    historyNew.title = "Đóng " + moneyPaid;
+                    historyNew.start = moment(contractNewLogItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+                    historyNew.stick = true;
+                    contractNewLogItem.histories.push(historyNew);
+                    contractLogs.push(contractNewLogItem);
 
-            // Sinh các bản ghi log vào lịch
-            EventDispatcher.insertOrUpdateBulkContractLogListener(contractLogs);
+                    // Sinh các bản ghi log vào lịch
+                    EventDispatcher.insertOrUpdateBulkContractLogListener(contractLogs);
 
-            res.send(201, contract);
-            next();
+                    res.send(201, contract);
+                    next();
+                });
         })
         .catch(function (error) {
             return next(error);

@@ -29,6 +29,12 @@ function newContractAddedListener(contracts) {
     eventEmitter.emit('LP_NEW_CONTRACT_EVENT', contracts);
 }
 
+function newContractOldAddedListener(contracts) {
+    eventEmitter.once('LP_OLD_CONTRACT_EVENT', NewContractListener.newContractOldAddedListener);
+
+    eventEmitter.emit('LP_OLD_CONTRACT_EVENT', contracts);
+}
+
 function newContractLuuThongListener(contracts) {
     eventEmitter.once('LP_NEW_CONTRACT_LUU_THONG_EVENT', NewContractListener.newContractLuuThongListener);
 
@@ -58,6 +64,7 @@ module.exports = {
     createContractLogListener: createContractLogListener,
     addMultiLogToContractLogListener: addMultiLogToContractLogListener,
     newContractAddedListener: newContractAddedListener,
+    newContractOldAddedListener: newContractOldAddedListener,
     newContractLuuThongListener: newContractLuuThongListener,
     updateAndNewLuuThongListener: updateAndNewLuuThongListener,
     updateStatusContractAndLuuThongListener: updateStatusContractAndLuuThongListener,

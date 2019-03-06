@@ -336,6 +336,77 @@ function insertMany(data) {
 }
 
 /**
+ * Thêm mới hàng loạt theo hơp đồng cũ
+ * @param data
+ * @returns {*|promise}
+ */
+function insertManyByContractOld(data) {
+    const deferred = Q.defer();
+
+    let luuthongList = [];
+
+    data.forEach((contractItem) => {
+        // let nextPayDate = new Date(contractItem.createdAt);
+        // nextPayDate.setDate(nextPayDate.getDate() + 1);
+
+        let dateEnd = moment(contractItem.dateEnd, "DD/MM/YYYY");
+        let nextPayDate = dateEnd.add(1, "days").format("YYYY-MM-DD");
+
+        let totalMoneyPaid = contractItem.totalMoneyPaid || 0;
+        let luuthong = new HdLuuThong();
+        luuthong.contractId = contractItem.contractId;
+
+        if (contractItem.status === CONTRACT_CONST.STAND) {
+
+        }
+        else {
+            if (totalMoneyPaid > 0) {
+                luuthong.moneyHavePay = contractItem.moneyHavePay;
+                luuthong.moneyPaid = contractItem.moneyPaid;
+            } else {
+                luuthong.moneyHavePay = contractItem.dailyMoneyPay;
+                luuthong.moneyPaid = contractItem.dailyMoneyPay;
+            }
+
+            // Nếu là tạo hợp đồng vay mới
+            if (contractItem.createContractNew) {
+                // Tính luôn lưu thông của hợp đồng theo ngày chốt
+                let luuthongCurrent = new HdLuuThong();
+                luuthongCurrent.contractId = contractItem.contractId;
+                luuthongCurrent.createdAt = moment(contractItem.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
+                luuthongCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+
+                let paidMoney = parseInt(contractItem.paidMoney);
+                if (paidMoney > 0) {
+                    luuthongCurrent.moneyPaid = paidMoney;
+                    luuthongCurrent.moneyHavePay = paidMoney;
+                }
+
+                luuthongList.push(luuthongCurrent);
+            }
+        }
+
+        luuthong.createdAt = nextPayDate;
+
+        if (totalMoneyPaid < contractItem.actuallyCollectedMoney)
+            luuthongList.push(luuthong);
+    });
+
+    HdLuuThong.insertMany(luuthongList, function (error, item) {
+        if (error) {
+            console.error(error);
+            deferred.reject(
+                new errors.InvalidContentError(error.message)
+            );
+        } else {
+            deferred.resolve(luuthongList);
+        }
+    });
+
+    return deferred.promise;
+}
+
+/**
  * Thêm mới hàng loạt các hdLuuThong list
  * @param data
  * @returns {*|promise}
@@ -613,6 +684,7 @@ module.exports = {
     remove: remove,
     removeByContractId: removeByContractId,
     insertMany: insertMany,
+    insertManyByContractOld: insertManyByContractOld,
     saveMany: saveMany,
     updateMany: updateMany,
     updateChotLaiDung: updateChotLaiDung,

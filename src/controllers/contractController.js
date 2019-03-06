@@ -64,6 +64,39 @@ function insertOrUpdateBulk(req, res, next) {
  * @param req
  * @param res
  * @param next
+ * @returns {*}
+ */
+function saveManyContractOld(req, res, next) {
+    let data = req.body;
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+
+    ContractRepository.insertContractOld(data)
+        .then(function (contracts) {
+            // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
+            EventDispatcher.newContractOldAddedListener(contracts);
+
+            // Sinh các bản ghi log lưu vết cho các hợp đồng mới tạo
+            // EventDispatcher.createContractLogListener(contracts);
+
+            res.send(201, data);
+            next();
+        })
+        .catch((error) => {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
  */
 function list(req, res, next) {
     ContractRepository.getList(req.params)
@@ -400,6 +433,7 @@ function updateTotalMoneyPaid(req, res, next) {
 
 module.exports = {
     insertOrUpdateBulk: insertOrUpdateBulk,
+    saveManyContractOld: saveManyContractOld,
     list: list,
     listByDate: listByDate,
     listByType: listByType,

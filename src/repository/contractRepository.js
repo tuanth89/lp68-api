@@ -397,6 +397,81 @@ function insertOrUpdateBulk(contracts) {
 }
 
 /**
+ * Thêm mới hợp đồng cũ
+ * @param {Array} contracts
+ */
+function insertContractOld(contracts) {
+    const deferred = Q.defer();
+
+    Contract.findOne({}).sort({noIdentity: -1})
+        .exec(function (error, item) {
+                if (error) {
+                    deferred.reject(new errors.InvalidContentError(error.message));
+                } else {
+                    let count = 0;
+                    if (item) {
+                        count = item.noIdentity;
+                    }
+
+                    let bulk = Contract.collection.initializeOrderedBulkOp();
+
+                    _.each(contracts, function (contract) {
+                        if (!contract._id) {
+                            contract._id = new ObjectId();
+                        }
+
+                        if (!contract.contractNo) {
+                            let nowDate = new Date();
+                            contract.contractNo = `${nowDate.getFullYear().toString().substr(-2)}${++count}`;
+                            contract.noIdentity = count;
+                        }
+                        contract.contractId = contract._id;
+
+                        // let startDate = new Date(contract.createdAt);
+                        // contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
+                        contract.createdAt = moment(contract.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
+                        contract.loanEndDate = moment(contract.createdAt, "YYYY-MM-DD").add(contract.loanDate, "days").format("YYYY-MM-DD");
+
+                        let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
+                        contract.dailyMoneyPay = dailyMoney.toFixed();
+
+                        if (contract.isHdLaiDung) {
+                            contract.status = CONTRACT_CONST.STAND;
+                            contract.dailyMoneyPay = 0;
+                        }
+                        else {
+                            // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
+                            contract.createContractNew = true;
+                        }
+
+                        if (contract.customer) {
+                            contract.customer._id = ObjectId(contract.customer._id);
+                        }
+
+                        let item = new Contract(contract);
+                        item.totalMoneyPaid = contract.paidMoney;
+
+                        bulk.find({_id: ObjectId(item._id)})
+                            .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+                            .updateOne(item);
+                    });
+
+                    bulk.execute(function (error, results) {
+                        if (error) {
+                            deferred.reject(new errors.InvalidContentError(error.message));
+                        } else {
+                            deferred.resolve(contracts);
+                        }
+                    });
+
+                }
+            }
+        );
+
+    return deferred.promise;
+}
+
+/**
  * Cập nhật tiền đóng hàng ngày.
  * @param {Array} contracts
  */
@@ -847,6 +922,7 @@ module.exports = {
     getListByCustomer: getListByCustomer,
     getDashboardStatistic: getDashboardStatistic,
     checkCustomerContractToDel: checkCustomerContractToDel,
-    checkContractToDel: checkContractToDel
+    checkContractToDel: checkContractToDel,
+    insertContractOld: insertContractOld
 
 };

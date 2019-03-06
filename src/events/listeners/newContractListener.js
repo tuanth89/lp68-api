@@ -34,6 +34,14 @@ function newContractAddedListener(contracts) {
         .done();
 }
 
+function newContractOldAddedListener(contracts) {
+    HdLuuThongRepository.insertManyByContractOld(contracts)
+        .catch((error) => {
+            log.error(error);
+        })
+        .done();
+}
+
 function newContractLuuThongListener(contracts) {
     let luuthongList = [];
 
@@ -136,6 +144,7 @@ module.exports = {
     createContractLog: createContractLog,
     addMultiLogToContractLog: addMultiLogToContractLog,
     newContractAddedListener: newContractAddedListener,
+    newContractOldAddedListener: newContractOldAddedListener,
     newContractLuuThongListener: newContractLuuThongListener,
     updateAndNewLuuThong: updateAndNewLuuThong,
     removeAllByContract: removeAllByContract,

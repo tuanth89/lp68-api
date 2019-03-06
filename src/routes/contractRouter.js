@@ -20,6 +20,7 @@ module.exports = function (server) {
      */
     server.post(prefix, ContractController.insertOrUpdateBulk);
     server.post(prefix + '/:contractId/circulationContract', ContractController.circulationContract);
+    server.post(prefix + '/contractOld', ContractController.saveManyContractOld);
 
     /**
      * PUT

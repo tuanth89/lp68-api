@@ -1,5 +1,6 @@
 "use strict";
 
+const Contract = require('../../models/contract');
 const HdLuuThong = require('../../models/hdLuuThong');
 const ContractLog = require('../../models/contractLog');
 const ContractLogRepository = require('../../repository/contractLogRepository');
@@ -32,6 +33,29 @@ function newContractAddedListener(contracts) {
             log.error(error);
         })
         .done();
+}
+
+function checkContractNo(contracts) {
+    contracts.forEach((contractItem) => {
+        ContractRepository.generateContract(contractItem._id, contractItem.storeCode, contractItem.customerCode)
+            .then((count) => {
+                // Mã cửa hàng/mã nv/số ngày vay/XM(XĐ)/STT
+                let contractNo = `${contractItem.storeCode}/${contractItem.customerCode}/${contractItem.loanDate}/${contractItem.typeCode}/${count}`;
+
+                Contract.update({_id: contractItem._id}, {
+                    $set: {
+                        noIdentity: count,
+                        contractNo: contractNo
+                    }
+                }, function (error, contract) {
+                    if (error) {
+                        console.error(error);
+                    } else {
+
+                    }
+                });
+            });
+    });
 }
 
 function newContractOldAddedListener(contracts) {
@@ -148,5 +172,6 @@ module.exports = {
     newContractLuuThongListener: newContractLuuThongListener,
     updateAndNewLuuThong: updateAndNewLuuThong,
     removeAllByContract: removeAllByContract,
-    insertOrUpdateBulkContractLog: insertOrUpdateBulkContractLog
+    insertOrUpdateBulkContractLog: insertOrUpdateBulkContractLog,
+    checkContractNo: checkContractNo
 };

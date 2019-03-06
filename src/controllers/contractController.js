@@ -1,6 +1,7 @@
 "use strict";
 
 const errors = require('restify-errors');
+const UserRepository = require('../repository/userRepository');
 const ContractLogRepository = require('../repository/contractLogRepository');
 const ContractRepository = require('../repository/contractRepository');
 const CustomerRepository = require('../repository/customerRepository');
@@ -38,6 +39,9 @@ function insertOrUpdateBulk(req, res, next) {
     //     .then((customers) => {
     ContractRepository.insertOrUpdateBulk(data)
         .then(function (contracts) {
+            //Kiểm tra số hợp đồng có bị trùng lặp
+            EventDispatcher.checkContractNoListener(contracts);
+
             // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
             EventDispatcher.newContractAddedListener(contracts);
 
@@ -46,17 +50,17 @@ function insertOrUpdateBulk(req, res, next) {
 
             res.send(201, data);
             next();
+            // })
+            // .catch((error) => {
+            //     return next(error);
+            // })
+            // .done();
+            // })
         })
         .catch((error) => {
             return next(error);
         })
         .done();
-    // })
-    // .catch((error) => {
-    //     return next(error);
-    // })
-    // .done();
-
 }
 
 /**
@@ -77,6 +81,9 @@ function saveManyContractOld(req, res, next) {
 
     ContractRepository.insertContractOld(data)
         .then(function (contracts) {
+            //Kiểm tra số hợp đồng có bị trùng lặp
+            EventDispatcher.checkContractNoListener(contracts);
+
             // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
             EventDispatcher.newContractOldAddedListener(contracts);
 

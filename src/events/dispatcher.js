@@ -29,6 +29,12 @@ function newContractAddedListener(contracts) {
     eventEmitter.emit('LP_NEW_CONTRACT_EVENT', contracts);
 }
 
+function checkContractNoListener(contracts) {
+    eventEmitter.once('LP_CHECK_CONTRACT_NO_EVENT', NewContractListener.checkContractNo);
+
+    eventEmitter.emit('LP_CHECK_CONTRACT_NO_EVENT', contracts);
+}
+
 function newContractOldAddedListener(contracts) {
     eventEmitter.once('LP_OLD_CONTRACT_EVENT', NewContractListener.newContractOldAddedListener);
 
@@ -68,5 +74,6 @@ module.exports = {
     newContractLuuThongListener: newContractLuuThongListener,
     updateAndNewLuuThongListener: updateAndNewLuuThongListener,
     updateStatusContractAndLuuThongListener: updateStatusContractAndLuuThongListener,
-    removeAllByContractListener: removeAllByContractListener
+    removeAllByContractListener: removeAllByContractListener,
+    checkContractNoListener: checkContractNoListener
 };

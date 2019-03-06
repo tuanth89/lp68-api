@@ -306,7 +306,7 @@ function getListUserByStore(storeId) {
 
     Store
         .findOne(query)
-        .populate("staffs", '_id fullName isAccountant')
+        .populate("staffs", '_id fullName isAccountant username')
         .select(Serializer.listByStore)
         .then(result => {
             d.resolve(result);

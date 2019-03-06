@@ -321,77 +321,104 @@ function insertOrUpdateBulk(contracts) {
 
     let bulk = Contract.collection.initializeOrderedBulkOp();
 
-    Contract.findOne({}).sort({noIdentity: -1})
-        .exec(function (error, item) {
-                if (error) {
-                    deferred.reject(new errors.InvalidContentError(error.message));
-                } else {
-                    let count = 0;
-                    if (item) {
-                        count = item.noIdentity;
-                    }
+    _.each(contracts, function (contract) {
+        if (!contract._id) {
+            contract._id = new ObjectId();
+            // contract.createdAt = new Date();
+            // contract.creator = ObjectId(creatorId);
+        }
+        else {
+            contract.createdAt = new Date(contract.createdAt);
+            contract._id = ObjectId(contract._id);
+            contract.updatedAt = new Date();
+        }
 
-                    _.each(contracts, function (contract) {
-                        if (!contract._id) {
-                            contract._id = new ObjectId();
-                            // contract.createdAt = new Date();
-                            // contract.creator = ObjectId(creatorId);
-                        }
-                        else {
-                            contract.createdAt = new Date(contract.createdAt);
-                            contract._id = ObjectId(contract._id);
-                            contract.updatedAt = new Date();
-                        }
+        // Mã cửa hàng/mã nv/số ngày vay/XM(XĐ)/STT
+        // if (!contract.contractNo) {
+        // let nowDate = new Date();
+        // contract.contractNo = `${nowDate.getFullYear().toString().substr(-2)}${++count}`;
+        // contract.noIdentity = count;
+        // }
 
-                        if (!contract.contractNo) {
-                            let nowDate = new Date();
-                            contract.contractNo = `${nowDate.getFullYear().toString().substr(-2)}${++count}`;
-                            contract.noIdentity = count;
-                        }
-                        contract.contractId = contract._id;
+        contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
+        contract.contractId = contract._id;
 
-                        let startDate = new Date(contract.createdAt);
-                        contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
+        let startDate = new Date(contract.createdAt);
+        contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
 
-                        let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
-                        contract.dailyMoneyPay = dailyMoney.toFixed();
+        let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
+        contract.dailyMoneyPay = dailyMoney.toFixed();
 
-                        // if (contract.loanDate > 0) {
-                        //     let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
-                        //     // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
-                        //     contract.dailyMoney = dailyMoney.toFixed();
-                        // }
+        // if (contract.loanDate > 0) {
+        //     let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
+        //     // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
+        //     contract.dailyMoney = dailyMoney.toFixed();
+        // }
 
-                        if (contract.isHdLaiDung) {
-                            contract.status = CONTRACT_CONST.STAND;
-                            contract.dailyMoneyPay = 0;
-                        }
-                        else {
-                            // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
-                            contract.createContractNew = true;
-                        }
+        if (contract.isHdLaiDung) {
+            contract.status = CONTRACT_CONST.STAND;
+            contract.dailyMoneyPay = 0;
+        }
+        else {
+            // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
+            contract.createContractNew = true;
+        }
 
-                        if (contract.customer) {
-                            contract.customer._id = ObjectId(contract.customer._id);
-                        }
+        if (contract.customer) {
+            contract.customer._id = ObjectId(contract.customer._id);
+        }
 
-                        let item = new Contract(contract);
+        let item = new Contract(contract);
 
-                        bulk.find({_id: ObjectId(item._id)})
-                            .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
-                            .updateOne(item);
-                    });
+        bulk.find({_id: ObjectId(item._id)})
+            .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+            .updateOne(item);
 
-                    bulk.execute(function (error, results) {
-                        if (error) {
-                            deferred.reject(new errors.InvalidContentError(error.message));
-                        } else {
-                            deferred.resolve(contracts);
-                        }
-                    });
-                }
-            }
-        );
+    });
+
+    bulk.execute(function (error, results) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(contracts);
+        }
+    });
+
+    return deferred.promise;
+}
+
+function generateContract(contractId, storeCode, customerCode) {
+    const deferred = Q.defer();
+
+    countByContractNo(contractId, storeCode, customerCode)
+        .then((count) => {
+            // if (count > 0) {
+            deferred.resolve(count + 1);
+            // } else {
+            //     deferred.resolve(1);
+            // }
+        })
+        .catch((error) => {
+            deferred.reject(error);
+        }).done();
+
+    return deferred.promise;
+}
+
+function countByContractNo(contractId, storeCode, customerCode) {
+    const deferred = Q.defer();
+
+    Contract.count({
+        _id: {$ne: contractId},
+        storeCode: storeCode,
+        customerCode: customerCode
+    }, function (error, count) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(count);
+        }
+    });
 
     return deferred.promise;
 }
@@ -403,70 +430,56 @@ function insertOrUpdateBulk(contracts) {
 function insertContractOld(contracts) {
     const deferred = Q.defer();
 
-    Contract.findOne({}).sort({noIdentity: -1})
-        .exec(function (error, item) {
-                if (error) {
-                    deferred.reject(new errors.InvalidContentError(error.message));
-                } else {
-                    let count = 0;
-                    if (item) {
-                        count = item.noIdentity;
-                    }
+    let bulk = Contract.collection.initializeOrderedBulkOp();
 
-                    let bulk = Contract.collection.initializeOrderedBulkOp();
+    _.each(contracts, function (contract) {
+        if (!contract._id) {
+            contract._id = new ObjectId();
+        }
 
-                    _.each(contracts, function (contract) {
-                        if (!contract._id) {
-                            contract._id = new ObjectId();
-                        }
+        contract.contractId = contract._id;
+        contract.createdAt = moment(contract.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
+        contract.loanEndDate = moment(contract.createdAt, "YYYY-MM-DD").add(contract.loanDate, "days").format("YYYY-MM-DD");
 
-                        if (!contract.contractNo) {
-                            let nowDate = new Date();
-                            contract.contractNo = `${nowDate.getFullYear().toString().substr(-2)}${++count}`;
-                            contract.noIdentity = count;
-                        }
-                        contract.contractId = contract._id;
+        let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
+        contract.dailyMoneyPay = dailyMoney.toFixed();
 
-                        // let startDate = new Date(contract.createdAt);
-                        // contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
-                        contract.createdAt = moment(contract.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
-                        contract.loanEndDate = moment(contract.createdAt, "YYYY-MM-DD").add(contract.loanDate, "days").format("YYYY-MM-DD");
+        contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
+        if (contract.isHdDao) {
+            contract.status = CONTRACT_CONST.MATURITY;
+            contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_DAO;
+            contract.transferDate = moment(contract.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
+        }
 
-                        let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
-                        contract.dailyMoneyPay = dailyMoney.toFixed();
+        if (contract.isHdLaiDung) {
+            contract.status = CONTRACT_CONST.STAND;
+            contract.dailyMoneyPay = 0;
+            contract.transferDate = moment(contract.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
+        }
+        else {
+            // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
+            contract.createContractNew = true;
+        }
 
-                        if (contract.isHdLaiDung) {
-                            contract.status = CONTRACT_CONST.STAND;
-                            contract.dailyMoneyPay = 0;
-                        }
-                        else {
-                            // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
-                            contract.createContractNew = true;
-                        }
+        if (contract.customer) {
+            contract.customer._id = ObjectId(contract.customer._id);
+        }
 
-                        if (contract.customer) {
-                            contract.customer._id = ObjectId(contract.customer._id);
-                        }
+        let item = new Contract(contract);
+        item.totalMoneyPaid = contract.paidMoney;
 
-                        let item = new Contract(contract);
-                        item.totalMoneyPaid = contract.paidMoney;
+        bulk.find({_id: ObjectId(item._id)})
+            .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+            .updateOne(item);
+    });
 
-                        bulk.find({_id: ObjectId(item._id)})
-                            .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
-                            .updateOne(item);
-                    });
-
-                    bulk.execute(function (error, results) {
-                        if (error) {
-                            deferred.reject(new errors.InvalidContentError(error.message));
-                        } else {
-                            deferred.resolve(contracts);
-                        }
-                    });
-
-                }
-            }
-        );
+    bulk.execute(function (error, results) {
+        if (error) {
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(contracts);
+        }
+    });
 
     return deferred.promise;
 }
@@ -622,26 +635,6 @@ function save(data) {
 
 /**
  *
- * @param contractNo
- */
-function countByContractNo(contractNo) {
-    const deferred = Q.defer();
-
-    Contract.count({
-        // contractNo: new RegExp('^' + contractNo + '(-[0-9])?$', "i")
-    }, function (error, count) {
-        if (error) {
-            deferred.reject(new errors.InvalidContentError(error.message));
-        } else {
-            deferred.resolve(count);
-        }
-    });
-
-    return deferred.promise;
-}
-
-/**
- *
  * @param id
  * @returns {*|promise}
  */
@@ -670,7 +663,7 @@ function remove(id) {
  */
 function circulationContract(contractId, data) {
     const deferred = Q.defer();
-    let newLoanMoney = parseInt(data.totalMoney) || 0;
+    let newLoanMoney = parseInt(data.newLoanMoney) || 0;
     let newActuallyCollectedMoney = parseInt(data.newActuallyCollectedMoney) || 0;
     let newDailyMoney = parseInt(data.newDailyMoney) || 0;
     // let totalMoney = parseInt(data.totalMoney) || 0;
@@ -713,7 +706,7 @@ function circulationContract(contractId, data) {
                     $set: {
                         // totalMoneyPaid: totalPaid,
                         status: CONTRACT_CONST.MATURITY,
-                        transferDate: moment(nowDate).format("YYYY-MM-DD"),
+                        transferDate: contractNew.createdAt,
                         updatedAt: new Date()
                     }
                 }, function (error, user) {
@@ -909,7 +902,7 @@ module.exports = {
     update: update,
     save: save,
     remove: remove,
-    countByContractNo: countByContractNo,
+    // countByContractNo: countByContractNo,
     insertOrUpdateBulk: insertOrUpdateBulk,
     updateDailyMoneyBulk: updateDailyMoneyBulk,
     circulationContract: circulationContract,
@@ -923,6 +916,7 @@ module.exports = {
     getDashboardStatistic: getDashboardStatistic,
     checkCustomerContractToDel: checkCustomerContractToDel,
     checkContractToDel: checkContractToDel,
-    insertContractOld: insertContractOld
+    insertContractOld: insertContractOld,
+    generateContract: generateContract
 
 };

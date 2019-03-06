@@ -185,6 +185,20 @@ function save(data) {
 
     if (user.fullName) {
         user.fullNameUnsign = StringService.removeSignInString(user.fullName);
+
+        let arr = item.fullNameUnsign.split(" ");
+        if (arr.length > 0) {
+            let userName = arr[arr.length - 1];
+
+            if (arr.length > 1) {
+                arr.splice(arr.length - 1, 1);
+
+                user.username = userName + arr.map((item) => item[0]).join('');
+            }
+            else {
+                user.username = userName;
+            }
+        }
     }
 
     let hashed = HashService.saltHashPassword(user.password);

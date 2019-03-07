@@ -669,10 +669,9 @@ function circulationContract(contractId, data) {
     // let totalMoney = parseInt(data.totalMoney) || 0;
     let newLoanDate = parseInt(data.newLoanDate) || 0;
 
-    Contract.findOne({}).sort({noIdentity: -1})
+    Contract.findOne({_id: contractId})
         .exec(function (error, contractItem) {
-                let countIndetity = contractItem.noIdentity || 0;
-                let nowDate = new Date();
+                // let nowDate = new Date();
 
                 let contractNew = new Contract();
                 contractNew.customer = data.customer;
@@ -683,10 +682,13 @@ function circulationContract(contractId, data) {
                 contractNew.loanDate = newLoanDate;
                 contractNew.contractHistory = [];
                 contractNew.contractHistory.push(contractId);
-                contractNew.contractNo = `${nowDate.getFullYear()}_${++countIndetity}`;
-                contractNew.noIdentity = countIndetity;
-                // let startDate = new Date(data.createdAt);
-                // startDate.setDate(startDate.getDate() + contractNew.loanDate);
+
+                contractNew.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_DAO;
+                contractNew.storeCode = contractItem.storeCode;
+                contractNew.customerCode = contractItem.customerCode;
+                // contractNew.contractNo = `${nowDate.getFullYear()}_${++countIndetity}`;
+                // contractNew.noIdentity = countIndetity;
+
                 contractNew.loanEndDate = moment(data.createdAt, "YYYY-MM-DD").add(contractNew.loanDate, "days").format("YYYY-MM-DD");
                 contractNew.dailyMoney = newDailyMoney;
                 contractNew.dailyMoneyPay = newDailyMoney;

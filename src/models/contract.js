@@ -29,16 +29,16 @@ const ContractSchema = new mongoose.Schema({
         },
         storeCode: {
             type: String,
-            required: true
+            // required: true
         },
         customerCode: {
             type: String,
-            required: true
+            // required: true
         },
         typeCode: {
             type: String,
             enum: [CONTRACT_OTHER_CONST.TYPE_CODE.XUAT_MOI, CONTRACT_OTHER_CONST.TYPE_CODE.XUAT_DAO],
-            required: true
+            // required: true
         },
         noIdentity: {
             type: Number

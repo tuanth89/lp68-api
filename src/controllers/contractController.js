@@ -348,6 +348,9 @@ function circulationContract(req, res, next) {
     // let _user = AuthorizationService.getUser(req);
     ContractRepository.circulationContract(contractId, data)
         .then(function (contract) {
+            //Kiểm tra số hợp đồng có bị trùng lặp
+            EventDispatcher.checkContractNoListener([contract]);
+
             EventDispatcher.updateAndNewLuuThongListener(data._id, contract);
 
             ContractLogRepository.findByContractId(contractId)

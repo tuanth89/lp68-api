@@ -471,6 +471,21 @@ function insertContractOld(contracts) {
         bulk.find({_id: ObjectId(item._id)})
             .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
             .updateOne(item);
+
+        // Sinh thêm hợp đồng ở tab hợp đồng mới nếu là loại Đáo
+        if (contract.isHdDao) {
+            let itemClone = Object.assign({},item);
+            let contractNew = new Contract(itemClone._doc);
+            contractNew._id = new ObjectId();
+            contractNew.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
+            contractNew.status = CONTRACT_CONST.NEW;
+            contractNew.createdAt = moment(contract.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
+            delete contractNew._doc.transferDate;
+
+            bulk.find({_id: ObjectId(contractNew._id)})
+                .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+                .updateOne(contractNew);
+        }
     });
 
     bulk.execute(function (error, results) {

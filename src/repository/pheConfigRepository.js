@@ -4,6 +4,7 @@ const PheConfig = require('../models/pheConfig');
 const Q = require("q");
 const errors = require('restify-errors');
 const ObjectId = require('mongoose').Types.ObjectId;
+const Serializer = require('../serializers/pheConfig');
 const _ = require('lodash');
 
 
@@ -32,6 +33,30 @@ function findById(id) {
     return deferred.promise;
 }
 
+function findByDayAndLoanMoney(day, loanMoney, isCustomerNew) {
+    const deferred = Q.defer();
+
+    PheConfig
+        .findOne({
+            isNewCustomer: isCustomerNew,
+            day: day,
+            loanMoneyPack: loanMoney
+        })
+        .select(Serializer.forStaff)
+        .exec(function (err, phe) {
+            if (err) {
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+                if (phe)
+                    phe._id = ObjectId(phe._id);
+
+                deferred.resolve(phe);
+            }
+        });
+
+    return deferred.promise;
+}
+
 /**
  * @param params
  * @returns {*|promise}
@@ -40,14 +65,163 @@ function getList(params) {
     const deferred = Q.defer();
     let isNewCustomer = params.isNewCustomer === "true";
 
+    let query = [
+        {
+            $match: {isNewCustomer: isNewCustomer}
+        }
+        , {
+            $sort: {loanMoneyPack: 1, day: 1}
+        }
+        , {
+            $group: {
+                _id: "loanMoneyPack",
+                docs: {
+                    $push: "$$ROOT"
+                }
+            }
+        }
+        , {
+            $project: {
+                money_1000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 1000]}
+                    }
+                },
+                money_2000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 2000]}
+                    }
+                },
+                money_2500: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 2500]}
+                    }
+                },
+                money_3000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 3000]}
+                    }
+                },
+                money_3500: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 3500]}
+                    }
+                },
+                money_4000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 4000]}
+                    }
+                },
+                money_5000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 5000]}
+                    }
+                },
+                money_6000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 6000]}
+                    }
+                },
+                money_7500: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 7500]}
+                    }
+                },
+                money_8000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 8000]}
+                    }
+                },
+                money_10000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 10000]}
+                    }
+                },
+                money_12500: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 12500]}
+                    }
+                },
+                money_15000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 15000]}
+                    }
+                },
+                money_20000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 25000]}
+                    }
+                },
+                money_30000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 30000]}
+                    }
+                },
+                money_40000: {
+                    $filter: {
+                        input: "$docs",
+                        as: "item",
+                        cond: {$eq: ["$$item.loanMoneyPack", 40000]}
+                    }
+                }
+            }
+        }
+    ];
+
     PheConfig
-        .find({isNewCustomer: isNewCustomer})
-        .exec(function (error, users) {
+        .aggregate(query)
+        .exec(function (error, pheArr) {
             if (error) {
                 console.error(error);
                 deferred.reject(new errors.InvalidContentError(err.message));
             } else {
-                deferred.resolve(users);
+                let data = [];
+                if (pheArr.length > 0) {
+                    let list = pheArr[0];
+                    for (let item of Object.values(list)) {
+                        let obj = {};
+                        if (item instanceof Array) {
+                            // obj = Object.assign({}, item.map((el, i) => ({[el.day]: el.receive})));
+                            obj = item.reduce((obj, item) => (obj[item.day] = item.receive, obj), {});
+                            obj.loanMoneyPack = item[0].loanMoneyPack;
+                            obj.isNewCustomer = item[0].isNewCustomer;
+
+                            data.push(obj);
+                        }
+                    }
+                }
+
+                deferred.resolve(data);
             }
         });
 
@@ -138,7 +312,7 @@ function updateBulk(data) {
         let pheConfigItem = new PheConfig(item);
 
         bulk.find({_id: ObjectId(pheConfigItem._id)})
-            // .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+        // .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
             .updateOne(pheConfigItem);
     });
 
@@ -156,6 +330,7 @@ function updateBulk(data) {
 
 module.exports = {
     findById: findById,
+    findByDayAndLoanMoney: findByDayAndLoanMoney,
     getList: getList,
     save: save,
     remove: remove,

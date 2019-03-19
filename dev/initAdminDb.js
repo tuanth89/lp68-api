@@ -116,6 +116,12 @@ let featureAccesses = [
                 "roles": [
                     "super-admin"
                 ]
+            },
+            {
+                "routeName": "contract.editPheStaff",
+                "roles": [
+                    "super-admin"
+                ]
             }
         ],
         "groupName": "Hợp đồng"

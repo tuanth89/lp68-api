@@ -5,6 +5,7 @@ module.exports = {
         getOne: 'getOne',
         update: "update",
         remove: "remove",
+        editPheStaff: "editPheStaff",
         active: "active",
         disable: "disable",
         lock: "lock",
@@ -52,6 +53,7 @@ module.exports = {
         "contract.update",
         "contract.remove",
         'contract.viewDate',
+        'contract.editPheStaff',
 
         //Quản lý cửa hàng
         "store.list",

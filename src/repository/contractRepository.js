@@ -12,6 +12,7 @@ const StringService = require('../services/stringService');
 const CONTRACT_CONST = require('../constant/contractConstant');
 const CONTRACT_OTHER_CONTANST = require('../constant/contractOtherConstant');
 const USER_CONSTANT = require('../constant/userConstant');
+const config = require('../../config');
 
 /**
  *
@@ -474,7 +475,7 @@ function insertContractOld(contracts) {
 
         // Sinh thêm hợp đồng ở tab hợp đồng mới nếu là loại Đáo
         if (contract.isHdDao) {
-            let itemClone = Object.assign({},item);
+            let itemClone = Object.assign({}, item);
             let contractNew = new Contract(itemClone._doc);
             contractNew._id = new ObjectId();
             contractNew.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
@@ -912,6 +913,102 @@ function checkContractToDel(contractId) {
     return deferred.promise;
 }
 
+/**
+ *
+ * @param params
+ * @returns {*|promise}
+ */
+function getListCommissionFeeStaff(params) {
+    const deferred = Q.defer();
+    let userId = params.creatorId || "";
+    let page = parseInt(params.page) || config.pagination.page;
+    let per_page = parseInt(params.per_page) || config.pagination.limit;
+    let offset = (per_page * page) - per_page;
+
+    let query = {};
+
+    if (userId) {
+        query.creator = ObjectId(userId);
+    }
+
+    Contract
+        .find(query)
+        .populate("creator", '_id fullName')
+        .populate("customerId", '_id name')
+        .select(Serializer.commissionFee)
+        .skip(offset)
+        .limit(per_page)
+        .exec(function (error, contracts) {
+            if (error) {
+                console.error(error);
+                deferred.reject(new errors.InvalidContentError(error.message));
+            } else {
+                Contract.count(query, function (error, totalItems) {
+                    if (error) {
+                        deferred.reject(
+                            new errors.InvalidContentError(error.message)
+                        );
+                    } else {
+                        deferred.resolve({
+                            contracts,
+                            totalItems
+                        });
+                    }
+                });
+            }
+        });
+
+    return deferred.promise;
+}
+
+/**
+ * Cập nhật số tiền phế của nhân viên (kế toán sửa)
+ * @param params
+ * @param {Object} data
+ */
+function updateMoneyFeeStaff(params, data) {
+    const deferred = Q.defer();
+    let contractId = params.contractId || "";
+    let lastUserUpdate = data.lastUserUpdate || "";
+    let lastUserNameUpdate = data.lastUserNameUpdate || "";
+    let moneyFeeStaff = data.moneyFeeStaff || 0;
+
+    Contract
+        .findOne({
+            _id: contractId
+        })
+        .exec(function (err, contract) {
+            if (err) {
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+                let commissionFee = contract.commissionFee ? contract.commissionFee : {};
+                commissionFee.lastUserUpdate = ObjectId(lastUserUpdate);
+                commissionFee.lastUserNameUpdate = lastUserNameUpdate;
+                commissionFee.receive = moneyFeeStaff;
+
+                let updateSet = {
+                    commissionFee: commissionFee
+                };
+
+                Contract.update({
+                    _id: contractId
+                }, {
+                    $set: updateSet
+                }, function (error, contract) {
+                    if (error) {
+                        deferred.reject(new errors.InvalidContentError("Not found"));
+                        return deferred.promise;
+                    } else {
+                        deferred.resolve(contract);
+                    }
+                });
+            }
+        });
+
+
+    return deferred.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
@@ -934,6 +1031,8 @@ module.exports = {
     checkCustomerContractToDel: checkCustomerContractToDel,
     checkContractToDel: checkContractToDel,
     insertContractOld: insertContractOld,
-    generateContract: generateContract
+    generateContract: generateContract,
+    getListCommissionFeeStaff: getListCommissionFeeStaff,
+    updateMoneyFeeStaff: updateMoneyFeeStaff
 
 };

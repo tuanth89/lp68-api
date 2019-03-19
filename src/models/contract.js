@@ -50,9 +50,6 @@ const ContractSchema = new mongoose.Schema({
             type: ObjectId,
             ref: "Contract"
         }],
-        // contractDate: {
-        //     type: Date
-        // },
         customer: {
             type: Mixed
         },
@@ -110,6 +107,9 @@ const ContractSchema = new mongoose.Schema({
         isCustomerNew: {
             type: Boolean
         },
+        commissionFee:{
+            type: Mixed
+        },
         // Ngày chuyển
         transferDate: {
             type: Date
@@ -124,14 +124,17 @@ const ContractSchema = new mongoose.Schema({
         },
         // Thuộc cửa hàng nào
         storeId: {
-            type: ObjectId
+            type: ObjectId,
+            ref: "Store"
         },
         // Người tạo
         creator: {
-            type: ObjectId
+            type: ObjectId,
+            ref: "User"
         },
         lastUserUpdate: {
-            type: ObjectId
+            type: ObjectId,
+            ref: "User"
         }
     }
     , {

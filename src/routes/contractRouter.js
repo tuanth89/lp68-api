@@ -14,6 +14,7 @@ module.exports = function (server) {
     server.get(prefix + '/circulation/all', ContractController.listByDate);
     server.get(prefix + '/allContract/byType', ContractController.listByType);
     server.get(prefix + '/:customerId/byCustomer', ContractController.listByCustomer);
+    server.get(prefix + '/:creatorId/commissionFeeStaff', ContractController.listCommisionFeeStaff);
 
     /**
      * POST
@@ -27,6 +28,10 @@ module.exports = function (server) {
      */
     server.put(prefix + '/:contractId/updateTotalMoneyPaid', ContractController.updateTotalMoneyPaid);
     server.put(prefix + '/circulation/update', ContractController.updateDailyMoneyBulk);
+    server.put({
+        path: prefix + '/:contractId/updateComFeeStaff',
+        actions: [`${resource}.${actions.editPheStaff}`]
+    }, ContractController.updateMoneyFeeStaff);
 
     /**
      * GET
@@ -43,8 +48,8 @@ module.exports = function (server) {
      * DELETE
      */
     server.del({
-            path: prefix  + '/:contractId',
-            actions: [`${resource}.${actions.remove}`]
-        }, ContractController.remove);
+        path: prefix + '/:contractId',
+        actions: [`${resource}.${actions.remove}`]
+    }, ContractController.remove);
 
 };

@@ -88,13 +88,14 @@ db.once('open', () => {
 
     // console.log(arrayKhachMoi);
 
-    Promise.all([dropPheConfig()]).then(function (results) {
+    // Promise.all([dropPheConfig()]).then(function (results) {
         PheConfig.insertMany(arrayKhachMoi)
             .then((result) => {
-                // console.log("result ", result);
+                console.log("result ", result);
             })
             .catch(err => {
                 console.error("error ", err);
             });
-    });
+    // });
+
 });

@@ -2,14 +2,12 @@
 
 const Contract = require('../../models/contract');
 const HdLuuThong = require('../../models/hdLuuThong');
-const ContractLog = require('../../models/contractLog');
 const ContractLogRepository = require('../../repository/contractLogRepository');
 const ContractRepository = require('../../repository/contractRepository');
 const HdLuuThongRepository = require('../../repository/hdLuuThongRepository');
+const PheConfigRepository = require('../../repository/pheConfigRepository');
 const log = require('../../../logger').log;
 const CONTRACT_OTHER_CONST = require('../../constant/contractOtherConstant');
-const StringService = require('../../services/stringService');
-const moment = require('moment');
 const _ = require('lodash');
 
 function createContractLog(contracts) {
@@ -49,11 +47,29 @@ function checkContractNo(contracts) {
                     }
                 }, function (error, contract) {
                     if (error) {
-                        console.error(error);
-                    } else {
-
+                        log.error(error);
                     }
                 });
+            });
+
+        PheConfigRepository.findByDayAndLoanMoney(contractItem.loanDate, contractItem.loanMoney / 1000, contractItem.isCustomerNew)
+            .then(item => {
+                if (item) {
+                    Contract.update({_id: contractItem._id}, {
+                        $set: {
+                            commissionFee: {
+                                _id: item._id,
+                                day: item.day,
+                                loanMoneyPack: item.loanMoneyPack,
+                                receive: item.receive
+                            }
+                        }
+                    }, {upsert: true}, function (error, contract) {
+                        if (error) {
+                            log.error(error);
+                        }
+                    });
+                }
             });
     });
 }
@@ -92,7 +108,7 @@ function newContractLuuThongListener(contracts) {
 
     HdLuuThong.insertMany(luuthongList, function (error, item) {
         if (error) {
-            console.error(error);
+            log.error(error);
         } else {
 
         }

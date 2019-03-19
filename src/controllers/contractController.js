@@ -441,6 +441,55 @@ function updateTotalMoneyPaid(req, res, next) {
         .done();
 }
 
+/**
+ * Danh sách các hợp đồng được quản lý bởi nhân viên
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function listCommisionFeeStaff(req, res, next) {
+    ContractRepository.getListCommissionFeeStaff(req.params)
+        .then(function (contracts) {
+            res.send(contracts);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ * Cập nhật số tiền phế của nhân viên (kế toán sửa)
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateMoneyFeeStaff(req, res, next) {
+    let data = req.body || {};
+
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+    data.lastUserUpdate = _user.id;
+    data.lastUserNameUpdate = _user.fullName;
+
+    ContractRepository.updateMoneyFeeStaff(req.params, data)
+        .then(function () {
+            res.send(200);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     insertOrUpdateBulk: insertOrUpdateBulk,
     saveManyContractOld: saveManyContractOld,
@@ -455,5 +504,7 @@ module.exports = {
     circulationContract: circulationContract,
     updateStatus: updateStatus,
     dashboardStatistic: dashboardStatistic,
-    updateTotalMoneyPaid: updateTotalMoneyPaid
+    updateTotalMoneyPaid: updateTotalMoneyPaid,
+    listCommisionFeeStaff: listCommisionFeeStaff,
+    updateMoneyFeeStaff: updateMoneyFeeStaff
 };

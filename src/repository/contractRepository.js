@@ -388,38 +388,61 @@ function insertOrUpdateBulk(contracts) {
     return deferred.promise;
 }
 
-function generateContract(contractId, storeCode, customerCode) {
+function generateContract(storeCode, customerCode) {
     const deferred = Q.defer();
 
-    countByContractNo(contractId, storeCode, customerCode)
-        .then((count) => {
-            // if (count > 0) {
-            deferred.resolve(count + 1);
-            // } else {
-            //     deferred.resolve(1);
-            // }
+    Contract.findOne(
+        {
+            // _id: {$ne: contractId},
+            storeCode: storeCode,
+            customerCode: customerCode,
         })
-        .catch((error) => {
-            deferred.reject(error);
-        }).done();
+        .sort({noIdentity: -1})
+        .select(Serializer.contractNoGenerate)
+        .exec(function (error, item) {
+            if (error) {
+                deferred.reject(new errors.InvalidContentError(error.message));
+            } else {
+                if (item)
+                    deferred.resolve(item.noIdentity ? item.noIdentity : 0);
+                else
+                    deferred.resolve(0);
+            }
+        });
+
+    // countByContractNo(storeCode, customerCode)
+    //     .then((count) => {
+    //         // if (count > 0) {
+    //         deferred.resolve(count);
+    //         // } else {
+    //         //     deferred.resolve(1);
+    //         // }
+    //     })
+    //     .catch((error) => {
+    //         deferred.reject(error);
+    //     }).done();
 
     return deferred.promise;
 }
 
-function countByContractNo(contractId, storeCode, customerCode) {
+function countByContractNo(storeCode, customerCode) {
     const deferred = Q.defer();
 
-    Contract.count({
-        _id: {$ne: contractId},
-        storeCode: storeCode,
-        customerCode: customerCode
-    }, function (error, count) {
-        if (error) {
-            deferred.reject(new errors.InvalidContentError(error.message));
-        } else {
-            deferred.resolve(count);
-        }
-    });
+    Contract.findOne(
+        {
+            // _id: {$ne: contractId},
+            storeCode: storeCode,
+            customerCode: customerCode,
+        })
+        .sort({noIdentity: -1})
+        .select(Serializer.contractNoGenerate)
+        .exec(function (error, item) {
+            if (error) {
+                deferred.reject(new errors.InvalidContentError(error.message));
+            } else {
+                deferred.resolve(item.noIdentity ? item.noIdentity : 0);
+            }
+        });
 
     return deferred.promise;
 }
@@ -600,22 +623,24 @@ function updateTotalMoneyPaidByUser(contractId, totalMoneyPaid, lastUserUpdate) 
                     lastUserUpdate: lastUserUpdate
                 };
 
-                if (totalMoney < contract.actuallyCollectedMoney) {
+                if (totalMoney >= contract.actuallyCollectedMoney) {
                     updateSet.status = CONTRACT_CONST.END;
+                    updateSet.contractEndDate = moment().format("YYYY-MM-DD");
                 }
 
                 Contract.update({
-                    _id: contractId
-                }, {
-                    $set: updateSet
-                }, function (error, contract) {
-                    if (error) {
-                        deferred.reject(new errors.InvalidContentError("Not found"));
-                        return deferred.promise;
-                    } else {
-                        deferred.resolve(contract);
-                    }
-                });
+                        _id: contractId
+                    },
+                    {
+                        $set: updateSet
+                    }, {upsert: true}
+                    , function (error, contract) {
+                        if (error) {
+                            deferred.reject(new errors.InvalidContentError("Not found"));
+                        } else {
+                            deferred.resolve(contract);
+                        }
+                    });
             }
         });
 

@@ -8,6 +8,7 @@ const HdLuuThongRepository = require('../../repository/hdLuuThongRepository');
 const PheConfigRepository = require('../../repository/pheConfigRepository');
 const log = require('../../../logger').log;
 const CONTRACT_OTHER_CONST = require('../../constant/contractOtherConstant');
+const CONTRACT_CONST = require('../../constant/contractConstant');
 const _ = require('lodash');
 
 function createContractLog(contracts) {
@@ -34,9 +35,12 @@ function newContractAddedListener(contracts) {
 }
 
 function checkContractNo(contracts) {
-    contracts.forEach((contractItem) => {
-        ContractRepository.generateContract(contractItem._id, contractItem.storeCode, contractItem.customerCode)
-            .then((count) => {
+    let itemContract = contracts[0];
+    ContractRepository.generateContract(itemContract.storeCode, itemContract.customerCode)
+        .then((count) => {
+            contracts.forEach((contractItem) => {
+                count++;
+
                 // Mã cửa hàng/mã nv/số ngày vay/XM(XĐ)/STT
                 let contractNo = `${contractItem.storeCode}/${contractItem.customerCode}/${contractItem.loanDate}/${contractItem.typeCode}/${count}`;
 
@@ -50,28 +54,32 @@ function checkContractNo(contracts) {
                         log.error(error);
                     }
                 });
-            });
 
-        PheConfigRepository.findByDayAndLoanMoney(contractItem.loanDate, contractItem.loanMoney / 1000, contractItem.isCustomerNew)
-            .then(item => {
-                if (item) {
-                    Contract.update({_id: contractItem._id}, {
-                        $set: {
-                            commissionFee: {
-                                _id: item._id,
-                                day: item.day,
-                                loanMoneyPack: item.loanMoneyPack,
-                                receive: item.receive
+
+                // hđ lãi đứng: sinh phế cho nhân viên theo ngày phát sinh hđ
+                if (contractItem.status === CONTRACT_CONST.STAND) {
+                    PheConfigRepository.findByDayAndLoanMoney(contractItem.loanDate, contractItem.loanMoney, contractItem.isCustomerNew)
+                        .then(item => {
+                            if (item) {
+                                Contract.update({_id: contractItem._id}, {
+                                    $set: {
+                                        commissionFee: {
+                                            _id: item._id,
+                                            day: item.day,
+                                            loanMoneyPack: item.loanMoneyPack,
+                                            receive: item.receive
+                                        }
+                                    }
+                                }, {upsert: true}, function (error, contract) {
+                                    if (error) {
+                                        log.error(error);
+                                    }
+                                });
                             }
-                        }
-                    }, {upsert: true}, function (error, contract) {
-                        if (error) {
-                            log.error(error);
-                        }
-                    });
+                        });
                 }
             });
-    });
+        });
 }
 
 function newContractOldAddedListener(contracts) {
@@ -180,6 +188,31 @@ function insertOrUpdateBulkContractLog(contracts) {
         .done();
 }
 
+function updatePheForStaff(contractId) {
+    ContractRepository.findById(contractId)
+        .then(contractItem => {
+            PheConfigRepository.findByDayAndLoanMoney(contractItem.loanDate, contractItem.loanMoney, contractItem.isCustomerNew)
+                .then(item => {
+                    if (item) {
+                        Contract.update({_id: contractId}, {
+                            $set: {
+                                commissionFee: {
+                                    _id: item._id,
+                                    day: item.day,
+                                    loanMoneyPack: item.loanMoneyPack,
+                                    receive: item.receive
+                                }
+                            }
+                        }, {upsert: true}, function (error, contract) {
+                            if (error) {
+                                log.error(error);
+                            }
+                        });
+                    }
+                });
+        })
+}
+
 module.exports = {
     createContractLog: createContractLog,
     addMultiLogToContractLog: addMultiLogToContractLog,
@@ -189,5 +222,6 @@ module.exports = {
     updateAndNewLuuThong: updateAndNewLuuThong,
     removeAllByContract: removeAllByContract,
     insertOrUpdateBulkContractLog: insertOrUpdateBulkContractLog,
-    checkContractNo: checkContractNo
+    checkContractNo: checkContractNo,
+    updatePheForStaff: updatePheForStaff
 };

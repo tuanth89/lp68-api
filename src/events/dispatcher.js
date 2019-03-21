@@ -65,6 +65,12 @@ function removeAllByContractListener(contract) {
     eventEmitter.emit('LP_REMOVE_ALL_BY_CONTRACT_EVENT', contract);
 }
 
+function updatePheForStaffListener(contractId) {
+    eventEmitter.once('LP_UPDATE_PHE_FOR_STAFF_EVENT', NewContractListener.updatePheForStaff);
+
+    eventEmitter.emit('LP_UPDATE_PHE_FOR_STAFF_EVENT', contractId);
+}
+
 module.exports = {
     insertOrUpdateBulkContractLogListener: insertOrUpdateBulkContractLogListener,
     createContractLogListener: createContractLogListener,
@@ -75,5 +81,6 @@ module.exports = {
     updateAndNewLuuThongListener: updateAndNewLuuThongListener,
     updateStatusContractAndLuuThongListener: updateStatusContractAndLuuThongListener,
     removeAllByContractListener: removeAllByContractListener,
-    checkContractNoListener: checkContractNoListener
+    checkContractNoListener: checkContractNoListener,
+    updatePheForStaffListener: updatePheForStaffListener
 };

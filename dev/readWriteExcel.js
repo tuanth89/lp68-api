@@ -73,11 +73,26 @@ db.once('open', () => {
             }
             itemKM.day = key;
             itemKM.loanMoneyPack = money;
-            itemKM.receive = value;
-            itemKM.isNewCustomer = true;
+
+            if (value % 1 !== 0) {
+                itemKM.receive = Math.round(value);
+            }
+            else
+                itemKM.receive = value;
+
+            itemKM.isNewCustomer = false;
             arrayKhachMoi.push(itemKM);
-            // console.log(arrayKhachMoi);
+
+            // console.log(itemKM.receive);
+
+            // if (value % 1 !== 0)
+            // {
+            //     console.log(itemKM.receive);
+            //     console.log(Math.round(value));
+            // }
+
         });
+
 
         // let itemKM = Object.assign({});
         // itemKM.day = 15;
@@ -89,13 +104,13 @@ db.once('open', () => {
     // console.log(arrayKhachMoi);
 
     // Promise.all([dropPheConfig()]).then(function (results) {
-        PheConfig.insertMany(arrayKhachMoi)
-            .then((result) => {
-                console.log("result ", result);
-            })
-            .catch(err => {
-                console.error("error ", err);
-            });
+    //     PheConfig.insertMany(arrayKhachMoi)
+    //         .then((result) => {
+    //             console.log("result ", result);
+    //         })
+    //         .catch(err => {
+    //             console.error("error ", err);
+    //         });
     // });
 
 });

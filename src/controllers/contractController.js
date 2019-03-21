@@ -1,11 +1,11 @@
 "use strict";
 
 const errors = require('restify-errors');
-const UserRepository = require('../repository/userRepository');
 const ContractLogRepository = require('../repository/contractLogRepository');
 const ContractRepository = require('../repository/contractRepository');
 const CustomerRepository = require('../repository/customerRepository');
 const HdLuuThongRepository = require('../repository/hdLuuThongRepository');
+const CONTRACT_CONTANST = require('../constant/contractConstant');
 const CONTRACT_OTHER_CONTANST = require('../constant/contractOtherConstant');
 const AuthorizationService = require('../services/authorizationService');
 const EventDispatcher = require('../events/dispatcher');
@@ -244,14 +244,15 @@ function update(req, res, next) {
 }
 
 /**
- *
+ * Dành cho kế toán Duyệt sang Hết họ
  * @param req
  * @param res
  * @param next
  * @returns {*}
  */
-function updateStatus(req, res, next) {
+function updateStatusEnd(req, res, next) {
     let data = req.body || {};
+    let contractId = req.params.contractId || "";
 
     let _user = AuthorizationService.getUser(req);
     if (!_user) {
@@ -263,8 +264,11 @@ function updateStatus(req, res, next) {
 
     HdLuuThongRepository.updateStatus(data.luuThongId, CONTRACT_OTHER_CONTANST.STATUS.COMPLETED)
         .then(() => {
-            ContractRepository.updateStatus(req.params.contractId, data)
+            ContractRepository.updateStatus(contractId, data)
                 .then(function () {
+                    if (data.status === CONTRACT_CONTANST.ACCOUNTANT_END)
+                        EventDispatcher.updatePheForStaffListener(contractId);
+
                     res.send(200);
                     next();
                 })
@@ -353,6 +357,9 @@ function circulationContract(req, res, next) {
 
             EventDispatcher.updateAndNewLuuThongListener(data._id, contract);
 
+            // Sinh phế nhân viên cho hợp đồng cũ
+            EventDispatcher.updatePheForStaffListener(contractId);
+
             ContractLogRepository.findByContractId(contractId)
                 .then((contractLog) => {
                     let contractLogs = [];
@@ -422,6 +429,7 @@ function dashboardStatistic(req, res, next) {
  */
 function updateTotalMoneyPaid(req, res, next) {
     let data = req.body || {};
+    let contractId = req.params.contractId || "";
 
     let _user = AuthorizationService.getUser(req);
     if (!_user) {
@@ -430,8 +438,8 @@ function updateTotalMoneyPaid(req, res, next) {
         );
     }
 
-    ContractRepository.updateTotalMoneyPaidByUser(req.params.contractId, data.totalMoneyPaid, _user.id)
-        .then(function () {
+    ContractRepository.updateTotalMoneyPaidByUser(contractId, data.totalMoneyPaid, _user.id)
+        .then(function (result) {
             res.send(200);
             next();
         })
@@ -502,7 +510,7 @@ module.exports = {
     remove: remove,
     updateDailyMoneyBulk: updateDailyMoneyBulk,
     circulationContract: circulationContract,
-    updateStatus: updateStatus,
+    updateStatusEnd: updateStatusEnd,
     dashboardStatistic: dashboardStatistic,
     updateTotalMoneyPaid: updateTotalMoneyPaid,
     listCommisionFeeStaff: listCommisionFeeStaff,

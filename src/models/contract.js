@@ -94,6 +94,12 @@ const ContractSchema = new mongoose.Schema({
         loanEndDate: {
             type: Date
         },
+        /**
+         * Ngày hết họ
+         */
+        contractEndDate: {
+            type: Date
+        },
         note: {
             type: String
         },
@@ -107,7 +113,7 @@ const ContractSchema = new mongoose.Schema({
         isCustomerNew: {
             type: Boolean
         },
-        commissionFee:{
+        commissionFee: {
             type: Mixed
         },
         // Ngày chuyển

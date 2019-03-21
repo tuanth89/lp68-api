@@ -186,7 +186,7 @@ function save(data) {
     if (user.fullName) {
         user.fullNameUnsign = StringService.removeSignInString(user.fullName);
 
-        let arr = item.fullNameUnsign.split(" ");
+        let arr = user.fullNameUnsign.split(" ");
         if (arr.length > 0) {
             let userName = arr[arr.length - 1];
 

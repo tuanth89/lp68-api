@@ -208,7 +208,8 @@ function getList(params) {
                 let data = [];
                 if (pheArr.length > 0) {
                     let list = pheArr[0];
-                    for (let item of Object.values(list)) {
+
+                    _.forIn(list, function(item, key) {
                         let obj = {};
                         if (item instanceof Array) {
                             // obj = Object.assign({}, item.map((el, i) => ({[el.day]: el.receive})));
@@ -218,7 +219,33 @@ function getList(params) {
 
                             data.push(obj);
                         }
-                    }
+                    });
+
+                    // Object.keys(list).forEach(function(key) {
+                    //     // console.log(key, obj[key]);
+                    //     let item = list[key];
+                    //     let obj = {};
+                    //     if (item instanceof Array) {
+                    //         // obj = Object.assign({}, item.map((el, i) => ({[el.day]: el.receive})));
+                    //         obj = item.reduce((obj, item) => (obj[item.day] = item.receive, obj), {});
+                    //         obj.loanMoneyPack = item[0].loanMoneyPack;
+                    //         obj.isNewCustomer = item[0].isNewCustomer;
+                    //
+                    //         data.push(obj);
+                    //     }
+                    // });
+
+                    // for (let item of Object.values(list)) {
+                    //     let obj = {};
+                    //     if (item instanceof Array) {
+                    //         // obj = Object.assign({}, item.map((el, i) => ({[el.day]: el.receive})));
+                    //         obj = item.reduce((obj, item) => (obj[item.day] = item.receive, obj), {});
+                    //         obj.loanMoneyPack = item[0].loanMoneyPack;
+                    //         obj.isNewCustomer = item[0].isNewCustomer;
+                    //
+                    //         data.push(obj);
+                    //     }
+                    // }
                 }
 
                 deferred.resolve(data);

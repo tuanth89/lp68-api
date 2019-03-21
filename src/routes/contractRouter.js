@@ -26,6 +26,8 @@ module.exports = function (server) {
     /**
      * PUT
      */
+    server.put(prefix + '/:contractId', ContractController.update);
+    server.put(prefix + '/:contractId/changeStatus', ContractController.updateStatusEnd);
     server.put(prefix + '/:contractId/updateTotalMoneyPaid', ContractController.updateTotalMoneyPaid);
     server.put(prefix + '/circulation/update', ContractController.updateDailyMoneyBulk);
     server.put({
@@ -37,12 +39,6 @@ module.exports = function (server) {
      * GET
      */
     server.get(prefix + '/:contractId', ContractController.one);
-
-    /**
-     * UPDATE
-     */
-    server.put(prefix + '/:contractId', ContractController.update);
-    server.put(prefix + '/:contractId/changeStatus', ContractController.updateStatus);
 
     /**
      * DELETE

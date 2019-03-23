@@ -463,10 +463,14 @@ function insertContractOld(contracts) {
 
         contract.contractId = contract._id;
         contract.createdAt = moment(contract.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
-        contract.loanEndDate = moment(contract.createdAt, "YYYY-MM-DD").add(contract.loanDate, "days").format("YYYY-MM-DD");
+        contract.dailyMoneyPay = 0;
 
-        let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
-        contract.dailyMoneyPay = dailyMoney.toFixed();
+        if (contract.loanDate !== "") {
+            contract.loanEndDate = moment(contract.createdAt, "YYYY-MM-DD").add(contract.loanDate, "days").format("YYYY-MM-DD");
+
+            let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
+            contract.dailyMoneyPay = dailyMoney.toFixed();
+        }
 
         contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
         if (contract.isHdDao) {

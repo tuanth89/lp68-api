@@ -1,5 +1,6 @@
 "use strict";
 
+const HdLuuThong = require('../../models/hdLuuThong');
 const ContractRepository = require('../../repository/contractRepository');
 const HdLuuThongRepository = require('../../repository/hdLuuThongRepository');
 const log = require('../../../logger').log;
@@ -29,11 +30,34 @@ function updateStatusLuuThongContract(data) {
     }
 
     if (data.luuThongId) {
-        HdLuuThongRepository.updateStatus(data.luuThongId, data.luuThongStatus)
-            .catch((error) => {
-                log.error(error);
-            })
-            .done();
+        let updateSet = {
+            status: data.luuThongStatus
+        };
+        if (data.luuthongMoneyPaid) {
+            updateSet.moneyPaid = data.luuthongMoneyPaid;
+        }
+
+        HdLuuThong.findOneAndUpdate(
+            {
+                _id: data.luuThongId
+            }, {
+                $set: updateSet
+            }, function (error, item) {
+                if (error) {
+                    console.log(error);
+                }
+            });
+
+        // Trường hợp lãi đứng: chưa nộp hết tiền thì vẫn sinh lưu thông đóng lãi hàng ngày
+        if (data.isLaiDung && data.contractStatus === -1) {
+            HdLuuThongRepository.insertHdLuuThong(data.contractId, data.dataLuuThong);
+        }
+
+        // HdLuuThongRepository.updateStatus(data.luuThongId, data.luuThongStatus)
+        //     .catch((error) => {
+        //         log.error(error);
+        //     })
+        //     .done();
     }
 }
 

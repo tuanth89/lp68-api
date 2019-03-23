@@ -148,14 +148,17 @@ function updateChotLai(req, res, next) {
     ContractRepository.findById(contractId)
         .then((contractItem) => {
             let money = contractItem.actuallyCollectedMoney - newPayMoney;
-            data.totalMoneyPaid = newPayMoney;
+            // data.totalMoneyPaid = newPayMoney;
 
             let dataContract = {
                 contractId: contractId,
                 luuThongId: data._id,
                 contractStatus: money <= 0 ? CONTRACT_CONST.END : -1,
                 luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
-                totalMoneyPaid: newPayMoney
+                totalMoneyPaid: 0,
+                luuthongMoneyPaid: newPayMoney,
+                isLaiDung: true,
+                dataLuuThong: data
             };
             EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
 

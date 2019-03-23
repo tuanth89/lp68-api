@@ -153,9 +153,8 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
         // Update tổng tiền đã dóng vào hợp đồng
         ContractRepository.updateTotalMoneyPaid(contractNew._id, luuThongDaoCurrent.moneyPaid);
 
-        // Khi đáo sẽ ko mặc định trừ tiền đóng ngày hôm đó của HĐ cũ
-        // HĐ đáo tự động trừ tiền đóng ngày hôm đó
-        updateLuuThong.moneyPaid = 0;
+        // Khi đáo sẽ ko mặc định trừ tiền đóng ngày hôm đó của HĐ cũ mà dựa vào số tiền nhân viên nhập
+        updateLuuThong.moneyPaid = contractNew.moneyPayOld === undefined ? 0 : contractNew.moneyPayOld;
     }
 
     HdLuuThong.update({_id: hdLuuThongId}, {

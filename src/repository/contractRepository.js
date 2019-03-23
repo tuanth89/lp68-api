@@ -712,9 +712,8 @@ function circulationContract(contractId, data) {
 
     Contract.findOne({_id: contractId})
         .exec(function (error, contractItem) {
-                // let nowDate = new Date();
-
                 let contractNew = new Contract();
+                contractNew.moneyPayOld = data.moneyPayOld;
                 contractNew.customer = data.customer;
                 contractNew.customerId = contractItem.customerId;
                 contractNew.createdAt = data.createdAt;
@@ -727,8 +726,6 @@ function circulationContract(contractId, data) {
                 contractNew.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_DAO;
                 contractNew.storeCode = contractItem.storeCode;
                 contractNew.customerCode = contractItem.customerCode;
-                // contractNew.contractNo = `${nowDate.getFullYear()}_${++countIndetity}`;
-                // contractNew.noIdentity = countIndetity;
 
                 contractNew.loanEndDate = moment(data.createdAt, "YYYY-MM-DD").add(contractNew.loanDate, "days").format("YYYY-MM-DD");
                 contractNew.dailyMoney = newDailyMoney;
@@ -737,20 +734,22 @@ function circulationContract(contractId, data) {
                 contractNew.storeId = contractItem.storeId;
                 contractNew.creator = contractItem.creator;
                 contractNew.isCustomerNew = contractItem.isCustomerNew;
-                // contractNew.transferDate = moment(nowDate).format("YYYY-MM-DD");
+                // contractNew.transferDate = moment().format("YYYY-MM-DD");
 
                 contractNew.isDaoHd = true;
                 // let dailyMoney = contractNew.actuallyCollectedMoney / (contractNew.loanDate === 0 ? 1 : contractNew.loanDate);
                 // contractNew.dailyMoney = dailyMoney.toFixed();
 
-                // let totalPaid = data.totalMoneyPaid + data.moneyPaid;
+                let totalPaid = contractItem.totalMoneyPaid + (data.moneyPayOld === undefined ? 0 : data.moneyPayOld);
+
+
                 // Thay đổi trạng thái hợp đồng cũ là đáo.
                 Contract.update({_id: contractId}, {
                     $set: {
-                        // totalMoneyPaid: totalPaid,
+                        totalMoneyPaid: totalPaid,
                         status: CONTRACT_CONST.MATURITY,
                         transferDate: contractNew.createdAt,
-                        updatedAt: new Date()
+                        updatedAt: moment().format("YYYY-MM-DD")
                     }
                 }, function (error, user) {
                     if (error) {

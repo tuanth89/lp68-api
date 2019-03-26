@@ -149,13 +149,20 @@ function updateChotLai(req, res, next) {
         .then((contractItem) => {
             let money = contractItem.actuallyCollectedMoney - newPayMoney;
             // data.totalMoneyPaid = newPayMoney;
+            let totalMoneyPaid = 0;
+
+            // Trường hợp lãi đứng
+            if (contractItem.status === CONTRACT_CONST.STAND && data.payMoneyOriginal !== undefined && data.payMoneyOriginal > 0) {
+                totalMoneyPaid = contractItem.totalMoneyPaid + data.payMoneyOriginal;
+                newPayMoney += data.payMoneyOriginal;
+            }
 
             let dataContract = {
                 contractId: contractId,
                 luuThongId: data._id,
                 contractStatus: money <= 0 ? CONTRACT_CONST.END : -1,
                 luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
-                totalMoneyPaid: 0,
+                totalMoneyPaid: totalMoneyPaid,
                 luuthongMoneyPaid: newPayMoney,
                 isLaiDung: true,
                 dataLuuThong: data

@@ -80,6 +80,7 @@ function getListByDate(params) {
     let date = params.date || new Date();
     let type = params.type || -1;
     let storeId = params.storeId || "";
+    let customerCode = params.customerCode || "";
     let role = params.roles || [];
 
     const deferred = Q.defer();
@@ -103,7 +104,7 @@ function getListByDate(params) {
     }
 
     if (storeId && role.indexOf(USER_CONSTANT.ROLE_ROOT) < 0) {
-        query = Object.assign({}, query, {storeId: ObjectId(storeId)});
+        query = Object.assign({}, query, {storeId: ObjectId(storeId), customerCode: customerCode});
     }
 
     Contract
@@ -474,8 +475,8 @@ function insertContractOld(contracts) {
 
         contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
         if (contract.isHdDao) {
-            contract.status = CONTRACT_CONST.MATURITY;
-            contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_DAO;
+            // contract.status = CONTRACT_CONST.MATURITY;
+            // contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_DAO;
             contract.transferDate = moment(contract.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
         }
 
@@ -500,20 +501,21 @@ function insertContractOld(contracts) {
             .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
             .updateOne(item);
 
-        // Sinh thêm hợp đồng ở tab hợp đồng mới nếu là loại Đáo
-        if (contract.isHdDao) {
-            let itemClone = Object.assign({}, item);
-            let contractNew = new Contract(itemClone._doc);
-            contractNew._id = new ObjectId();
-            contractNew.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
-            contractNew.status = CONTRACT_CONST.NEW;
-            contractNew.createdAt = moment(contract.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
-            delete contractNew._doc.transferDate;
+        // // Sinh thêm hợp đồng ở tab hợp đồng mới nếu là loại Đáo
+        // if (contract.isHdDao) {
+        //     let itemClone = Object.assign({}, item);
+        //     let contractNew = new Contract(itemClone._doc);
+        //     contractNew._id = new ObjectId();
+        //     contractNew.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
+        //     contractNew.status = CONTRACT_CONST.NEW;
+        //     contractNew.createdAt = moment(contract.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
+        //     delete contractNew._doc.transferDate;
+        //
+        //     bulk.find({_id: ObjectId(contractNew._id)})
+        //         .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+        //         .updateOne(contractNew);
+        // }
 
-            bulk.find({_id: ObjectId(contractNew._id)})
-                .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
-                .updateOne(contractNew);
-        }
     });
 
     bulk.execute(function (error, results) {

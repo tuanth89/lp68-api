@@ -152,7 +152,18 @@ function getListByDate(params) {
                 moneyPaid: 1,
                 status: 1,
                 createdAt: 1,
-                totalHavePay: {$subtract: ["$contract.actuallyCollectedMoney", "$contract.totalMoneyPaid"]}
+                totalHavePay: {$subtract: ["$contract.actuallyCollectedMoney", "$contract.totalMoneyPaid"]},
+                moneyByStatusEnd: {
+                    $cond: [{
+                        $and: [
+                            {
+                                $eq: ["$status", CONTRACT_OTHER_CONST.STATUS.COMPLETED]
+                            }
+                        ]
+                    },
+                        "$moneyPaid", 0
+                    ]
+                }
             }
         }
     ];
@@ -174,6 +185,9 @@ function getListByDate(params) {
                 totalItems: {
                     $sum: 1
                 },
+                totalMoneyStatusEnd: {
+                    $sum: "$moneyByStatusEnd"
+                },
                 docs: {
                     $push: '$$ROOT'
                 }
@@ -182,6 +196,7 @@ function getListByDate(params) {
         {
             $project: {
                 totalItems: 1,
+                totalMoneyStatusEnd: 1,
                 docs: {
                     $slice: ["$docs", offset, per_page]
                 }

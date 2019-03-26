@@ -718,6 +718,7 @@ function circulationContract(contractId, data) {
         .exec(function (error, contractItem) {
                 let contractNew = new Contract();
                 contractNew.moneyPayOld = data.moneyPayOld;
+                contractNew.moneyPayNew = data.moneyPayNew;
                 contractNew.customer = data.customer;
                 contractNew.customerId = contractItem.customerId;
                 contractNew.createdAt = data.createdAt;

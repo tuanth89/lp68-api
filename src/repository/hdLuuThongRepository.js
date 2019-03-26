@@ -12,6 +12,7 @@ const StringService = require('../services/stringService');
 const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
 const CONTRACT_CONST = require('../constant/contractConstant');
 const USER_CONSTANT = require('../constant/userConstant');
+const config = require('../../config');
 
 /**
  *
@@ -78,6 +79,11 @@ Date.prototype.addDays = function (days) {
  */
 function getListByDate(params) {
     const deferred = Q.defer();
+
+    let page = parseInt(params.page) || config.pagination.page;
+    let per_page = parseInt(params.per_page) || config.pagination.limit;
+    let offset = (page - 1) * per_page;
+
     let date = params.date || new Date();
     let status = parseInt(params.status);
     if (status === undefined || status === null)
@@ -149,7 +155,6 @@ function getListByDate(params) {
                 totalHavePay: {$subtract: ["$contract.actuallyCollectedMoney", "$contract.totalMoneyPaid"]}
             }
         }
-        // , {$sort: {contractStatus: 1}}
     ];
 
     if (storeId && !isRoot) {
@@ -160,17 +165,41 @@ function getListByDate(params) {
         query.push({$match: {creator: ObjectId(userId)}});
     }
 
-    query.push({$sort: {contractStatus: 1, "customer.name": 1}});
+    query.push({$sort: {"customer.name": 1, contractCreatedAt: -1}});
+
+    let pageIndex = [
+        {
+            $group: {
+                _id: null,
+                totalItems: {
+                    $sum: 1
+                },
+                docs: {
+                    $push: '$$ROOT'
+                }
+            }
+        },
+        {
+            $project: {
+                totalItems: 1,
+                docs: {
+                    $slice: ["$docs", offset, per_page]
+                }
+            }
+        }
+    ];
+
+    query.push(...pageIndex);
 
     HdLuuThong
         .aggregate(query)
         // .select(Serializer.summary)
         .exec(function (error, contracts) {
             if (error) {
-                console.error(error);
+                console.log(error);
                 deferred.reject(new errors.InvalidContentError(error.message));
             } else {
-                deferred.resolve(contracts);
+                deferred.resolve(contracts[0]);
             }
         });
 

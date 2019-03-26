@@ -146,7 +146,7 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
         luuThongDaoCurrent.contractId = contractNew._id;
         luuThongDaoCurrent.createdAt = contractNew.createdAt;
         luuThongDaoCurrent.moneyHavePay = contractNew.dailyMoney;
-        luuThongDaoCurrent.moneyPaid = contractNew.dailyMoney;
+        luuThongDaoCurrent.moneyPaid = contractNew.moneyPayNew === undefined ? 0 : contractNew.moneyPayNew;
         luuThongDaoCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
         luuthongList.push(luuThongDaoCurrent);
 

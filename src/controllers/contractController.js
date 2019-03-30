@@ -261,22 +261,40 @@ function updateStatusEnd(req, res, next) {
         );
     }
     data.userId = _user.id;
+    data.luuThongStatus = CONTRACT_OTHER_CONTANST.STATUS.COMPLETED;
+    data.contractId = contractId;
 
-    HdLuuThongRepository.updateStatus(data.luuThongId, CONTRACT_OTHER_CONTANST.STATUS.COMPLETED)
-        .then(() => {
-            ContractRepository.updateStatus(contractId, data)
-                .then(function () {
-                    if (data.status === CONTRACT_CONTANST.ACCOUNTANT_END)
-                        EventDispatcher.updatePheForStaffListener(contractId);
+    // Nếu kế toán duyệt để chuyển hết họ
+    if (data.status === CONTRACT_CONTANST.ACCOUNTANT_END) {
+        ContractRepository.updateStatus(contractId, data)
+            .then(function () {
+                if (data.status === CONTRACT_CONTANST.ACCOUNTANT_END)
+                    EventDispatcher.updatePheForStaffListener(contractId);
 
-                    res.send(200);
-                    next();
-                })
-        })
-        .catch(function (error) {
-            return next(error);
-        })
-        .done();
+                res.send(200);
+                next();
+            })
+            .catch(function (error) {
+                return next(error);
+            })
+            .done();
+    }
+    else {
+        HdLuuThongRepository.updateStatus(data)
+            .then(() => {
+                EventDispatcher.updateContractTotalMoneyPaidListener(data);
+
+                ContractRepository.updateStatus(contractId, data)
+                    .then(function () {
+                        res.send(200);
+                        next();
+                    })
+            })
+            .catch(function (error) {
+                return next(error);
+            })
+            .done();
+    }
 }
 
 /**

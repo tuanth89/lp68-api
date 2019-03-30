@@ -13,12 +13,13 @@ module.exports = {
         limit: 12
     },
     db: {
-        uri: process.env.MONGODB_URI || 'mongodb://45.117.82.250:27017/lp68',
-        authorizationEnabled: true,
-        auth: {
-            user: "lp68",
-            password: "lp68@123"
-        }
+       uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/lp68',
+               //uri: process.env.MONGODB_URI || 'mongodb://45.117.82.250:27017/lp68-api',
+               // authorizationEnabled: true,
+               // auth: {
+               //     user: "lp68",
+               //     password: "Lp68@2019"
+               // }
     },
     cors: ['http://localhost:9001', 'http://192.168.1.17', 'http://localhost:9002'],
     jwt: {

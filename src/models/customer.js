@@ -19,6 +19,10 @@ const UserSchema = new mongoose.Schema({
         default: '',
         trim: true
     },
+    nameE: {
+        type: String,
+        trim: true
+    },
     photo: {
         type: String
     },

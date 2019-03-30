@@ -28,5 +28,7 @@ module.exports = function (server) {
     server.put(prefix + '/:contractId/updateThuve', HdLuuThongController.updateThuVe);
     server.put(prefix + '/:contractId/updateChot', HdLuuThongController.updateChot);
     server.put(prefix + '/:contractId/updateBe', HdLuuThongController.updateBe);
+    server.put(prefix + '/:contractId/updateKetThuc', HdLuuThongController.updateKetThuc);
+    server.put(prefix + '/:contractId/transferType', HdLuuThongController.transferType);
 
 };

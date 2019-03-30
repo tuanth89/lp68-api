@@ -200,37 +200,61 @@ function updateChotLai(req, res, next) {
  */
 function updateThuVe(req, res, next) {
     let data = req.body || {};
+
     let contractId = req.params.contractId;
-    // let _user = AuthorizationService.getUser(req);
+    let payMoneyAdded = data.payMoneyAdded !== undefined ? data.payMoneyAdded : 0;
+    let payMoneyOriginal = data.payMoneyOriginal !== undefined ? data.payMoneyOriginal : 0;
+    let luuthongMoneyPaid = payMoneyAdded + payMoneyOriginal;
 
-    // ContractRepository.findById(contractId)
-    //     .then((contractItem) => {
-    let dataContract = {
-        contractId: contractId,
-        luuThongId: data._id,
-        contractStatus: data.statusContract,
-        luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED
-    };
+    let hdLuuThongItem = {};
+    if (!data.isNotFromLuuThong) {
+        hdLuuThongItem = HdLuuThongRepository.findById(data._id);
+    }
+    else {
+        data.contractId = data._id;
+        data.luuthongMoneyPaid = luuthongMoneyPaid;
+        hdLuuThongItem = HdLuuThongRepository.findAndInsertIfNotExists(data);
+    }
 
-    EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+    hdLuuThongItem.then(luuthongItem => {
+        if (luuthongItem.status === CONTRACT_OTHER_CONST.STATUS.COMPLETED && !luuthongItem.isNew) {
+            luuthongMoneyPaid += luuthongItem.moneyPaid;
+        }
 
-    res.send(201, true);
-    next();
+        let dataContract = {
+            contractId: contractId,
+            luuThongId: luuthongItem._id,
+            luuthongMoneyPaid: luuthongMoneyPaid,
+            contractStatus: data.statusContract,
+            luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+        };
 
-    // HdLuuThongRepository.insertHdLuuThong(contractId, data)
-    //     .then(function (contract) {
-    //         res.send(201, true);
-    //         next();
-    //     })
-    //     .catch(function (error) {
-    //         return next(error);
-    //     })
-    //     .done();
-    // })
-    // .catch(function (error) {
-    //     return next(error);
-    // })
-    // .done();
+        EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+
+        EventDispatcher.updateContractTotalMoneyPaidListener(data);
+
+        res.send(201, true);
+        next();
+
+        // HdLuuThongRepository.insertHdLuuThong(contractId, data)
+        //     .then(function (contract) {
+        //         res.send(201, true);
+        //         next();
+        //     })
+        //     .catch(function (error) {
+        //         return next(error);
+        //     })
+        //     .done();
+        // })
+        // .catch(function (error) {
+        //     return next(error);
+        // })
+        // .done();
+    })
+        .catch(function (error) {
+            console.log(error);
+            return next(error);
+        })
 
 }
 
@@ -244,32 +268,44 @@ function updateThuVe(req, res, next) {
 function updateChot(req, res, next) {
     let data = req.body || {};
     let contractId = req.params.contractId;
-    // let _user = AuthorizationService.getUser(req);
+    let newPayMoney = data.newPayMoney !== undefined ? data.newPayMoney : 0;
+    let payMoneyOriginal = data.payMoneyOriginal !== undefined ? data.payMoneyOriginal : 0;
+    let luuthongMoneyPaid = newPayMoney + payMoneyOriginal;
 
-    let dataContract = {
-        contractId: contractId,
-        luuThongId: data._id,
-        contractStatus: data.statusContract,
-        luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
-        newTransferDate: data.newTransferDate,
-        newAppointmentDate: data.newAppointmentDate,
-        payMoney: data.moneyHavePay
+    let hdLuuThongItem = {};
+    if (!data.isNotFromLuuThong) {
+        hdLuuThongItem = HdLuuThongRepository.findById(data._id);
+    }
+    else {
+        data.contractId = data._id;
+        data.luuthongMoneyPaid = luuthongMoneyPaid;
+        hdLuuThongItem = HdLuuThongRepository.findAndInsertIfNotExists(data);
+    }
 
-    };
-    EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+    hdLuuThongItem.then(luuthongItem => {
+        if (luuthongItem.status === CONTRACT_OTHER_CONST.STATUS.COMPLETED && !luuthongItem.isNew) {
+            luuthongMoneyPaid += luuthongItem.moneyPaid;
+        }
 
-    res.send(201, true);
-    next();
+        let dataContract = {
+            contractId: contractId,
+            luuThongId: luuthongItem._id,
+            contractStatus: data.statusContract,
+            luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+            luuthongMoneyPaid: luuthongMoneyPaid,
+        };
 
-    // HdLuuThongRepository.insertHdLuuThong(contractId, data)
-    //     .then(function (contract) {
-    //         res.send(201, true);
-    //         next();
-    //     })
-    //     .catch(function (error) {
-    //         return next(error);
-    //     })
-    //     .done();
+        EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+        EventDispatcher.updateContractTotalMoneyPaidListener(data);
+
+        res.send(201, true);
+        next();
+    })
+        .catch(function (error) {
+            console.log(error);
+            return next(error);
+        })
+        .done();
 }
 
 /**
@@ -282,22 +318,144 @@ function updateChot(req, res, next) {
 function updateBe(req, res, next) {
     let data = req.body || {};
     let contractId = req.params.contractId;
-    // let _user = AuthorizationService.getUser(req);
+    let newPayMoney = data.newPayMoney !== undefined ? data.newPayMoney : 0;
+    let payMoneyOriginal = data.payMoneyOriginal !== undefined ? data.payMoneyOriginal : 0;
+    let luuthongMoneyPaid = newPayMoney + payMoneyOriginal;
 
-    let dataContract = {
-        contractId: contractId,
-        luuThongId: data._id,
-        contractStatus: data.statusContract,
-        luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED
-    };
-    EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+    let hdLuuThongItem = {};
+    if (!data.isNotFromLuuThong) {
+        hdLuuThongItem = HdLuuThongRepository.findById(data._id);
+    }
+    else {
+        data.contractId = data._id;
+        data.luuthongMoneyPaid = luuthongMoneyPaid;
+        hdLuuThongItem = HdLuuThongRepository.findAndInsertIfNotExists(data);
+    }
 
-    HdLuuThongRepository.insertHdLuuThong(contractId, data)
-        .then(function (contract) {
-            res.send(201, true);
-            next();
-        })
+    hdLuuThongItem.then(luuthongItem => {
+        if (luuthongItem.status === CONTRACT_OTHER_CONST.STATUS.COMPLETED && !luuthongItem.isNew) {
+            luuthongMoneyPaid += luuthongItem.moneyPaid;
+        }
+
+        let dataContract = {
+            contractId: contractId,
+            luuThongId: luuthongItem._id,
+            contractStatus: data.statusContract,
+            luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+            luuthongMoneyPaid: luuthongMoneyPaid,
+        };
+
+        EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+        EventDispatcher.updateContractTotalMoneyPaidListener(data);
+
+        res.send(201, true);
+        next();
+
+    })
         .catch(function (error) {
+            console.log(error);
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ * @desc Chuyển sang Kết thúc
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateKetThuc(req, res, next) {
+    let data = req.body || {};
+    let contractId = req.params.contractId;
+    let newPayMoney = data.newPayMoney !== undefined ? data.newPayMoney : 0;
+    let payMoneyOriginal = data.payMoneyOriginal !== undefined ? data.payMoneyOriginal : 0;
+    let luuthongMoneyPaid = newPayMoney + payMoneyOriginal;
+
+    let hdLuuThongItem = {};
+    if (!data.isNotFromLuuThong) {
+        hdLuuThongItem = HdLuuThongRepository.findById(data._id);
+    }
+    else {
+        data.contractId = data._id;
+        data.luuthongMoneyPaid = luuthongMoneyPaid;
+        hdLuuThongItem = HdLuuThongRepository.findAndInsertIfNotExists(data);
+    }
+
+    hdLuuThongItem.then(luuthongItem => {
+        if (luuthongItem.status === CONTRACT_OTHER_CONST.STATUS.COMPLETED && !luuthongItem.isNew) {
+            luuthongMoneyPaid += luuthongItem.moneyPaid;
+        }
+
+        let dataContract = {
+            contractId: contractId,
+            luuThongId: luuthongItem._id,
+            contractStatus: data.statusContract,
+            luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+            luuthongMoneyPaid: luuthongMoneyPaid,
+        };
+
+        EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+        EventDispatcher.updateContractTotalMoneyPaidListener(data);
+
+        res.send(201, true);
+        next();
+
+    })
+        .catch(function (error) {
+            console.log(error);
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ * @desc Chuyển sang Thu về, chốt, bễ, kết thúc
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function transferType(req, res, next) {
+    let data = req.body || {};
+    let contractId = req.params.contractId;
+    let newPayMoney = data.newPayMoney !== undefined ? data.newPayMoney : 0;
+    let payMoneyOriginal = data.payMoneyOriginal !== undefined ? data.payMoneyOriginal : 0;
+    let luuthongMoneyPaid = newPayMoney + payMoneyOriginal;
+
+    let hdLuuThongItem = {};
+    if (!data.isNotFromLuuThong) {
+        hdLuuThongItem = HdLuuThongRepository.findById(data._id);
+    }
+    else {
+        data.contractId = data._id;
+        data.luuthongMoneyPaid = luuthongMoneyPaid;
+        hdLuuThongItem = HdLuuThongRepository.findAndInsertIfNotExists(data);
+    }
+
+    hdLuuThongItem.then(luuthongItem => {
+        if (luuthongItem.status === CONTRACT_OTHER_CONST.STATUS.COMPLETED && !luuthongItem.isNew) {
+            luuthongMoneyPaid += luuthongItem.moneyPaid;
+        }
+
+        let dataContract = {
+            contractId: contractId,
+            luuThongId: luuthongItem._id,
+            contractStatus: data.statusContract,
+            luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+            luuthongMoneyPaid: luuthongMoneyPaid,
+        };
+
+        EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+        EventDispatcher.updateContractTotalMoneyPaidListener(data);
+
+        res.send(201, true);
+        next();
+
+    })
+        .catch(function (error) {
+            console.log(error);
             return next(error);
         })
         .done();
@@ -313,5 +471,7 @@ module.exports = {
     updateChotLai: updateChotLai,
     updateThuVe: updateThuVe,
     updateChot: updateChot,
-    updateBe: updateBe
+    updateBe: updateBe,
+    updateKetThuc: updateKetThuc,
+    transferType: transferType
 };

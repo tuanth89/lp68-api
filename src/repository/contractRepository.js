@@ -249,15 +249,19 @@ function update(id, data) {
 function updateStatus(id, data) {
     const deferred = Q.defer();
 
+    let updateSet = {
+        status: data.status,
+        lastUserUpdate: data.userId
+    };
+
+    if (data.transferDate)
+        updateSet.transferDate = moment(data.newTransferDate, "YYYY-MM-DD").format("YYYY-MM-DD");
+
     Contract.findOneAndUpdate({
         _id: id
     }, {
-        $set: {
-            status: data.status,
-            transferDate: moment.utc(new Date(), "YYYYMMDD"),
-            lastUserUpdate: data.userId
-        }
-    }, function (error, contract) {
+        $set: updateSet
+    }, {upsert: true}, function (error, contract) {
         if (error) {
             deferred.reject(new errors.InvalidContentError("Not found"));
             return deferred.promise;

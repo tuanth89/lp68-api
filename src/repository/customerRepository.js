@@ -128,6 +128,8 @@ function insertOrUpdateBulk(customers) {
             customer.needRemove = true;
         }
 
+        customer.nameE = StringService.removeSignInString(customer.name);
+
         let item = new Customer(customer);
 
         bulk.find({_id: ObjectId(item._id)})

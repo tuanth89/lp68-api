@@ -107,8 +107,8 @@ function getListByDate(params) {
                     $lt: dateTo
                 }
             }
-        },
-        {
+        }
+        , {
             $lookup: {
                 from: "contracts",
                 localField: "contractId",
@@ -127,6 +127,25 @@ function getListByDate(params) {
             }
         }
         , {
+            $lookup: {
+                from: "customers",
+                localField: "contract.customerId",
+                foreignField: "_id",
+                as: "customers"
+            }
+        }
+        , {
+            $project: {
+                _id: 1,
+                contract: 1,
+                customerItem: {"$arrayElemAt": ["$customers", 0]},
+                moneyHavePay: 1,
+                moneyPaid: 1,
+                status: 1,
+                createdAt: 1
+            }
+        }
+        , {
             $match: status > -1 ? {
                 "contract.status": status
             } : {}
@@ -136,7 +155,9 @@ function getListByDate(params) {
                 _id: 1,
                 contractId: "$contract._id",
                 contractNo: "$contract.contractNo",
-                customer: "$contract.customer",
+                "customer.name": "$customerItem.name",
+                "customer._id": "$customerItem._id",
+                customerNameE: "$customerItem.nameE",
                 loanMoney: "$contract.loanMoney",
                 actuallyCollectedMoney: "$contract.actuallyCollectedMoney",
                 loanDate: "$contract.loanDate",
@@ -176,7 +197,7 @@ function getListByDate(params) {
         query.push({$match: {creator: ObjectId(userId)}});
     }
 
-    query.push({$sort: {"customer.name": 1, contractCreatedAt: -1}});
+    query.push({$sort: {"customerNameE": 1, contractCreatedAt: -1}});
 
     let pageIndex = [
         {
@@ -645,19 +666,22 @@ function removeByContractId(contractId) {
 
 /**
  *
- * @param id
- * @param status
+ * @param data
  * @returns {*|promise}
  */
-function updateStatus(id, status) {
+function updateStatus(data) {
     const deferred = Q.defer();
+    let luuThongUpdateSet = {
+        status: data.luuThongStatus
+    };
+
+    if (data.payMoneyOriginal)
+        luuThongUpdateSet.moneyPaid = data.payMoneyOriginal === undefined ? 0 : data.payMoneyOriginal;
 
     HdLuuThong.findOneAndUpdate({
-        _id: id
+        _id: data.luuThongId
     }, {
-        $set: {
-            status: status
-        }
+        $set: luuThongUpdateSet
     }, function (error, item) {
         if (error) {
             deferred.reject(new errors.InvalidContentError("Not found"));
@@ -719,6 +743,73 @@ function insertHdLuuThong(contractId, data) {
     return deferred.promise;
 }
 
+/**
+ * Chuyển ở tab nào (Thu ve, Chot, Be) thì update tiền đóng vào ngày lưu thông hôm ấy.
+ * Nếu lưu thông k có bản ghi ngày hôm ấy thì tự sinh bản ghi.
+ * @param data
+ * @returns {*|promise}
+ */
+function findAndInsertIfNotExists(data) {
+    const deferred = Q.defer();
+    let dateCondition = moment();
+    if (data.newTransferDate)
+        dateCondition = moment.utc(data.newTransferDate, "YYYY-MM-DD");
+
+    let query = [
+        {
+            $project: {
+                _id: 1,
+                moneyPaid: 1,
+                status: 1,
+                contractId: 1,
+                createdAt: 1,
+                day: {"$dayOfMonth": "$createdAt"},
+                month: {"$month": "$createdAt"},
+                year: {"$year": "$createdAt"},
+            }
+        },
+        {$match: {month: dateCondition.month() + 1, day: dateCondition.date(), year: dateCondition.year()}}
+    ];
+
+    HdLuuThong.aggregate(query).exec(function (err, items) {
+        if (err) {
+            deferred.reject(new errors.InvalidContentError(err.message));
+        } else {
+            if (items.length > 0)
+                deferred.resolve(items[0]);
+            else {
+                let luuThongList = [];
+                let hdLuuThongItem = new HdLuuThong();
+                hdLuuThongItem.contractId = data.contractId;
+                hdLuuThongItem.moneyPaid = data.luuthongMoneyPaid;
+                hdLuuThongItem.createdAt = moment(data.newTransferDate, "YYYY-MM-DD").format("YYYY-MM-DD");
+                hdLuuThongItem.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+
+                luuThongList.push(hdLuuThongItem);
+                HdLuuThong.insertMany(luuThongList, function (error, item) {
+                    if (error) {
+                        deferred.reject(new errors.InvalidContentError(err.message));
+                    } else {
+                        let luuThong = item[0];
+                        luuThong.isNew = true;
+                        deferred.resolve(luuThong);
+                    }
+                });
+
+                // HdLuuThong.insertMany([hdLuuThongItem])(function (error, item) {
+                //     if (error) {
+                //         deferred.reject(new errors.InvalidContentError(err.message));
+                //     } else {
+                //         deferred.resolve(item);
+                //     }
+                // });
+            }
+        }
+    });
+
+    return deferred.promise;
+}
+
 module.exports = {
     findById: findById,
     getList: getList,
@@ -733,6 +824,7 @@ module.exports = {
     updateMany: updateMany,
     updateChotLaiDung: updateChotLaiDung,
     updateStatus: updateStatus,
-    insertHdLuuThong: insertHdLuuThong
+    insertHdLuuThong: insertHdLuuThong,
+    findAndInsertIfNotExists: findAndInsertIfNotExists
 
 };

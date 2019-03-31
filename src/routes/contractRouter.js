@@ -12,6 +12,7 @@ module.exports = function (server) {
      */
     server.get(prefix, ContractController.list);
     server.get(prefix + '/circulation/all', ContractController.listByDate);
+    server.get(prefix + '/newOrOld/all', ContractController.listNewOrOldByDate);
     server.get(prefix + '/allContract/byType', ContractController.listByType);
     server.get(prefix + '/:customerId/byCustomer', ContractController.listByCustomer);
     server.get(prefix + '/:creatorId/commissionFeeStaff', ContractController.listCommisionFeeStaff);
@@ -20,6 +21,7 @@ module.exports = function (server) {
      * POST
      */
     server.post(prefix, ContractController.insertOrUpdateBulk);
+    server.post(prefix + '/insertCusAndContract', ContractController.insertCusAndContractBulk);
     server.post(prefix + '/:contractId/circulationContract', ContractController.circulationContract);
     server.post(prefix + '/contractOld', ContractController.saveManyContractOld);
 

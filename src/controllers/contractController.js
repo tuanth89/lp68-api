@@ -70,6 +70,45 @@ function insertOrUpdateBulk(req, res, next) {
  * @param next
  * @returns {*}
  */
+function insertCusAndContractBulk(req, res, next) {
+    let data = req.body;
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+
+    CustomerRepository.updateBulk(data)
+        .then((customers) => {
+            ContractRepository.insertContractNewOrOldBulk(customers)
+                .then(function (contracts) {
+                    //Kiểm tra số hợp đồng có bị trùng lặp
+                    EventDispatcher.checkContractNoListener(contracts);
+
+                    // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
+                    EventDispatcher.newContractAddedListener(contracts);
+
+                    // Sinh các bản ghi log lưu vết cho các hợp đồng mới tạo
+                    // EventDispatcher.createContractLogListener(contracts);
+
+                    res.send(201, customers);
+                    next();
+                })
+        })
+        .catch((error) => {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
 function saveManyContractOld(req, res, next) {
     let data = req.body;
     let _user = AuthorizationService.getUser(req);
@@ -135,6 +174,32 @@ function listByDate(req, res, next) {
     req.params.roles = _user.userRoles;
 
     ContractRepository.getListByDate(req.params)
+        .then(function (contracts) {
+            res.send(contracts);
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ * Danh sách hợp đồng mới hoặc cũ
+ * @param req
+ * @param res
+ * @param next
+ */
+function listNewOrOldByDate(req, res, next) {
+    let _user = AuthorizationService.getUser(req);
+    if (!_user) {
+        return next(
+            new errors.UnauthorizedError("No token provided or token expired !")
+        );
+    }
+    req.params.roles = _user.userRoles;
+
+    ContractRepository.getListNewOrOldByDate(req.params)
         .then(function (contracts) {
             res.send(contracts);
             next();
@@ -517,6 +582,7 @@ function updateMoneyFeeStaff(req, res, next) {
 }
 
 module.exports = {
+    insertCusAndContractBulk: insertCusAndContractBulk,
     insertOrUpdateBulk: insertOrUpdateBulk,
     saveManyContractOld: saveManyContractOld,
     list: list,
@@ -532,5 +598,6 @@ module.exports = {
     dashboardStatistic: dashboardStatistic,
     updateTotalMoneyPaid: updateTotalMoneyPaid,
     listCommisionFeeStaff: listCommisionFeeStaff,
-    updateMoneyFeeStaff: updateMoneyFeeStaff
+    updateMoneyFeeStaff: updateMoneyFeeStaff,
+    listNewOrOldByDate: listNewOrOldByDate
 };

@@ -7,9 +7,9 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 require('mongoose-type-email');
 
 const UserSchema = new mongoose.Schema({
-    code: {
-        type: String
-    },
+    // code: {
+    //     type: String
+    // },
     address: {
         type: String,
         default: '',

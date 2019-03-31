@@ -8,6 +8,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const _ = require('lodash');
 const StringService = require('../services/stringService');
 const USER_CONSTANT = require('../constant/userConstant');
+const moment = require('moment');
 
 
 /**
@@ -221,32 +222,39 @@ function remove(id) {
  */
 function updateBulk(customers) {
     const deferred = Q.defer();
-    let bulk = Customer.collection.initializeUnorderedBulkOp();
-    _.each(customers, function (item) {
-        if (!item._id) {
-            item._id = new ObjectId();
-            item.createdAt = new Date();
-        }
-        else {
-            item.createdAt = new Date(item.createdAt);
-            item._id = ObjectId(item._id);
-            item.updatedAt = new Date();
-        }
+    let bulk = Customer.collection.initializeOrderedBulkOp();
+    _.forEach(customers, function (item) {
+        if (!StringService.isObjectId(item.customerId)) {
+            let customerItem = new Customer(item);
+            customerItem._id = new ObjectId();
+            customerItem.name = item.customer.name;
+            customerItem.nameE = StringService.removeSignInString(item.customer.name);
+            customerItem.storeId = StringService.removeSignInString(item.storeId);
+            customerItem.visitor = StringService.removeSignInString(item.creator);
+            customerItem.createdAt = moment(item.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
 
-        let customerItem = new Customer(item);
+            item.customerId = customerItem._id;
+            item.customer._id = customerItem._id;
 
-        bulk.find({_id: ObjectId(customerItem._id)})
-        // .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
-            .updateOne(customerItem);
-    });
-
-    bulk.execute(function (error, results) {
-        if (error) {
-            deferred.reject(new errors.InvalidContentError(error.message));
-        } else {
-            deferred.resolve(results);
+            bulk.find({_id: ObjectId(customerItem._id)})
+                .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+                .updateOne(customerItem);
         }
     });
+
+    if (bulk && bulk.s && bulk.s.currentBatch
+        && bulk.s.currentBatch.operations
+        && bulk.s.currentBatch.operations.length > 0) {
+        bulk.execute(function (error, results) {
+            if (error) {
+                deferred.reject(new errors.InvalidContentError(error.message));
+            } else {
+                deferred.resolve(customers);
+            }
+        });
+    }
+    else
+        deferred.resolve(customers);
 
     return deferred.promise;
 }

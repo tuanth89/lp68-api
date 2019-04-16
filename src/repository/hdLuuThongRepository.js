@@ -13,6 +13,7 @@ const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
 const CONTRACT_CONST = require('../constant/contractConstant');
 const USER_CONSTANT = require('../constant/userConstant');
 const config = require('../../config');
+const log = require('../../logger').log;
 
 /**
  *
@@ -32,18 +33,46 @@ function findById(id) {
             _id: id
         })
         // .select(Serializer.detail)
-        .exec(function (err, user) {
+        .exec(function (err, luuthong) {
             if (err) {
                 deferred.reject(new errors.InvalidContentError(err.message));
-            } else if (!user) {
+            } else if (!luuthong) {
                 deferred.reject(new errors.ResourceNotFoundError('The resource you requested could not be found.'));
             } else {
-                deferred.resolve(user);
+                deferred.resolve(luuthong);
             }
         });
 
     return deferred.promise;
 }
+
+/**
+ * @desc Tìm ngày lưu thông gần nhất với trạng thái đã đóng.
+ * @param contractId
+ * @returns {*|promise}
+ */
+function findDateDescByContractId(contractId) {
+    const deferred = Q.defer();
+
+    HdLuuThong
+        .findOne({
+            // _id: {$ne: luuthongCurrentId},
+            contractId: contractId
+            // status: 1
+        })
+        .sort({createdAt: -1})
+        .exec(function (err, luuthong) {
+            if (err) {
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+                deferred.resolve(luuthong);
+            }
+
+        });
+
+    return deferred.promise;
+}
+
 
 /**
  *
@@ -308,9 +337,14 @@ function insertMany(data) {
     data.forEach((contractItem) => {
         // let count = 1; // Khách vay đóng luôn vài ngày
 
-        // let createdDate = new Date(contractItem.createdAt);
-        let nextPayDate = new Date(contractItem.createdAt);
-        nextPayDate.setDate(nextPayDate.getDate() + 1);
+        // let nextPayDate = new Date(contractItem.createdAt);
+        // nextPayDate.setDate(nextPayDate.getDate() + 1);
+
+        let nextPayDate = moment(contractItem.createdAt, "YYYY-MM-DD");
+        if (contractItem.dateEnd) {
+            nextPayDate = moment(contractItem.dateEnd, "DD/MM/YYYY");
+        }
+        nextPayDate.add(1, "days");
 
         let totalMoneyPaid = contractItem.totalMoneyPaid || 0;
         let luuthong = new HdLuuThong();
@@ -322,19 +356,24 @@ function insertMany(data) {
         }
         else {
             if (totalMoneyPaid > 0) {
-                luuthong.moneyHavePay = contractItem.moneyHavePay;
+                luuthong.moneyHavePay = contractItem.dailyMoneyPay;
                 luuthong.moneyPaid = contractItem.moneyPaid;
             } else {
                 luuthong.moneyHavePay = contractItem.dailyMoneyPay;
                 luuthong.moneyPaid = contractItem.dailyMoneyPay;
             }
         }
+
         // Nếu là tạo hợp đồng vay mới
         if (contractItem.createContractNew) {
             // Tính luôn lưu thông của ngày tạo hợp đồng mới
             let luuthongCurrent = new HdLuuThong();
             luuthongCurrent.contractId = contractItem.contractId;
-            luuthongCurrent.createdAt = contractItem.createdAt;
+            if (contractItem.dateEnd) {
+                luuthongCurrent.createdAt = moment(contractItem.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
+            }
+            else
+                luuthongCurrent.createdAt = contractItem.createdAt;
             luuthongCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
 
             // // Nếu khách đóng trước 1 khoản tiền
@@ -389,7 +428,7 @@ function insertMany(data) {
             ContractRepository.updateTotalMoneyPaid(contractItem._id, totalMoneyPaid);
         }
 
-        luuthong.createdAt = nextPayDate;
+        luuthong.createdAt = nextPayDate.format("YYYY-MM-DD");
         if (contractItem.status === CONTRACT_CONST.STAND
             || contractItem.status === CONTRACT_CONST.NEW
             || contractItem.status === CONTRACT_CONST.MATURITY) {
@@ -823,6 +862,7 @@ function findAndInsertIfNotExists(data) {
 
 module.exports = {
     findById: findById,
+    findDateDescByContractId: findDateDescByContractId,
     getList: getList,
     getListByDate: getListByDate,
     update: update,

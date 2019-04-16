@@ -6,6 +6,8 @@ const ContractRepository = require('../../repository/contractRepository');
 const HdLuuThongRepository = require('../../repository/hdLuuThongRepository');
 const log = require('../../../logger').log;
 const moment = require('moment');
+const CONTRACT_OTHER_CONST = require('../../constant/contractOtherConstant');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 /**
  * @desc update trạng thái hợp đồng, hợp đồng lưu thông
@@ -95,8 +97,108 @@ function updateContractTotalMoneyPaid(data) {
         .done();
 }
 
+/**
+ * @desc Cập nhật tiền đóng, cộng thêm ngày khi đóng trước
+ * @param {Object} data
+ * @returns {*|promise}
+ */
+function updateContractDongTruoc(data) {
+    ContractRepository.findById(data.contractId)
+        .then(contractItem => {
+            HdLuuThongRepository.findDateDescByContractId(data.contractId)
+                .then(luuThongItem => {
+                    //region Sinh các bản ghi ngày theo số tiền đã nộp
+                    let dayByMoney = Math.trunc(data.newPayMoney / (contractItem.dailyMoneyPay === 0 ? data.newPayMoney : contractItem.dailyMoneyPay));
+                    let day = 1;
+
+                    let luuThong = new HdLuuThong();
+                    let luuThongList = [];
+
+                    if (luuThongItem.status !== CONTRACT_OTHER_CONST.STATUS.COMPLETED) {
+                        let updateLt = {
+                            status: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+                        };
+                        if(luuThongItem._id.toString() !== data.luuThongId.toString())
+                            updateLt.moneyPaid = 0;
+
+                        HdLuuThong.findOneAndUpdate({_id: luuThongItem._id}, {
+                            $set: updateLt
+                        }, function (error, item) {
+                            if (error) {
+                                console.log(error);
+                            }
+                        });
+                        dayByMoney--;
+                    }
+
+                    while (day <= dayByMoney) {
+                        let dateCurrent = moment(luuThongItem.createdAt);
+                        dateCurrent.add(day, "days");
+
+                        let luuThongPaid = Object.assign({}, luuThong);
+                        luuThongPaid = new HdLuuThong();
+                        luuThongPaid.moneyHavePay = 0;
+                        luuThongPaid.moneyPaid = 0;
+                        luuThongPaid.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+                        luuThongPaid.contractId = data.contractId;
+                        luuThongPaid.createdAt = dateCurrent.format("YYYY-MM-DD");
+
+                        luuThongList.push(luuThongPaid);
+                        day++;
+                    }
+
+                    HdLuuThong.insertMany(luuThongList, function (error, item) {
+                        if (error) {
+                            console.log(error);
+                        }
+                    });
+                    //endregion
+
+                    //region Cập nhật tổng tiền đã nộp vào hợp đồng, Cập nhật tiền nộp khách ngày hôm đó
+                    let totalMoneyPaid = contractItem.totalMoneyPaid + (data.newPayMoney === undefined ? 0 : data.newPayMoney);
+                    let updateSet = {
+                        totalMoneyPaid: totalMoneyPaid
+                    };
+
+                    Contract.update({
+                        _id: data.contractId
+                    }, {
+                        $set: updateSet
+                    }, {upsert: true}, function (error, contract) {
+                        if (error) {
+                            log.error(error);
+                        }
+                    });
+
+                    let updateLuuThongSet = {
+                        status: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+                    };
+                    if (data.luuthongMoneyPaid) {
+                        updateLuuThongSet.moneyPaid = data.luuthongMoneyPaid;
+                    }
+
+                    HdLuuThong.findOneAndUpdate({_id: data.luuThongId}, {
+                        $set: updateLuuThongSet
+                    }, function (error, item) {
+                        if (error) {
+                            console.log(error);
+                        }
+                    });
+
+                    //endregion
+
+                });
+
+        })
+        .catch((error) => {
+            log.error(error);
+        })
+        .done();
+}
+
 
 module.exports = {
     updateStatusLuuThongContract: updateStatusLuuThongContract,
-    updateContractTotalMoneyPaid: updateContractTotalMoneyPaid
+    updateContractTotalMoneyPaid: updateContractTotalMoneyPaid,
+    updateContractDongTruoc: updateContractDongTruoc
 };

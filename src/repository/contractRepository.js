@@ -451,8 +451,15 @@ function insertContractNewOrOldBulk(contracts) {
         contract.contractId = contract._id;
         contract.createdAt = moment(contract.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
 
-        let startDate = new Date(contract.createdAt);
-        contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
+        if (!moment(contract.createdAt).isValid()) {
+            contract.createdAt = moment().format("YYYY-MM-DD");
+        }
+
+        // let startDate = new Date(contract.createdAt);
+        // contract.loanEndDate = new Date(startDate.setDate(startDate.getDate() + contract.loanDate));
+
+        let startDate = moment(contract.createdAt);
+        contract.loanEndDate = startDate.add(contract.loanDate, "days").format("YYYY-MM-DD");
 
         let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
         contract.dailyMoneyPay = dailyMoney.toFixed();
@@ -469,10 +476,6 @@ function insertContractNewOrOldBulk(contracts) {
             contract.status = CONTRACT_CONST.STAND;
             // contract.dailyMoneyPay = 0;
         }
-        // else {
-            // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
-            // contract.createContractNew = true;
-        // }
 
         if (contract.isHdThuVe) {
             contract.status = CONTRACT_CONST.COLLECT;
@@ -546,27 +549,27 @@ function generateContract(storeCode, customerCode) {
     return deferred.promise;
 }
 
-function countByContractNo(storeCode, customerCode) {
-    const deferred = Q.defer();
-
-    Contract.findOne(
-        {
-            // _id: {$ne: contractId},
-            storeCode: storeCode,
-            customerCode: customerCode,
-        })
-        .sort({noIdentity: -1})
-        .select(Serializer.contractNoGenerate)
-        .exec(function (error, item) {
-            if (error) {
-                deferred.reject(new errors.InvalidContentError(error.message));
-            } else {
-                deferred.resolve(item.noIdentity ? item.noIdentity : 0);
-            }
-        });
-
-    return deferred.promise;
-}
+// function countByContractNo(storeCode, customerCode) {
+//     const deferred = Q.defer();
+//
+//     Contract.findOne(
+//         {
+//             // _id: {$ne: contractId},
+//             storeCode: storeCode,
+//             customerCode: customerCode,
+//         })
+//         .sort({noIdentity: -1})
+//         .select(Serializer.contractNoGenerate)
+//         .exec(function (error, item) {
+//             if (error) {
+//                 deferred.reject(new errors.InvalidContentError(error.message));
+//             } else {
+//                 deferred.resolve(item.noIdentity ? item.noIdentity : 0);
+//             }
+//         });
+//
+//     return deferred.promise;
+// }
 
 /**
  * Thêm mới hợp đồng cũ

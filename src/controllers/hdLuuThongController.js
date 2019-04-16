@@ -425,13 +425,13 @@ function transferType(req, res, next) {
     let luuthongMoneyPaid = newPayMoney + payMoneyOriginal;
 
     let hdLuuThongItem = {};
-    if (!data.isNotFromLuuThong) {
-        hdLuuThongItem = HdLuuThongRepository.findById(data._id);
-    }
-    else {
+    if (data.isNotFromLuuThong) {
         data.contractId = data._id;
         data.luuthongMoneyPaid = luuthongMoneyPaid;
         hdLuuThongItem = HdLuuThongRepository.findAndInsertIfNotExists(data);
+    }
+    else {
+        hdLuuThongItem = HdLuuThongRepository.findById(data._id);
     }
 
     hdLuuThongItem.then(luuthongItem => {
@@ -461,6 +461,46 @@ function transferType(req, res, next) {
         .done();
 }
 
+/**
+ * @desc Đóng trước nhiều ngày
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function updateDongTruoc(req, res, next) {
+    let data = req.body || {};
+    let contractId = req.params.contractId;
+    let luuthongMoneyPaid = data.newPayMoney !== undefined ? data.newPayMoney : 0;
+
+    HdLuuThongRepository
+        .findById(data._id)
+        .then(luuthongItem => {
+            if (luuthongItem.status === CONTRACT_OTHER_CONST.STATUS.COMPLETED && !luuthongItem.isNew) {
+                luuthongMoneyPaid += luuthongItem.moneyPaid;
+            }
+
+            let dataContract = {
+                contractId: contractId,
+                luuThongId: luuthongItem._id,
+                luuThongStatus: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+                luuthongMoneyPaid: luuthongMoneyPaid,
+                newPayMoney: data.newPayMoney !== undefined ? data.newPayMoney : 0,
+                createdAt: data.createdAt
+            };
+
+            EventDispatcher.updateContractDongTruoc(dataContract);
+
+            res.send(201, true);
+            next();
+
+        })
+        .catch(function (error) {
+            console.log(error);
+            return next(error);
+        })
+        .done();
+}
 
 module.exports = {
     list: list,
@@ -473,5 +513,6 @@ module.exports = {
     updateChot: updateChot,
     updateBe: updateBe,
     updateKetThuc: updateKetThuc,
-    transferType: transferType
+    transferType: transferType,
+    updateDongTruoc: updateDongTruoc
 };

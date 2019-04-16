@@ -77,6 +77,12 @@ function updateContractTotalMoneyPaidListener(data) {
     eventEmitter.emit('LP_UPDATE_CONTRACT_TOTALMONEYPAID_EVENT', data);
 }
 
+function updateContractDongTruoc(data) {
+    eventEmitter.once('LP_UPDATE_CONTRACT_DONGTRUOC_EVENT', UpdateContractListener.updateContractDongTruoc);
+
+    eventEmitter.emit('LP_UPDATE_CONTRACT_DONGTRUOC_EVENT', data);
+}
+
 module.exports = {
     insertOrUpdateBulkContractLogListener: insertOrUpdateBulkContractLogListener,
     createContractLogListener: createContractLogListener,
@@ -89,5 +95,6 @@ module.exports = {
     removeAllByContractListener: removeAllByContractListener,
     checkContractNoListener: checkContractNoListener,
     updatePheForStaffListener: updatePheForStaffListener,
-    updateContractTotalMoneyPaidListener: updateContractTotalMoneyPaidListener
+    updateContractTotalMoneyPaidListener: updateContractTotalMoneyPaidListener,
+    updateContractDongTruoc: updateContractDongTruoc
 };

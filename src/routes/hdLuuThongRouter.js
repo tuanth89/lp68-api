@@ -25,11 +25,10 @@ module.exports = function (server) {
      */
     server.put(prefix + '/contract/updateMany', HdLuuThongController.updateMany);
     server.put(prefix + '/:contractId/updateLaiDung', HdLuuThongController.updateChotLai);
-    // server.put(prefix + '/:contractId/updateThuve', HdLuuThongController.updateThuVe);
-    // server.put(prefix + '/:contractId/updateChot', HdLuuThongController.updateChot);
-    // server.put(prefix + '/:contractId/updateBe', HdLuuThongController.updateBe);
-    // server.put(prefix + '/:contractId/updateKetThuc', HdLuuThongController.updateKetThuc);
     server.put(prefix + '/:contractId/transferType', HdLuuThongController.transferType);
     server.put(prefix + '/:contractId/updateDongTruoc', HdLuuThongController.updateDongTruoc);
+
+    // Update tổng tiền cho hợp đồng Thu về, Chốt, Bễ
+    server.put(prefix + '/:contractId/updateTotalMoneyPaidTCB', HdLuuThongController.updateTotalMoneyPaidTCB);
 
 };

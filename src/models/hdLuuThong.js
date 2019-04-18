@@ -8,6 +8,10 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
 
 const ContractSchema = new mongoose.Schema({
+    creator: {
+        type: ObjectId,
+        ref: "User"
+    },
     contractId: {
         type: ObjectId,
         ref: "Contract",

@@ -107,6 +107,8 @@ function updateContractDongTruoc(data) {
         .then(contractItem => {
             HdLuuThongRepository.findDateDescByContractId(data.contractId)
                 .then(luuThongItem => {
+                    let totalMoneyPaid = contractItem.totalMoneyPaid + (data.newPayMoney === undefined ? 0 : data.newPayMoney);
+
                     //region Sinh các bản ghi ngày theo số tiền đã nộp
                     let dayByMoney = Math.trunc(data.newPayMoney / (contractItem.dailyMoneyPay === 0 ? data.newPayMoney : contractItem.dailyMoneyPay));
                     let day = 1;
@@ -118,7 +120,7 @@ function updateContractDongTruoc(data) {
                         let updateLt = {
                             status: CONTRACT_OTHER_CONST.STATUS.COMPLETED
                         };
-                        if(luuThongItem._id.toString() !== data.luuThongId.toString())
+                        if (luuThongItem._id.toString() !== data.luuThongId.toString())
                             updateLt.moneyPaid = 0;
 
                         HdLuuThong.findOneAndUpdate({_id: luuThongItem._id}, {
@@ -141,10 +143,26 @@ function updateContractDongTruoc(data) {
                         luuThongPaid.moneyPaid = 0;
                         luuThongPaid.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
                         luuThongPaid.contractId = data.contractId;
+                        luuThongPaid.creator = contractItem.creator;
                         luuThongPaid.createdAt = dateCurrent.format("YYYY-MM-DD");
 
                         luuThongList.push(luuThongPaid);
                         day++;
+                    }
+
+                    // Nếu chưa đóng đủ tiền thì sinh thêm bản ghi cho ngày tiếp theo
+                    if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
+                        let dateCurrent = moment(luuThongItem.createdAt);
+                        dateCurrent.add(dayByMoney + 1, "days");
+
+                        let luuThongNext = new HdLuuThong();
+                        luuThongNext.moneyHavePay = contractItem.dailyMoneyPay;
+                        luuThongNext.moneyPaid = 0;
+                        luuThongNext.contractId = data.contractId;
+                        luuThongNext.creator = contractItem.creator;
+                        luuThongNext.createdAt = dateCurrent.format("YYYY-MM-DD");
+
+                        luuThongList.push(luuThongNext);
                     }
 
                     HdLuuThong.insertMany(luuThongList, function (error, item) {
@@ -155,7 +173,7 @@ function updateContractDongTruoc(data) {
                     //endregion
 
                     //region Cập nhật tổng tiền đã nộp vào hợp đồng, Cập nhật tiền nộp khách ngày hôm đó
-                    let totalMoneyPaid = contractItem.totalMoneyPaid + (data.newPayMoney === undefined ? 0 : data.newPayMoney);
+
                     let updateSet = {
                         totalMoneyPaid: totalMoneyPaid
                     };

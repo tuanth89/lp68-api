@@ -30,7 +30,7 @@ module.exports = function (server) {
      */
     server.put(prefix + '/:contractId', ContractController.update);
     server.put(prefix + '/:contractId/changeStatus', ContractController.updateStatusEnd);
-    server.put(prefix + '/:contractId/updateTotalMoneyPaid', ContractController.updateTotalMoneyPaid);
+    // server.put(prefix + '/:contractId/updateTotalMoneyPaid', ContractController.updateTotalMoneyPaid);
     server.put(prefix + '/circulation/update', ContractController.updateDailyMoneyBulk);
     server.put({
         path: prefix + '/:contractId/updateComFeeStaff',

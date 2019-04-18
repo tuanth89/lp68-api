@@ -90,21 +90,22 @@ function newContractOldAddedListener(contracts) {
         .done();
 }
 
-function newContractLuuThongListener(contracts) {
+function newContractLuuThongListener(luuthongs) {
     let luuthongList = [];
 
-    contracts.forEach((contractItem) => {
-        let nextPayDate = new Date(contractItem.createdAt);
+    luuthongs.forEach((luuthongItem) => {
+        let nextPayDate = new Date(luuthongItem.createdAt);
         nextPayDate.setDate(nextPayDate.getDate() + 1);
 
-        let totalMoneyPaid = contractItem._doc.totalMoneyPaid || 0;
-        let dailyMoneyPay = contractItem._doc.dailyMoneyPay || 0;
+        let totalMoneyPaid = luuthongItem._doc.totalMoneyPaid || 0;
+        let dailyMoneyPay = luuthongItem._doc.dailyMoneyPay || 0;
         let luuthong = new HdLuuThong();
-        luuthong.contractId = contractItem.contractId;
+        luuthong.contractId = luuthongItem.contractId;
+        luuthong.creator = luuthongItem.creator;
 
         if (totalMoneyPaid > 0) {
-            luuthong.moneyHavePay = contractItem.moneyHavePay;
-            luuthong.moneyPaid = contractItem.moneyPaid;
+            luuthong.moneyHavePay = luuthongItem.moneyHavePay;
+            luuthong.moneyPaid = luuthongItem.moneyPaid;
         } else {
             luuthong.moneyHavePay = dailyMoneyPay;
             luuthong.moneyPaid = dailyMoneyPay;
@@ -135,6 +136,7 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
 
     let luuthong = new HdLuuThong();
     luuthong.contractId = contractNew._id;
+    luuthong.creator = contractNew.creator;
     luuthong.moneyHavePay = contractNew.dailyMoney;
     luuthong.moneyPaid = contractNew.dailyMoney;
     luuthong.createdAt = nextPayDate;
@@ -144,6 +146,7 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
     if (contractNew.isDaoHd) {
         let luuThongDaoCurrent = new HdLuuThong();
         luuThongDaoCurrent.contractId = contractNew._id;
+        luuThongDaoCurrent.creator = contractNew.creator;
         luuThongDaoCurrent.createdAt = contractNew.createdAt;
         luuThongDaoCurrent.moneyHavePay = contractNew.dailyMoney;
         luuThongDaoCurrent.moneyPaid = contractNew.moneyPayNew === undefined ? 0 : contractNew.moneyPayNew;

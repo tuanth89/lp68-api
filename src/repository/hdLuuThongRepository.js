@@ -349,6 +349,7 @@ function insertMany(data) {
         let totalMoneyPaid = contractItem.totalMoneyPaid || 0;
         let luuthong = new HdLuuThong();
         luuthong.contractId = contractItem.contractId;
+        luuthong.creator = contractItem.creator;
 
         if (contractItem.status === CONTRACT_CONST.STAND) {
             luuthong.moneyHavePay = contractItem.dailyMoneyPay;
@@ -369,27 +370,13 @@ function insertMany(data) {
             // Tính luôn lưu thông của ngày tạo hợp đồng mới
             let luuthongCurrent = new HdLuuThong();
             luuthongCurrent.contractId = contractItem.contractId;
+            luuthongCurrent.creator = contractItem.creator;
             if (contractItem.dateEnd) {
                 luuthongCurrent.createdAt = moment(contractItem.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
             }
             else
                 luuthongCurrent.createdAt = contractItem.createdAt;
             luuthongCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
-
-            // // Nếu khách đóng trước 1 khoản tiền
-            // if (parseInt(contractItem.payNow) > 0) {
-            //     luuthongCurrent.moneyPaid = parseInt(contractItem.payNow);
-            //     luuthongCurrent.moneyHavePay = contractItem.dailyMoneyPay;
-            // }
-            // else {
-            //     if (totalMoneyPaid > 0) {
-            //         luuthongCurrent.moneyHavePay = contractItem.moneyHavePay;
-            //         luuthongCurrent.moneyPaid = contractItem.moneyPaid;
-            //     } else {
-            //         luuthongCurrent.moneyHavePay = contractItem.dailyMoneyPay;
-            //         luuthongCurrent.moneyPaid = contractItem.dailyMoneyPay;
-            //     }
-            // }
 
             let paidMoney = parseInt(contractItem.paidMoney);
             if (paidMoney > 0) {
@@ -399,30 +386,6 @@ function insertMany(data) {
 
             totalMoneyPaid += parseInt(luuthongCurrent.moneyPaid);
             luuthongList.push(luuthongCurrent);
-
-            // // Nếu khách đóng luôn vài ngày khi tạo hợp đồng
-            // if (!isNaN(parseFloat(contractItem.numOfPayDay)) && isFinite(contractItem.numOfPayDay) && contractItem.numOfPayDay > 0) {
-            //     numOfPayDay = parseInt(contractItem.numOfPayDay) - 1;
-            //     let payPaid = new HdLuuThong();
-            //     while (count <= numOfPayDay) {
-            //         let luuthongPaid = Object.assign({}, payPaid);
-            //         luuthongPaid.contractId = contractItem.contractId;
-            //
-            //         let date = new Date(createdDate);
-            //         date.setDate(date.getDate() + count);
-            //         luuthongPaid.createdAt = date;
-            //
-            //         luuthongPaid.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
-            //         luuthongPaid.moneyHavePay = contractItem.dailyMoneyPay;
-            //         luuthongPaid.moneyPaid = contractItem.dailyMoneyPay;
-            //         totalMoneyPaid += parseInt(luuthongPaid.moneyPaid);
-            //
-            //         luuthongList.push(luuthongPaid);
-            //         count++;
-            //     }
-            //
-            //     nextPayDate.setDate(createdDate.getDate() + count);
-            // }
 
             // Update tổng tiền đã đóng vào hợp đồng
             ContractRepository.updateTotalMoneyPaid(contractItem._id, totalMoneyPaid);
@@ -470,6 +433,7 @@ function insertManyByContractOld(data) {
         let totalMoneyPaid = contractItem.totalMoneyPaid || 0;
         let luuthong = new HdLuuThong();
         luuthong.contractId = contractItem.contractId;
+        luuthong.creator = contractItem.creator;
 
         if (contractItem.status === CONTRACT_CONST.STAND) {
 
@@ -488,6 +452,7 @@ function insertManyByContractOld(data) {
                 // Tính luôn lưu thông của hợp đồng theo ngày chốt
                 let luuthongCurrent = new HdLuuThong();
                 luuthongCurrent.contractId = contractItem.contractId;
+                luuthongCurrent.creator = contractItem.creator;
                 luuthongCurrent.createdAt = moment(contractItem.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
                 luuthongCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
 
@@ -554,7 +519,7 @@ function updateMany(data) {
 
     let bulkContract = Contract.collection.initializeOrderedBulkOp();
     let bulkHdLuuThong = HdLuuThong.collection.initializeOrderedBulkOp();
-    let contracts = [];
+    let luuthongs = [];
     let dailyMoneyPay = 0, // Số tiền phải đóng hàng ngày (cố định) (tiền lãi, thực thu / số ngày vay)
         // totalMoneyHavePayNow = 0, // Tổng số tiền phải đóng tói thời điểm hiện tại
         totalMoneyPaid = 0; // Tổng số tiền đã đóng tới thời điểm hiện tại
@@ -562,45 +527,33 @@ function updateMany(data) {
     data.forEach((contractItem) => {
         dailyMoneyPay = contractItem.dailyMoneyPay;
         totalMoneyPaid = contractItem.totalMoneyPaid || 0;
-
         totalMoneyPaid += contractItem.moneyPaid;
-
-        // let contractDate = moment(contractItem.contractDate);
-        // let luuThongDate = moment(contractItem.createdAt);
-        // let totalDayNow = moment.duration(luuThongDate.startOf('day').diff(contractDate.startOf('day'))).asDays();
-        // totalMoneyHavePayNow = dailyMoneyPay * totalDayNow;
-        //
-        // // Tính tới thời điểm hiện tại:
-        // // Nếu khách nộp nhiều hơn tiền phải đóng hàng ngày thì trừ bớt sang ngày hôm sau
-        // if (totalMoneyPaid > totalMoneyHavePayNow) {
-        //     dailyMoneyPay = Math.max(0, dailyMoneyPay - (totalMoneyPaid - totalMoneyHavePayNow));
-        // }
-        //
-        // // Nếu số tiền đóng nhỏ hơn số tiền phải đóng thì cộng dần tiền phải đóng ngày tiếp theo
-        // else if (totalMoneyPaid < totalMoneyHavePayNow) {
-        //     dailyMoneyPay += (totalMoneyHavePayNow - totalMoneyPaid);
-        // }
 
         let contractUpdateSet = {totalMoneyPaid: totalMoneyPaid};
 
         if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
             // Tạo bản ghi lưu thông ngày tiếp theo
             let luuthong = new HdLuuThong();
-            // let nextPayDate = new Date(contractItem.createdAt);
-            // luuthong.createdAt = nextPayDate.setDate(nextPayDate.getDate() + 1);
-
+            luuthong.creator = contractItem.creator;
             luuthong.contractId = contractItem.contractId;
             luuthong._doc.totalMoneyPaid = totalMoneyPaid;
-            luuthong._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
-            luuthong.moneyHavePay = dailyMoneyPay;
-            luuthong.moneyPaid = dailyMoneyPay;
+
+            if (contractItem.contractStatus === CONTRACT_CONST.STAND) {
+                luuthong._doc.dailyMoneyPay = 0;
+                luuthong.moneyHavePay = 0;
+                luuthong.moneyPaid = 0;
+            }
+            else {
+                luuthong._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
+                luuthong.moneyHavePay = dailyMoneyPay;
+                luuthong.moneyPaid = dailyMoneyPay;
+            }
+
             luuthong.createdAt = contractItem.createdAt;
-            contracts.push(luuthong);
+            luuthongs.push(luuthong);
         }
         else // Nếu tiền đóng đủ và hết
-        {
             contractUpdateSet.status = CONTRACT_CONST.END;
-        }
 
         bulkHdLuuThong.find({_id: ObjectId(contractItem._id)})
             .update({
@@ -624,7 +577,7 @@ function updateMany(data) {
                 if (error) {
                     deferred.reject(new errors.InvalidContentError(error.message));
                 } else {
-                    deferred.resolve(contracts);
+                    deferred.resolve(luuthongs);
                 }
             });
         }
@@ -648,6 +601,7 @@ function updateChotLaiDung(contractId, data) {
         let luuthongList = [];
         let luuthong = new HdLuuThong(data);
         luuthong._id = new ObjectId();
+        luuthong.creator = data.creator;
         luuthong.contractId = contractId;
         luuthong.createdAt = (new Date()).addDays(1);
         luuthongList.push(luuthong);
@@ -758,6 +712,7 @@ function insertHdLuuThong(contractId, data) {
     let luuthong = new HdLuuThong(data);
     luuthong._id = new ObjectId();
     luuthong.contractId = contractId;
+    luuthong.creator = data.creator;
     if (data.moneyHavePay)
         luuthong.moneyHavePay = data.moneyHavePay;
     if (data.moneyPaid)
@@ -828,23 +783,30 @@ function findAndInsertIfNotExists(data) {
             if (items.length > 0)
                 deferred.resolve(items[0]);
             else {
-                let luuThongList = [];
-                let hdLuuThongItem = new HdLuuThong();
-                hdLuuThongItem.contractId = data.contractId;
-                hdLuuThongItem.moneyPaid = data.luuthongMoneyPaid;
-                hdLuuThongItem.createdAt = moment(data.newTransferDate, "YYYY-MM-DD").format("YYYY-MM-DD");
-                hdLuuThongItem.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+                ContractRepository.findById(data.contractId)
+                    .then(contractItem => {
+                        let luuThongList = [];
+                        let hdLuuThongItem = new HdLuuThong();
+                        hdLuuThongItem.creator = contractItem.creator;
+                        hdLuuThongItem.contractId = data.contractId;
+                        hdLuuThongItem.moneyPaid = data.luuthongMoneyPaid;
+                        hdLuuThongItem.createdAt = moment(data.newTransferDate, "YYYY-MM-DD").format("YYYY-MM-DD");
+                        hdLuuThongItem.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
 
-                luuThongList.push(hdLuuThongItem);
-                HdLuuThong.insertMany(luuThongList, function (error, item) {
-                    if (error) {
+                        luuThongList.push(hdLuuThongItem);
+                        HdLuuThong.insertMany(luuThongList, function (error, item) {
+                            if (error) {
+                                deferred.reject(new errors.InvalidContentError(err.message));
+                            } else {
+                                let luuThong = item[0];
+                                luuThong.isNew = true;
+                                deferred.resolve(luuThong);
+                            }
+                        });
+                    })
+                    .catch(err => {
                         deferred.reject(new errors.InvalidContentError(err.message));
-                    } else {
-                        let luuThong = item[0];
-                        luuThong.isNew = true;
-                        deferred.resolve(luuThong);
-                    }
-                });
+                    });
 
                 // HdLuuThong.insertMany([hdLuuThongItem])(function (error, item) {
                 //     if (error) {
@@ -853,6 +815,101 @@ function findAndInsertIfNotExists(data) {
                 //         deferred.resolve(item);
                 //     }
                 // });
+            }
+        }
+    });
+
+    return deferred.promise;
+}
+
+/**
+ * @desc Sinh bản ghi lưu thông cho ngày đóng tiền của hợp đồng Thu về, Chốt, Bễ
+ * @param {String} contractId
+ * @param {Object} data
+ * @returns {*|promise}
+ */
+function insertHdLuuThongByTCB(contractId, data) {
+    const deferred = Q.defer();
+
+    let dateCondition = moment();
+    if (data.payDate)
+        dateCondition = moment(data.payDate, "DD/MM/YYYY");
+
+    let query = [
+        {
+            $project: {
+                _id: 1,
+                moneyPaid: 1,
+                status: 1,
+                contractId: 1,
+                createdAt: 1,
+                day: {"$dayOfMonth": "$createdAt"},
+                month: {"$month": "$createdAt"},
+                year: {"$year": "$createdAt"},
+            }
+        },
+        {
+            $match: {
+                contractId: ObjectId(contractId),
+                month: dateCondition.month() + 1,
+                day: dateCondition.date(),
+                year: dateCondition.year()
+            }
+        }
+    ];
+
+    HdLuuThong.aggregate(query).exec(function (err, items) {
+        if (err) {
+            deferred.reject(new errors.InvalidContentError(err.message));
+        } else {
+            if (items.length > 0) {
+                let [luuThongItem] = items;
+                let luuThongUpdateSet = {
+                    status: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+                };
+
+                if (data.newPayMoney)
+                    luuThongUpdateSet.moneyPaid = data.newPayMoney === undefined ? 0 : parseInt(data.newPayMoney) + luuThongItem.moneyPaid;
+
+                HdLuuThong.findOneAndUpdate({
+                    _id: luuThongItem._id
+                }, {
+                    $set: luuThongUpdateSet
+                }, function (error, item) {
+                    if (error) {
+                        // deferred.reject(new errors.InvalidContentError("Not found"));
+                        deferred.resolve({});
+                    } else {
+                        deferred.resolve(item);
+                    }
+                });
+                deferred.resolve(items[0]);
+            }
+            else {
+                let luuthongList = [];
+                let luuthong = new HdLuuThong();
+                luuthong._id = new ObjectId();
+                luuthong.contractId = contractId;
+                luuthong.creator = data.creator;
+                luuthong.moneyHavePay = 0;
+                luuthong.moneyPaid = data.newPayMoney;
+                luuthong.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+
+                if (data.payDate)
+                    luuthong.createdAt = moment(data.payDate, "DD/MM/YYYY").format("YYYY-MM-DD");
+                else
+                    luuthong.createdAt = moment().format("YYYY-MM-DD");
+
+                luuthongList.push(luuthong);
+
+                HdLuuThong.insertMany(luuthongList, function (error, item) {
+                    if (error) {
+                        console.log(error);
+                        deferred.resolve({});
+                    } else {
+                        deferred.resolve(item);
+                    }
+                });
             }
         }
     });
@@ -876,6 +933,7 @@ module.exports = {
     updateChotLaiDung: updateChotLaiDung,
     updateStatus: updateStatus,
     insertHdLuuThong: insertHdLuuThong,
-    findAndInsertIfNotExists: findAndInsertIfNotExists
+    findAndInsertIfNotExists: findAndInsertIfNotExists,
+    insertHdLuuThongByTCB: insertHdLuuThongByTCB
 
 };

@@ -530,6 +530,7 @@ function updateMany(data) {
         totalMoneyPaid += contractItem.moneyPaid;
 
         let contractUpdateSet = {totalMoneyPaid: totalMoneyPaid};
+        let luuThongUpdateSet = {};
 
         if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
             // Tạo bản ghi lưu thông ngày tiếp theo
@@ -540,6 +541,7 @@ function updateMany(data) {
 
             if (contractItem.contractStatus === CONTRACT_CONST.STAND) {
                 luuthong._doc.dailyMoneyPay = 0;
+                luuthong._doc.totalMoneyPaid = 0;
                 luuthong.moneyHavePay = 0;
                 luuthong.moneyPaid = 0;
             }
@@ -564,8 +566,10 @@ function updateMany(data) {
                 }
             });
 
-        bulkContract.find({_id: ObjectId(contractItem.contractId)})
-            .update({$set: contractUpdateSet});
+        if (contractItem.contractStatus !== CONTRACT_CONST.STAND) {
+            bulkContract.find({_id: ObjectId(contractItem.contractId)})
+                .update({$set: contractUpdateSet});
+        }
     });
 
 
@@ -573,13 +577,20 @@ function updateMany(data) {
         if (error) {
             deferred.reject(new errors.InvalidContentError(error.message));
         } else {
-            bulkContract.execute(function (error, items) {
-                if (error) {
-                    deferred.reject(new errors.InvalidContentError(error.message));
-                } else {
-                    deferred.resolve(luuthongs);
-                }
-            });
+            if (bulkContract && bulkContract.s && bulkContract.s.currentBatch
+                && bulkContract.s.currentBatch.operations
+                && bulkContract.s.currentBatch.operations.length > 0) {
+                bulkContract.execute(function (error, items) {
+                    if (error) {
+                        deferred.reject(new errors.InvalidContentError(error.message));
+                    } else {
+                        deferred.resolve(luuthongs);
+                    }
+                });
+            }
+            else
+                deferred.resolve(luuthongs);
+
         }
     });
 

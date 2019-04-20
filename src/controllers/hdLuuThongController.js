@@ -140,9 +140,9 @@ function updateChotLai(req, res, next) {
     let data = req.body || {};
     let contractId = req.params.contractId;
     let newPayMoney = parseInt(data.newPayMoney);
-    if (newPayMoney <= 0) {
-        return next(new errors.InvalidContentError("Số tiền đóng không được <= 0"));
-    }
+    // if (newPayMoney <= 0) {
+    //     return next(new errors.InvalidContentError("Số tiền đóng không được <= 0"));
+    // }
     // let _user = AuthorizationService.getUser(req);
 
     ContractRepository.findById(contractId)

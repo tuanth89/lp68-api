@@ -10,11 +10,13 @@ require('mongoose-type-email');
 const ContractLogSchema = new mongoose.Schema({
     contractId: {
         type: ObjectId,
+        ref: "Contract",
         required: true,
         unique: true
     },
     customerId: {
         type: ObjectId,
+        ref: "User",
         required: true
     },
     histories: {

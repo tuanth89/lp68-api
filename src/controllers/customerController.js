@@ -6,6 +6,7 @@ const AuthorizationService = require('../services/authorizationService');
 const UserRepository = require('../repository/userRepository');
 const ContractRepository = require('../repository/contractRepository');
 const UserConstant = require('../constant/userConstant');
+const EventDispatcher = require('../events/dispatcher');
 
 /**
  *
@@ -159,19 +160,25 @@ function remove(req, res, next) {
     // let _user = req.user;
     let customerId = req.params.customerId;
 
-    ContractRepository.checkCustomerContractToDel(customerId)
-        .then((contract) => {
-            if (!contract) {
-                CustomerRepository.remove(customerId)
-                    .then(function (deleted) {
-                        res.send(200, {removed: true});
-                        next();
-                    });
-            }
-            else {
-                res.send(200, {removed: false});
-                next();
-            }
+    CustomerRepository.findById(customerId)
+        .then(customerItem => {
+            // ContractRepository.checkCustomerContractToDel(customerId)
+            //     .then((contract) => {
+            //         if (!contract) {
+            EventDispatcher.removeAllByCustomerId(customerId, customerItem.visitor);
+
+            CustomerRepository.remove(customerId)
+                .then(function (deleted) {
+                    res.send(200, {removed: true});
+                    next();
+                });
+            // }
+            // else {
+
+            // res.send(200, {removed: false});
+            // next();
+            // }
+            // })
         })
         .catch(function (error) {
             return next(error);

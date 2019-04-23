@@ -4,6 +4,8 @@ const events = require('events');
 const eventEmitter = new events.EventEmitter();
 const NewContractListener = require('./listeners/newContractListener');
 const UpdateContractListener = require('./listeners/updateContractListener');
+const CustomerChangeListener = require('./listeners/customerChangeListener');
+const ReportDailyChangeListener = require('./listeners/reportDailyChangeListener');
 
 function insertOrUpdateBulkContractLogListener(contracts) {
     eventEmitter.once('LP_BATCH_LOG_LOG_EVENT', NewContractListener.insertOrUpdateBulkContractLog);
@@ -83,6 +85,12 @@ function updateContractDongTruoc(data) {
     eventEmitter.emit('LP_UPDATE_CONTRACT_DONGTRUOC_EVENT', data);
 }
 
+function removeAllByCustomerId(customerId, visitorId) {
+    eventEmitter.once('LP_REMOVE_ALL_BY_CUSTOMER_EVENT', CustomerChangeListener.removeAllByCustomerId);
+
+    eventEmitter.emit('LP_REMOVE_ALL_BY_CUSTOMER_EVENT', customerId, visitorId);
+}
+
 module.exports = {
     insertOrUpdateBulkContractLogListener: insertOrUpdateBulkContractLogListener,
     createContractLogListener: createContractLogListener,
@@ -96,5 +104,6 @@ module.exports = {
     checkContractNoListener: checkContractNoListener,
     updatePheForStaffListener: updatePheForStaffListener,
     updateContractTotalMoneyPaidListener: updateContractTotalMoneyPaidListener,
-    updateContractDongTruoc: updateContractDongTruoc
+    updateContractDongTruoc: updateContractDongTruoc,
+    removeAllByCustomerId: removeAllByCustomerId
 };

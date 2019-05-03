@@ -79,6 +79,9 @@ module.exports = {
         "pheConfig.update",
         "pheConfig.remove",
 
+        /* Quản lý báo cáo */
+        "reportDaily.list",
+
         // Thống kê
         "statistic.list"
     ]

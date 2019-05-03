@@ -375,8 +375,7 @@ function insertOrUpdateBulk(contracts) {
             contract._id = new ObjectId();
             // contract.createdAt = new Date();
             // contract.creator = ObjectId(creatorId);
-        }
-        else {
+        } else {
             contract.createdAt = new Date(contract.createdAt);
             contract._id = ObjectId(contract._id);
             contract.updatedAt = new Date();
@@ -407,8 +406,7 @@ function insertOrUpdateBulk(contracts) {
         if (contract.isHdLaiDung) {
             contract.status = CONTRACT_CONST.STAND;
             contract.dailyMoneyPay = 0;
-        }
-        else {
+        } else {
             // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
             contract.createContractNew = true;
         }
@@ -607,8 +605,7 @@ function insertContractOld(contracts) {
             contract.status = CONTRACT_CONST.STAND;
             contract.dailyMoneyPay = 0;
             contract.transferDate = moment(contract.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
-        }
-        else {
+        } else {
             // Nếu là hợp đồng vay mới thì tính luôn lưu thông cho ngày đó và sinh bản ghi cho ngày tiếp theo
             contract.createContractNew = true;
         }
@@ -872,6 +869,8 @@ function circulationContract(contractId, data) {
 
                 let totalPaid = contractItem.totalMoneyPaid + (data.moneyPayOld === undefined ? 0 : data.moneyPayOld);
 
+                /* Đáo tăng hay giảm */
+                contractNew.isGreaterThanOld = newLoanMoney > contractItem.loanMoney;
 
                 // Thay đổi trạng thái hợp đồng cũ là đáo.
                 Contract.update({_id: contractId}, {
@@ -890,8 +889,7 @@ function circulationContract(contractId, data) {
                             if (error) {
                                 console.error(error);
                                 deferred.reject(new errors.InvalidContentError(error.message));
-                            }
-                            else {
+                            } else {
                                 item._doc.dailyMoney = newDailyMoney;
                                 deferred.resolve(item);
                             }

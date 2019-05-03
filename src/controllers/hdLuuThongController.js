@@ -5,10 +5,11 @@ const ContractRepository = require('../repository/contractRepository');
 const HdLuuThongRepository = require('../repository/hdLuuThongRepository');
 const AuthorizationService = require('../services/authorizationService');
 const EventDispatcher = require('../events/dispatcher');
-const _ = require('lodash')
+const _ = require('lodash');
+const moment = require('moment');
 const CONTRACT_OTHER_CONST = require('../constant/contractOtherConstant');
 const CONTRACT_CONST = require('../constant/contractConstant');
-
+const log = require('../../logger').log;
 
 /**
  *
@@ -35,10 +36,8 @@ function list(req, res, next) {
  * @param next
  */
 function listByDate(req, res, next) {
-    // let date = req.params.date || new Date();
-    // let status = parseInt(req.params.status);
-    // if (status === undefined || status === null)
-    //     status = -1;
+    // let contractTemp = JSON.parse("[{\"_id\":\"5cc490fe0cc46e0a3b189c18\",\"customer\":{\"name\":\"Tuan\",\"_id\":\"5cbd6505faaaaa0bc3cf2817\"},\"customerId\":\"5cbd6505faaaaa0bc3cf2817\",\"loanMoney\":10000000,\"actuallyCollectedMoney\":10000000,\"loanDate\":10,\"createdAt\":\"2019-04-28\",\"dateEnd\":\"\",\"isHdLaiDung\":false,\"isHdDao\":false,\"isHdThuVe\":false,\"isHdChot\":false,\"isHdBe\":false,\"isCustomerNew\":false,\"storeId\":\"5c64e4e4b524f513fc9cf74e\",\"storeCode\":\"TD\",\"customerCode\":\"tientd\",\"creator\":\"5c6292a66003663f387b6c0f\",\"isRemove\":true,\"typeCode\":\"XM\",\"contractId\":\"5cc490fe0cc46e0a3b189c18\",\"loanEndDate\":\"2019-05-08\",\"dailyMoneyPay\":\"1000000\",\"status\":0,\"createContractNew\":true},{\"_id\":\"5cc490fe0cc46e0a3b189c1a\",\"customer\":{\"name\":\"GAGA\",\"_id\":\"5cbf415e8575a10b54bc965e\"},\"customerId\":\"5cbf415e8575a10b54bc965e\",\"loanMoney\":10000000,\"actuallyCollectedMoney\":10000000,\"loanDate\":10,\"createdAt\":\"2019-04-27\",\"dateEnd\":\"\",\"isHdLaiDung\":false,\"isHdDao\":false,\"isHdThuVe\":false,\"isHdChot\":false,\"isHdBe\":false,\"isCustomerNew\":false,\"storeId\":\"5c64e4e4b524f513fc9cf74e\",\"storeCode\":\"TD\",\"customerCode\":\"tientd\",\"creator\":\"5c6292a66003663f387b6c0f\",\"isRemove\":true,\"typeCode\":\"XM\",\"contractId\":\"5cc490fe0cc46e0a3b189c1a\",\"loanEndDate\":\"2019-05-07\",\"dailyMoneyPay\":\"1000000\",\"status\":0,\"createContractNew\":true},{\"_id\":\"5cc490fe0cc46e0a3b189c1c\",\"customer\":{\"name\":\"GAGA\",\"_id\":\"5cbf415e8575a10b54bc965e\"},\"customerId\":\"5cbf415e8575a10b54bc965e\",\"loanMoney\":10000000,\"actuallyCollectedMoney\":10000000,\"loanDate\":10,\"createdAt\":\"2019-04-28\",\"dateEnd\":\"\",\"isHdLaiDung\":false,\"isHdDao\":false,\"isHdThuVe\":false,\"isHdChot\":false,\"isHdBe\":false,\"isCustomerNew\":false,\"storeId\":\"5c64e4e4b524f513fc9cf74e\",\"storeCode\":\"TD\",\"customerCode\":\"tientd\",\"creator\":\"5c6292a66003663f387b6c0f\",\"isRemove\":true,\"typeCode\":\"XM\",\"contractId\":\"5cc490fe0cc46e0a3b189c1c\",\"loanEndDate\":\"2019-05-08\",\"dailyMoneyPay\":\"1000000\",\"status\":0,\"createContractNew\":true}]");
+    // EventDispatcher.totalLuuThongTangGiamListener(contractTemp, true);
 
     let _user = AuthorizationService.getUser(req);
     if (!_user) {
@@ -210,8 +209,7 @@ function transferType(req, res, next) {
         data.contractId = data._id;
         data.luuthongMoneyPaid = luuthongMoneyPaid;
         hdLuuThongItem = HdLuuThongRepository.findAndInsertIfNotExists(data);
-    }
-    else {
+    } else {
         hdLuuThongItem = HdLuuThongRepository.findById(data._id);
     }
 
@@ -230,6 +228,82 @@ function transferType(req, res, next) {
 
         EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
         EventDispatcher.updateContractTotalMoneyPaidListener(data);
+
+        let reportItem = {storeId: data.storeId};
+        let debtContract = Math.max(0, data.actuallyCollectedMoney - (data.totalMoneyPaid + payMoneyOriginal));
+        /* Cập nhật báo cáo theo ngày */
+        if (!data.isNotFromLuuThong) { // Chuyển từ Lưu Thông sang Thu về, chốt, bễ
+            /* Thu ve, chot, be tăng khi chuyển từ Lưu Thông sang */
+            if (data.status === CONTRACT_CONST.NEW) {
+                reportItem.createdAt = moment(data.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
+                if (data.newTransferDate)
+                    reportItem.createdAt = data.newTransferDate;
+
+                reportItem.luuThongSLGiam = 1;
+                reportItem.luuThongMoneyGiam = luuthongMoneyPaid;
+
+                /* Thu về tăng */
+                if (data.statusContract === CONTRACT_CONST.COLLECT) {
+                    reportItem.thuVeSLTang = 1;
+                    reportItem.thuVeMoneyTang = debtContract;
+                }
+
+                /* Chốt tăng */
+                if (data.statusContract === CONTRACT_CONST.CLOSE_DEAL) {
+                    reportItem.chotSLTang = 1;
+                    reportItem.chotMoneyTang = debtContract;
+                }
+
+                /* Bễ tăng */
+                if (data.statusContract === CONTRACT_CONST.ESCAPE) {
+                    reportItem.beSLTang = 1;
+                    reportItem.beMoneyTang = debtContract;
+                }
+            }
+        }
+        /* Thu ve, chot, be tăng giảm khi chuyển qua lại lẫn nhau */
+        else {
+            reportItem.createdAt = moment().format("YYYY-MM-DD");
+            if (data.newTransferDate)
+                reportItem.createdAt = data.newTransferDate;
+
+            /* Thu về giảm */
+            if (data.status === CONTRACT_CONST.COLLECT) {
+                reportItem.thuVeSLGiam = 1;
+                reportItem.thuVeMoneyGiam = debtContract;
+            }
+
+            /* Thu về tăng */
+            if (data.statusContract === CONTRACT_CONST.COLLECT) {
+                reportItem.thuVeSLTang = 1;
+                reportItem.thuVeMoneyTang = debtContract;
+            }
+
+            /* Chốt giảm */
+            if (data.status === CONTRACT_CONST.CLOSE_DEAL) {
+                reportItem.chotSLGiam = 1;
+                reportItem.chotMoneyGiam = debtContract;
+            }
+
+            /* Chốt tăng */
+            if (data.statusContract === CONTRACT_CONST.CLOSE_DEAL) {
+                reportItem.chotSLTang = 1;
+                reportItem.chotMoneyTang = debtContract;
+            }
+
+            /* Bễ giảm */
+            if (data.status === CONTRACT_CONST.ESCAPE) {
+                reportItem.beSLGiam = 1;
+                reportItem.beMoneyGiam = debtContract;
+            }
+
+            /* Bễ tăng */
+            if (data.statusContract === CONTRACT_CONST.ESCAPE) {
+                reportItem.beSLTang = 1;
+                reportItem.beMoneyTang = debtContract;
+            }
+        }
+        EventDispatcher.totalLuuThongTangGiamListener(reportItem, false);
 
         res.send(201, true);
         next();

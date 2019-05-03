@@ -27,6 +27,7 @@ const hdLuuThongRouter = require('./src/routes/hdLuuThongRouter');
 const contractLogRouter = require('./src/routes/contractLogRouter');
 const storeRouter = require('./src/routes/storeRouter');
 const pheConfigRouter = require('./src/routes/pheConfigRouter');
+const reportDailyRouter = require('./src/routes/reportDailyRouter');
 
 const adminRouter = require('./src/routes/adminRouter');
 const rootRouter = require('./src/routes/rootRouter');
@@ -136,6 +137,7 @@ server.listen(config.port, () => {
         featureAccessRouter(server);
         roleRouter(server);
         pheConfigRouter(server);
+        reportDailyRouter(server);
 
         console.log(`Server is listening on port ${config.port}`);
     })

@@ -91,6 +91,18 @@ function removeAllByCustomerId(customerId, visitorId) {
     eventEmitter.emit('LP_REMOVE_ALL_BY_CUSTOMER_EVENT', customerId, visitorId);
 }
 
+function totalLuuThongTangGiamListener(data, isLuuThongTang) {
+    eventEmitter.once('LP_REPORT_DAILY_LT_TANG_GIAM_EVENT', ReportDailyChangeListener.totalLuuThongTangDaily);
+
+    eventEmitter.emit('LP_REPORT_DAILY_LT_TANG_GIAM_EVENT', data, isLuuThongTang);
+}
+
+function daoTangGiamReportDailyListener(data) {
+    eventEmitter.once('LP_REPORT_DAILY_DAO_TANG_GIAM_EVENT', ReportDailyChangeListener.daoTangGiamReportDaily);
+
+    eventEmitter.emit('LP_REPORT_DAILY_DAO_TANG_GIAM_EVENT', data);
+}
+
 module.exports = {
     insertOrUpdateBulkContractLogListener: insertOrUpdateBulkContractLogListener,
     createContractLogListener: createContractLogListener,
@@ -105,5 +117,7 @@ module.exports = {
     updatePheForStaffListener: updatePheForStaffListener,
     updateContractTotalMoneyPaidListener: updateContractTotalMoneyPaidListener,
     updateContractDongTruoc: updateContractDongTruoc,
-    removeAllByCustomerId: removeAllByCustomerId
+    removeAllByCustomerId: removeAllByCustomerId,
+    totalLuuThongTangGiamListener: totalLuuThongTangGiamListener,
+    daoTangGiamReportDailyListener: daoTangGiamReportDailyListener
 };

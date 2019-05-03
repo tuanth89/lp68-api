@@ -1,74 +1,108 @@
 "use strict";
 
-const config = require('../../config');
 const mongoose = require('mongoose');
 const mongooseStringQuery = require('mongoose-string-query');
 const timestamps = require('mongoose-timestamp');
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const ReportDailySchema = new mongoose.Schema({
+        storeId: {
+            type: ObjectId,
+            ref: "Store",
+            required: true
+        },
+        totalCustomerMaturity: {
+            type: Number,
+            default: 0
+        },
+        totalCustomerNew: {
+            type: Number,
+            default: 0
+        },
+
         luuThongSLTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         luuThongSLGiam: {
-            type: Number
+            type: Number,
+            default: 0
         },
         luuThongMoneyTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         luuThongMoneyGiam: {
-            type: Number
+            type: Number,
+            default: 0
         },
 
         thuVeSLTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         thuVeSLGiam: {
-            type: Number
+            type: Number,
+            default: 0
         },
         thuVeMoneyTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         thuVeMoneyGiam: {
-            type: Number
+            type: Number,
+            default: 0
         },
 
         chotSLTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         chotSLGiam: {
-            type: Number
+            type: Number,
+            default: 0
         },
         chotMoneyTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         chotMoneyGiam: {
-            type: Number
+            type: Number,
+            default: 0
         },
 
         beSLTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         beSLGiam: {
-            type: Number
+            type: Number,
+            default: 0
         },
         beMoneyTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         beMoneyGiam: {
-            type: Number
+            type: Number,
+            default: 0
         },
 
         daoSLTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         daoSLGiam: {
-            type: Number
+            type: Number,
+            default: 0
         },
         daoMoneyTang: {
-            type: Number
+            type: Number,
+            default: 0
         },
         daoMoneyGiam: {
-            type: Number
+            type: Number,
+            default: 0
         }
     }
     , {

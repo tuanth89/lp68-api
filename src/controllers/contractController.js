@@ -87,7 +87,11 @@ function insertCusAndContractBulk(req, res, next) {
                     EventDispatcher.checkContractNoListener(contracts);
 
                     // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
-                    EventDispatcher.newContractAddedListener(contracts);
+                    EventDispatcher.newContractAddedListener(contracts, {luuThongTang: true});
+
+                    /* Report Daily */
+                    // let contractTemp = JSON.parse("[{\"_id\":\"5cc490fe0cc46e0a3b189c18\",\"customer\":{\"name\":\"Tuan\",\"_id\":\"5cbd6505faaaaa0bc3cf2817\"},\"customerId\":\"5cbd6505faaaaa0bc3cf2817\",\"loanMoney\":10000000,\"actuallyCollectedMoney\":10000000,\"loanDate\":10,\"createdAt\":\"2019-04-28\",\"dateEnd\":\"\",\"isHdLaiDung\":false,\"isHdDao\":false,\"isHdThuVe\":false,\"isHdChot\":false,\"isHdBe\":false,\"isCustomerNew\":false,\"storeId\":\"5c64e4e4b524f513fc9cf74e\",\"storeCode\":\"TD\",\"customerCode\":\"tientd\",\"creator\":\"5c6292a66003663f387b6c0f\",\"isRemove\":true,\"typeCode\":\"XM\",\"contractId\":\"5cc490fe0cc46e0a3b189c18\",\"loanEndDate\":\"2019-05-08\",\"dailyMoneyPay\":\"1000000\",\"status\":0,\"createContractNew\":true},{\"_id\":\"5cc490fe0cc46e0a3b189c1a\",\"customer\":{\"name\":\"GAGA\",\"_id\":\"5cbf415e8575a10b54bc965e\"},\"customerId\":\"5cbf415e8575a10b54bc965e\",\"loanMoney\":10000000,\"actuallyCollectedMoney\":10000000,\"loanDate\":10,\"createdAt\":\"2019-04-27\",\"dateEnd\":\"\",\"isHdLaiDung\":false,\"isHdDao\":false,\"isHdThuVe\":false,\"isHdChot\":false,\"isHdBe\":false,\"isCustomerNew\":false,\"storeId\":\"5c64e4e4b524f513fc9cf74e\",\"storeCode\":\"TD\",\"customerCode\":\"tientd\",\"creator\":\"5c6292a66003663f387b6c0f\",\"isRemove\":true,\"typeCode\":\"XM\",\"contractId\":\"5cc490fe0cc46e0a3b189c1a\",\"loanEndDate\":\"2019-05-07\",\"dailyMoneyPay\":\"1000000\",\"status\":0,\"createContractNew\":true},{\"_id\":\"5cc490fe0cc46e0a3b189c1c\",\"customer\":{\"name\":\"GAGA\",\"_id\":\"5cbf415e8575a10b54bc965e\"},\"customerId\":\"5cbf415e8575a10b54bc965e\",\"loanMoney\":10000000,\"actuallyCollectedMoney\":10000000,\"loanDate\":10,\"createdAt\":\"2019-04-28\",\"dateEnd\":\"\",\"isHdLaiDung\":false,\"isHdDao\":false,\"isHdThuVe\":false,\"isHdChot\":false,\"isHdBe\":false,\"isCustomerNew\":false,\"storeId\":\"5c64e4e4b524f513fc9cf74e\",\"storeCode\":\"TD\",\"customerCode\":\"tientd\",\"creator\":\"5c6292a66003663f387b6c0f\",\"isRemove\":true,\"typeCode\":\"XM\",\"contractId\":\"5cc490fe0cc46e0a3b189c1c\",\"loanEndDate\":\"2019-05-08\",\"dailyMoneyPay\":\"1000000\",\"status\":0,\"createContractNew\":true}]");
+                    EventDispatcher.totalLuuThongTangGiamListener(contracts, true);
 
                     // Sinh các bản ghi log lưu vết cho các hợp đồng mới tạo
                     // EventDispatcher.createContractLogListener(contracts);
@@ -343,8 +347,7 @@ function updateStatusEnd(req, res, next) {
                 return next(error);
             })
             .done();
-    }
-    else {
+    } else {
         HdLuuThongRepository.updateStatus(data)
             .then(() => {
                 EventDispatcher.updateContractTotalMoneyPaidListener(data);
@@ -404,8 +407,7 @@ function remove(req, res, next) {
                         res.send(200, {removed: true});
                         next();
                     });
-            }
-            else {
+            } else {
                 res.send(200, {removed: false});
                 next();
             }
@@ -432,7 +434,6 @@ function circulationContract(req, res, next) {
         return next(new errors.InvalidContentError("Số tiền vay không được <= 0"));
     }
 
-    // let _user = AuthorizationService.getUser(req);
     ContractRepository.circulationContract(contractId, data)
         .then(function (contract) {
             //Kiểm tra số hợp đồng có bị trùng lặp
@@ -477,6 +478,19 @@ function circulationContract(req, res, next) {
                     res.send(201, contract);
                     next();
                 });
+
+            /* Báo cáo ngày đáo tăng giảm */
+            let reportItem = {totalCustomerMaturity: 1};
+            let moneyPayNew = contract.moneyPayNew === undefined ? 0 : parseInt(contract.moneyPayNew);
+            if (contract.isGreaterThanOld) {
+                reportItem.daoSLTang = 1;
+                reportItem.daoMoneyTang = moneyPayNew;
+            } else {
+                reportItem.daoSLGiam = 1;
+                reportItem.daoMoneyGiam = moneyPayNew;
+            }
+
+            EventDispatcher.daoTangGiamReportDailyListener(reportItem);
         })
         .catch(function (error) {
             return next(error);

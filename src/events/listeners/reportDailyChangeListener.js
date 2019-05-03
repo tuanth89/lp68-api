@@ -5,61 +5,54 @@ const log = require('../../../logger').log;
 const moment = require('moment');
 const CONTRACT_OTHER_CONST = require('../../constant/contractOtherConstant');
 const ObjectId = require('mongoose').Types.ObjectId;
+const _ = require('lodash');
 
 /**
- * @desc Cập nhật báo cáo hàng ngày
- * @param {Object} data
+ * @desc Tong so luu thong tang, giảm
+ * @param {Object} contracts
+ * @param {Boolean} isLuuThongTang : tăng hoặc giảm
  * @returns {*|promise}
  */
-function updateReportDaily(data) {
-    let updateSetReport = {};
+function totalLuuThongTangDaily(contracts, isLuuThongTang) {
+    if (isLuuThongTang) {
+        let group = _.groupBy(contracts, 'createdAt');
 
-    if (data.luuThongTang) {
-
-    }
-
-    if (data.luuThongGiam) {
-
-    }
-
-    if (data.thuVeTang) {
-
-    }
-
-    if (data.thuVeGiam) {
-
-    }
-
-    if (data.chotTang) {
-
-    }
-
-    if (data.chotGiam) {
-
-    }
-
-    if (data.beTang) {
-
-    }
-
-    if (data.beGiam) {
-
-    }
-
-    if (data.daoTang) {
-
-    }
-
-    if (data.daoGiam) {
-
-    }
-
-    ReportDailyRepository.checkExistsAndInsertOrUpdate(updateSetReport)
-        .catch(()=> {
-
+        let data = _.map(_.keys(group), function (e) {
+            return _.reduce(group[e], function (r, o) {
+                return r.luuThongMoneyTang += parseInt(o.dailyMoneyPay), r.storeId = o.storeId, r.totalCustomerNew += (o.isCustomerNew ? 1 : 0), r
+            }, {createdAt: e, luuThongMoneyTang: 0, luuThongSLTang: group[e].length, storeId: "", totalCustomerNew: 0})
         });
+
+        data.forEach(item => {
+            ReportDailyRepository.checkExistsAndInsertOrUpdate(item)
+                .catch((err) => {
+                    log.error(err.message);
+                })
+                .done();
+        })
+    } else {
+        ReportDailyRepository.checkExistsAndInsertOrUpdate(contracts)
+            .catch((err) => {
+                log.error(err.message);
+            })
+            .done();
+    }
+}
+
+/**
+ * @desc Đáo tăng, giảm
+ * @param {Object} contract
+ * @returns {*|promise}
+ */
+function daoTangGiamReportDaily(contract) {
+    ReportDailyRepository.checkExistsAndInsertOrUpdate(contract)
+        .catch((err) => {
+            log.error(err.message);
+        })
+        .done();
 }
 
 module.exports = {
-    updateReportDaily: updateReportDaily
+    totalLuuThongTangDaily: totalLuuThongTangDaily,
+    daoTangGiamReportDaily: daoTangGiamReportDaily
 };

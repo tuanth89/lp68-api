@@ -444,6 +444,19 @@ function circulationContract(req, res, next) {
             // Sinh phế nhân viên cho hợp đồng cũ
             EventDispatcher.updatePheForStaffListener(contractId);
 
+            /* Báo cáo ngày đáo tăng giảm */
+            let reportItem = {createdAt: contract.createdAt, totalCustomerMaturity: 1};
+            let moneyPayNew = contract.moneyPayNew === undefined ? 0 : parseInt(contract.moneyPayNew);
+            if (contract.isGreaterThanOld) {
+                reportItem.daoSLTang = 1;
+                reportItem.daoMoneyTang = moneyPayNew;
+            } else {
+                reportItem.daoSLGiam = 1;
+                reportItem.daoMoneyGiam = moneyPayNew;
+            }
+
+            EventDispatcher.daoTangGiamReportDailyListener(reportItem);
+
             ContractLogRepository.findByContractId(contractId)
                 .then((contractLog) => {
                     let contractLogs = [];
@@ -479,21 +492,9 @@ function circulationContract(req, res, next) {
                     next();
                 });
 
-            /* Báo cáo ngày đáo tăng giảm */
-            let reportItem = {totalCustomerMaturity: 1};
-            let moneyPayNew = contract.moneyPayNew === undefined ? 0 : parseInt(contract.moneyPayNew);
-            if (contract.isGreaterThanOld) {
-                reportItem.daoSLTang = 1;
-                reportItem.daoMoneyTang = moneyPayNew;
-            } else {
-                reportItem.daoSLGiam = 1;
-                reportItem.daoMoneyGiam = moneyPayNew;
-            }
-
-            EventDispatcher.daoTangGiamReportDailyListener(reportItem);
         })
-        .catch(function (error) {
-            return next(error);
+        .catch(err => {
+            return next(err);
         })
         .done();
 }

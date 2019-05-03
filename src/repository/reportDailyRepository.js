@@ -71,7 +71,6 @@ function checkExistsAndInsertOrUpdate(data) {
     if (data.createdAt)
         dateCondition = moment(data.createdAt, "YYYY-MM-DD");
     else {
-        console.error(error);
         deferred.reject(new errors.InvalidContentError("Chưa nhập tham số ngày báo cáo"));
         return;
     }

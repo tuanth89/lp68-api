@@ -71,7 +71,8 @@ function findAllByContractId(contractId) {
                 histories: 1,
                 createdAt: "$contract.createdAt",
                 loanMoney: "$contract.loanMoney",
-                actuallyCollectedMoney: "$contract.actuallyCollectedMoney"
+                actuallyCollectedMoney: "$contract.actuallyCollectedMoney",
+                totalMoneyPaid: "$contract.totalMoneyPaid"
             }
         }
     ];
@@ -179,38 +180,52 @@ function insertMany(data) {
     let contractLogList = [];
 
     data.forEach((contractItem) => {
+
         let contractLog = new ContractLog();
-        let history = {};
-        if (contractItem.isDaoHan) {
-            history.title = "Đáo hạn";
-        }
-        else {
-            let moneyPaid = contractItem.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contractItem.dailyMoneyPay)) : 0;
-            history.title = "Đóng " + moneyPaid;
-        }
+        if (parseInt(contractItem.paidMoney) > 0) {
+            let history = {};
+            if (contractItem.isDaoHan) {
+                history.title = "Đáo hạn";
+            } else {
 
-        history.start = moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
-        history.stick = true;
+                let moneyPaid = contractItem.paidMoney !== undefined ? StringService.formatNumeric(parseInt(contractItem.paidMoney)) : 0;
+                history.title = "Đóng " + moneyPaid;
+                // else {
+                //     let moneyPaid = contractItem.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contractItem.dailyMoneyPay)) : 0;
+                //     history.title = "Đóng " + moneyPaid;
+                // }
+            }
 
-        contractLog.histories = [];
-        contractLog.histories.push(history);
+            history.start = moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+            history.stick = true;
+
+            contractLog.histories = [];
+            contractLog.histories.push(history);
+        }
 
         contractLog.contractId = contractItem.contractId;
         contractLog.customerId = contractItem.customerId;
-        contractLog.createdAt = new Date();
+
+        contractLog.createdAt = moment().format("YYYY-MM-DD");
+
         contractLogList.push(contractLog);
+
     });
 
-    ContractLog.insertMany(contractLogList, function (error, item) {
-        if (error) {
-            console.log(error);
-            deferred.reject(
-                new errors.InvalidContentError(error.message)
-            );
-        } else {
-            deferred.resolve(contractLogList);
-        }
-    });
+    if (contractLogList.length > 0) {
+        ContractLog.insertMany(contractLogList, function (error, item) {
+            if (error) {
+                console.log(error);
+                deferred.reject(
+                    new errors.InvalidContentError(error.message)
+                );
+            } else {
+                deferred.resolve(contractLogList);
+            }
+        });
+    } else {
+        deferred.resolve(contractLogList);
+    }
 
     return deferred.promise;
 }

@@ -89,12 +89,17 @@ function insertCusAndContractBulk(req, res, next) {
                     // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
                     EventDispatcher.newContractAddedListener(contracts, {luuThongTang: true});
 
+                    let contractList = contracts.slice();
+                    _.forEach(contractList, (item) => {
+                        if (item.dateEnd)
+                            item.createdAt = moment(item.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
+                    });
                     /* Report Daily */
                     // let contractTemp = JSON.parse("[{\"_id\":\"5cc490fe0cc46e0a3b189c18\",\"customer\":{\"name\":\"Tuan\",\"_id\":\"5cbd6505faaaaa0bc3cf2817\"},\"customerId\":\"5cbd6505faaaaa0bc3cf2817\",\"loanMoney\":10000000,\"actuallyCollectedMoney\":10000000,\"loanDate\":10,\"createdAt\":\"2019-04-28\",\"dateEnd\":\"\",\"isHdLaiDung\":false,\"isHdDao\":false,\"isHdThuVe\":false,\"isHdChot\":false,\"isHdBe\":false,\"isCustomerNew\":false,\"storeId\":\"5c64e4e4b524f513fc9cf74e\",\"storeCode\":\"TD\",\"customerCode\":\"tientd\",\"creator\":\"5c6292a66003663f387b6c0f\",\"isRemove\":true,\"typeCode\":\"XM\",\"contractId\":\"5cc490fe0cc46e0a3b189c18\",\"loanEndDate\":\"2019-05-08\",\"dailyMoneyPay\":\"1000000\",\"status\":0,\"createContractNew\":true},{\"_id\":\"5cc490fe0cc46e0a3b189c1a\",\"customer\":{\"name\":\"GAGA\",\"_id\":\"5cbf415e8575a10b54bc965e\"},\"customerId\":\"5cbf415e8575a10b54bc965e\",\"loanMoney\":10000000,\"actuallyCollectedMoney\":10000000,\"loanDate\":10,\"createdAt\":\"2019-04-27\",\"dateEnd\":\"\",\"isHdLaiDung\":false,\"isHdDao\":false,\"isHdThuVe\":false,\"isHdChot\":false,\"isHdBe\":false,\"isCustomerNew\":false,\"storeId\":\"5c64e4e4b524f513fc9cf74e\",\"storeCode\":\"TD\",\"customerCode\":\"tientd\",\"creator\":\"5c6292a66003663f387b6c0f\",\"isRemove\":true,\"typeCode\":\"XM\",\"contractId\":\"5cc490fe0cc46e0a3b189c1a\",\"loanEndDate\":\"2019-05-07\",\"dailyMoneyPay\":\"1000000\",\"status\":0,\"createContractNew\":true},{\"_id\":\"5cc490fe0cc46e0a3b189c1c\",\"customer\":{\"name\":\"GAGA\",\"_id\":\"5cbf415e8575a10b54bc965e\"},\"customerId\":\"5cbf415e8575a10b54bc965e\",\"loanMoney\":10000000,\"actuallyCollectedMoney\":10000000,\"loanDate\":10,\"createdAt\":\"2019-04-28\",\"dateEnd\":\"\",\"isHdLaiDung\":false,\"isHdDao\":false,\"isHdThuVe\":false,\"isHdChot\":false,\"isHdBe\":false,\"isCustomerNew\":false,\"storeId\":\"5c64e4e4b524f513fc9cf74e\",\"storeCode\":\"TD\",\"customerCode\":\"tientd\",\"creator\":\"5c6292a66003663f387b6c0f\",\"isRemove\":true,\"typeCode\":\"XM\",\"contractId\":\"5cc490fe0cc46e0a3b189c1c\",\"loanEndDate\":\"2019-05-08\",\"dailyMoneyPay\":\"1000000\",\"status\":0,\"createContractNew\":true}]");
-                    EventDispatcher.totalLuuThongTangGiamListener(contracts, true);
+                    EventDispatcher.totalLuuThongTangGiamListener(contractList, true);
 
                     // Sinh các bản ghi log lưu vết cho các hợp đồng mới tạo
-                    // EventDispatcher.createContractLogListener(contracts);
+                    EventDispatcher.createContractLogListener(contractList);
 
                     res.send(201, customers);
                     next();
@@ -457,40 +462,54 @@ function circulationContract(req, res, next) {
 
             EventDispatcher.daoTangGiamReportDailyListener(reportItem);
 
-            ContractLogRepository.findByContractId(contractId)
-                .then((contractLog) => {
-                    let contractLogs = [];
-                    let contractLogItem = {
-                        histories: contractLog ? contractLog.histories : [],
-                        contractId: ObjectId(contractId),
-                        customerId: ObjectId(data.customer._id),
-                        createdAt: new Date(data.createdAt)
-                    };
-                    let history = {};
-                    history.title = "Đáo hạn";
-                    history.start = moment(data.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
-                    history.stick = true;
-                    contractLogItem.histories.push(history);
-                    contractLogs.push(contractLogItem);
+            let dataContractLog = {
+                contractId: ObjectId(contractId),
+                customerId: ObjectId(data.customer._id),
+                createdAt: data.createdAt,
+                moneyPayOld: data.moneyPayOld,
+                moneyPayNew: data.moneyPayNew,
+                contractNewId: contract._id
+                // dailyMoneyPay: contract.dailyMoneyPay
+            };
+            EventDispatcher.insertOrUpdateBulkContractLogListener(dataContractLog);
 
-                    let contractNewLogItem = Object.assign({}, contractLogItem);
-                    contractNewLogItem.contractId = contract._id;
-                    contractNewLogItem.histories = [];
-                    contractNewLogItem.createdAt = new Date();
-                    let moneyPaid = contract.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contract.dailyMoneyPay)) : 0;
-                    let historyNew = {};
-                    historyNew.title = "Đóng " + moneyPaid;
-                    historyNew.start = moment(contractNewLogItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
-                    historyNew.stick = true;
-                    contractNewLogItem.histories.push(historyNew);
-                    contractLogs.push(contractNewLogItem);
+            res.send(201, contract);
+            next();
 
-                    // Sinh các bản ghi log vào lịch
-                    EventDispatcher.insertOrUpdateBulkContractLogListener(contractLogs);
-
-                    res.send(201, contract);
-                    next();
-                });
+            // ContractLogRepository.findByContractId(contractId)
+            //     .then((contractLog) => {
+            //         let contractLogs = [];
+            //         let contractLogItem = {
+            //             histories: contractLog ? contractLog.histories : [],
+            //             contractId: ObjectId(contractId),
+            //             customerId: ObjectId(data.customer._id),
+            //             createdAt: new Date(data.createdAt)
+            //         };
+            //         let history = {};
+            //         history.title = "Đáo hạn";
+            //         history.start = moment(data.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+            //         history.stick = true;
+            //         contractLogItem.histories.push(history);
+            //         contractLogs.push(contractLogItem);
+            //
+            //         let contractNewLogItem = Object.assign({}, contractLogItem);
+            //         contractNewLogItem.contractId = contract._id;
+            //         contractNewLogItem.histories = [];
+            //         contractNewLogItem.createdAt = new Date();
+            //         let moneyPaid = contract.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contract.dailyMoneyPay)) : 0;
+            //         let historyNew = {};
+            //         historyNew.title = "Đóng " + moneyPaid;
+            //         historyNew.start = moment(contractNewLogItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+            //         historyNew.stick = true;
+            //         contractNewLogItem.histories.push(historyNew);
+            //         contractLogs.push(contractNewLogItem);
+            //
+            //         // Sinh các bản ghi log vào lịch
+            //         EventDispatcher.insertOrUpdateBulkContractLogListener(contractLogs);
+            //
+            //         res.send(201, contract);
+            //         next();
+            //     });
 
         })
         .catch(err => {

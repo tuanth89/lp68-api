@@ -70,9 +70,13 @@ function checkExistsAndInsertOrUpdate(data) {
     let dateCondition = "";
     if (data.createdAt)
         dateCondition = moment(data.createdAt, "YYYY-MM-DD");
-    else {
+
+    // if (data.dateEnd)
+    //     dateCondition = moment(data.dateEnd, "YYYY-MM-DD");
+
+    if (!dateCondition) {
         deferred.reject(new errors.InvalidContentError("Chưa nhập tham số ngày báo cáo"));
-        return;
+        return deferred.promise;
     }
 
     let query = [
@@ -244,7 +248,7 @@ function totalCusLuuThongByDate(params) {
         if (err) {
             deferred.reject(new errors.InvalidContentError(err.message));
         } else {
-            deferred.resolve(item.length > 0 ? item[0]: {});
+            deferred.resolve(item.length > 0 ? item[0] : {});
         }
     });
 
@@ -317,7 +321,7 @@ function totalCusThuVeChotBeByDate(params) {
         if (err) {
             deferred.reject(new errors.InvalidContentError(err.message));
         } else {
-            deferred.resolve(item.length > 0 ? item[0]: {});
+            deferred.resolve(item.length > 0 ? item[0] : {});
         }
     });
 

@@ -10,6 +10,8 @@ const log = require('../../../logger').log;
 const CONTRACT_OTHER_CONST = require('../../constant/contractOtherConstant');
 const CONTRACT_CONST = require('../../constant/contractConstant');
 const _ = require('lodash');
+const moment = require('moment');
+const StringService = require('../../services/stringService');
 
 function createContractLog(contracts) {
     ContractLogRepository.insertMany(contracts)
@@ -18,6 +20,7 @@ function createContractLog(contracts) {
         })
         .done();
 }
+
 function addMultiLogToContractLog(contracts) {
     ContractLogRepository.bulkHistoriesByContractId(contracts)
         .catch((error) => {
@@ -182,8 +185,55 @@ function removeAllByContract(contractId) {
         .done();
 }
 
-function insertOrUpdateBulkContractLog(contracts) {
-    ContractLogRepository.insertOrUpdateBulkContractLog(contracts)
+function insertOrUpdateBulkContractLog(data) {
+    ContractLogRepository.findByContractId(data.contractId)
+        .then((contractLog) => {
+            let contractLogs = [];
+            let contractLogItem = {
+                histories: contractLog ? contractLog.histories : [],
+                contractId: data.contractId,
+                customerId: data.customerId,
+                createdAt: data.createdAt
+            };
+            if (data.moneyPayOld > 0) {
+                let history = {};
+                let moneyPaidOld = data.moneyPayOld !== undefined ? StringService.formatNumeric(parseInt(data.moneyPayOld)) : 0;
+                history.title = "Đóng " + moneyPaidOld;
+                history.start = moment(data.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+                history.stick = true;
+                contractLogItem.histories.push(history);
+
+                let historyDaoHan = {};
+                historyDaoHan.title = "Đáo hạn";
+                historyDaoHan.start = history.start;
+                historyDaoHan.stick = true;
+                contractLogItem.histories.push(historyDaoHan);
+
+                contractLogs.push(contractLogItem);
+            }
+
+            if (data.moneyPayNew > 0) {
+                let contractNewLogItem = Object.assign({}, contractLogItem);
+                contractNewLogItem.contractId = data.contractNewId;
+                contractNewLogItem.histories = [];
+                contractNewLogItem.createdAt = moment().format("YYYY-MM-DD");
+                let moneyPaid = data.moneyPayNew !== undefined ? StringService.formatNumeric(parseInt(data.moneyPayNew)) : 0;
+                let historyNew = {};
+                historyNew.title = "Đóng " + moneyPaid;
+                historyNew.start = moment().format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+                historyNew.stick = true;
+                contractNewLogItem.histories.push(historyNew);
+                contractLogs.push(contractNewLogItem);
+            }
+
+            if (contractLogs.length > 0) {
+                ContractLogRepository.insertOrUpdateBulkContractLog(contractLogs)
+                    .catch((error) => {
+                        log.error(error);
+                    })
+                    .done();
+            }
+        })
         .catch((error) => {
             log.error(error);
         })

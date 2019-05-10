@@ -1,5 +1,6 @@
 "use strict";
 
+const ContractLog = require('../../models/contractLog');
 const HdLuuThong = require('../../models/hdLuuThong');
 const Contract = require('../../models/contract');
 const ContractRepository = require('../../repository/contractRepository');
@@ -107,6 +108,7 @@ function updateContractDongTruoc(data) {
         .then(contractItem => {
             HdLuuThongRepository.findDateDescByContractId(data.contractId)
                 .then(luuThongItem => {
+                    let bulk = ContractLog.collection.initializeOrderedBulkOp();
                     let totalMoneyPaid = contractItem.totalMoneyPaid + (data.newPayMoney === undefined ? 0 : data.newPayMoney);
 
                     //region Sinh các bản ghi ngày theo số tiền đã nộp
@@ -148,6 +150,15 @@ function updateContractDongTruoc(data) {
 
                         luuThongList.push(luuThongPaid);
                         day++;
+
+                        let history = {
+                            title: "Đóng 0",
+                            start: dateCurrent.format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z',
+                            stick: true
+                        };
+
+                        bulk.find({contractId: ObjectId(data.contractId)})
+                            .update({$push: {histories: history}});
                     }
 
                     // Nếu chưa đóng đủ tiền thì sinh thêm bản ghi cho ngày tiếp theo
@@ -203,6 +214,16 @@ function updateContractDongTruoc(data) {
                         }
                     });
 
+                    //endregion
+
+
+                    //region Ghi log đã đóng tiền theo ngày cho hợp đồng
+
+                    bulk.execute(function (error, results) {
+                        if (error) {
+                            console.log(error);
+                        }
+                    });
                     //endregion
 
                 });

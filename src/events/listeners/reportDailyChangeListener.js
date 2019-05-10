@@ -15,6 +15,11 @@ const _ = require('lodash');
  */
 function totalLuuThongTangDaily(contracts, isLuuThongTang) {
     if (isLuuThongTang) {
+        // _.forEach(contracts, (item) => {
+        //     if (item.dateEnd)
+        //         item.createdAt = moment(item.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
+        // });
+
         let group = _.groupBy(contracts, 'createdAt');
 
         let data = _.map(_.keys(group), function (e) {
@@ -25,6 +30,9 @@ function totalLuuThongTangDaily(contracts, isLuuThongTang) {
 
         data.forEach(item => {
             ReportDailyRepository.checkExistsAndInsertOrUpdate(item)
+                .then(item => {
+
+                })
                 .catch((err) => {
                     log.error(err.message);
                 })
@@ -32,6 +40,9 @@ function totalLuuThongTangDaily(contracts, isLuuThongTang) {
         })
     } else {
         ReportDailyRepository.checkExistsAndInsertOrUpdate(contracts)
+            .then(item => {
+
+            })
             .catch((err) => {
                 log.error(err.message);
             })

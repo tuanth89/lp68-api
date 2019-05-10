@@ -7,10 +7,10 @@ const UpdateContractListener = require('./listeners/updateContractListener');
 const CustomerChangeListener = require('./listeners/customerChangeListener');
 const ReportDailyChangeListener = require('./listeners/reportDailyChangeListener');
 
-function insertOrUpdateBulkContractLogListener(contracts) {
+function insertOrUpdateBulkContractLogListener(data) {
     eventEmitter.once('LP_BATCH_LOG_LOG_EVENT', NewContractListener.insertOrUpdateBulkContractLog);
 
-    eventEmitter.emit('LP_BATCH_LOG_LOG_EVENT', contracts);
+    eventEmitter.emit('LP_BATCH_LOG_LOG_EVENT', data);
 }
 
 function createContractLogListener(contracts) {

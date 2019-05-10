@@ -234,32 +234,33 @@ function transferType(req, res, next) {
         /* Cập nhật báo cáo theo ngày */
         if (!data.isNotFromLuuThong) { // Chuyển từ Lưu Thông sang Thu về, chốt, bễ
             /* Thu ve, chot, be tăng khi chuyển từ Lưu Thông sang */
-            if (data.status === CONTRACT_CONST.NEW) {
-                reportItem.createdAt = moment(data.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
-                if (data.newTransferDate)
-                    reportItem.createdAt = data.newTransferDate;
+            reportItem.createdAt = moment(data.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
+            if (data.newTransferDate)
+                reportItem.createdAt = data.newTransferDate;
 
+            if (data.status === CONTRACT_CONST.NEW) {
                 reportItem.luuThongSLGiam = 1;
                 reportItem.luuThongMoneyGiam = luuthongMoneyPaid;
-
-                /* Thu về tăng */
-                if (data.statusContract === CONTRACT_CONST.COLLECT) {
-                    reportItem.thuVeSLTang = 1;
-                    reportItem.thuVeMoneyTang = debtContract;
-                }
-
-                /* Chốt tăng */
-                if (data.statusContract === CONTRACT_CONST.CLOSE_DEAL) {
-                    reportItem.chotSLTang = 1;
-                    reportItem.chotMoneyTang = debtContract;
-                }
-
-                /* Bễ tăng */
-                if (data.statusContract === CONTRACT_CONST.ESCAPE) {
-                    reportItem.beSLTang = 1;
-                    reportItem.beMoneyTang = debtContract;
-                }
             }
+
+            /* Thu về tăng */
+            if (data.statusContract === CONTRACT_CONST.COLLECT) {
+                reportItem.thuVeSLTang = 1;
+                reportItem.thuVeMoneyTang = debtContract;
+            }
+
+            /* Chốt tăng */
+            if (data.statusContract === CONTRACT_CONST.CLOSE_DEAL) {
+                reportItem.chotSLTang = 1;
+                reportItem.chotMoneyTang = debtContract;
+            }
+
+            /* Bễ tăng */
+            if (data.statusContract === CONTRACT_CONST.ESCAPE) {
+                reportItem.beSLTang = 1;
+                reportItem.beMoneyTang = debtContract;
+            }
+
         }
         /* Thu ve, chot, be tăng giảm khi chuyển qua lại lẫn nhau */
         else {
@@ -305,6 +306,14 @@ function transferType(req, res, next) {
         }
         EventDispatcher.totalLuuThongTangGiamListener(reportItem, false);
 
+        /* Ghi log đóng tiền */
+        let contractLog = [{
+            contractId: contractId,
+            moneyPaid: payMoneyOriginal,
+            createdAt: data.newTransferDate
+        }];
+        EventDispatcher.addMultiLogToContractLogListener(contractLog);
+
         res.send(201, true);
         next();
 
@@ -346,6 +355,14 @@ function updateDongTruoc(req, res, next) {
 
             EventDispatcher.updateContractDongTruoc(dataContract);
 
+            /* ghi log lưu vết đã đóng cho hợp đồng */
+            let contractLog = [{
+                contractId: contractId,
+                moneyPaid: data.newPayMoney !== undefined ? data.newPayMoney : 0,
+                createdAt: data.createdAt
+            }];
+            EventDispatcher.addMultiLogToContractLogListener(contractLog);
+
             res.send(201, true);
             next();
 
@@ -385,6 +402,14 @@ function updateTotalMoneyPaidTCB(req, res, next) {
                 totalMoneyPaid: totalMoneyPaid
             };
             EventDispatcher.updateStatusContractAndLuuThongListener(dataContract);
+
+            /* ghi log lưu vết đã đóng cho hợp đồng */
+            let contractLog = [{
+                contractId: contractId,
+                moneyPaid: newPayMoney,
+                createdAt: moment(data.payDate, "DD/MM/YYYY").format("YYYY-MM-DD")
+            }];
+            EventDispatcher.addMultiLogToContractLogListener(contractLog);
 
             data.creator = contractItem.creator;
             HdLuuThongRepository.insertHdLuuThongByTCB(contractId, data)

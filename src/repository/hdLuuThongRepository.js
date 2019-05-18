@@ -101,6 +101,7 @@ Date.prototype.addDays = function (days) {
     this.setDate(this.getDate() + parseInt(days));
     return this;
 };
+
 /**
  *
  * @param params
@@ -354,8 +355,7 @@ function insertMany(data) {
         if (contractItem.status === CONTRACT_CONST.STAND) {
             luuthong.moneyHavePay = contractItem.dailyMoneyPay;
             luuthong.moneyPaid = 0;
-        }
-        else {
+        } else {
             if (totalMoneyPaid > 0) {
                 luuthong.moneyHavePay = contractItem.dailyMoneyPay;
                 luuthong.moneyPaid = contractItem.moneyPaid;
@@ -373,8 +373,7 @@ function insertMany(data) {
             luuthongCurrent.creator = contractItem.creator;
             if (contractItem.dateEnd) {
                 luuthongCurrent.createdAt = moment(contractItem.dateEnd, "DD/MM/YYYY").format("YYYY-MM-DD");
-            }
-            else
+            } else
                 luuthongCurrent.createdAt = contractItem.createdAt;
             luuthongCurrent.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
 
@@ -437,8 +436,7 @@ function insertManyByContractOld(data) {
 
         if (contractItem.status === CONTRACT_CONST.STAND) {
 
-        }
-        else {
+        } else {
             if (totalMoneyPaid > 0) {
                 luuthong.moneyHavePay = contractItem.moneyHavePay;
                 luuthong.moneyPaid = contractItem.moneyPaid;
@@ -544,8 +542,7 @@ function updateMany(data) {
                 luuthong._doc.totalMoneyPaid = 0;
                 luuthong.moneyHavePay = 0;
                 luuthong.moneyPaid = 0;
-            }
-            else {
+            } else {
                 luuthong._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
                 luuthong.moneyHavePay = dailyMoneyPay;
                 luuthong.moneyPaid = dailyMoneyPay;
@@ -553,8 +550,7 @@ function updateMany(data) {
 
             luuthong.createdAt = contractItem.createdAt;
             luuthongs.push(luuthong);
-        }
-        else // Nếu tiền đóng đủ và hết
+        } else // Nếu tiền đóng đủ và hết
             contractUpdateSet.status = CONTRACT_CONST.END;
 
         bulkHdLuuThong.find({_id: ObjectId(contractItem._id)})
@@ -587,8 +583,7 @@ function updateMany(data) {
                         deferred.resolve(luuthongs);
                     }
                 });
-            }
-            else
+            } else
                 deferred.resolve(luuthongs);
 
         }
@@ -627,8 +622,7 @@ function updateChotLaiDung(contractId, data) {
                 deferred.resolve(true);
             }
         });
-    }
-    else {
+    } else {
         deferred.resolve(true);
     }
 
@@ -833,101 +827,6 @@ function findAndInsertIfNotExists(data) {
     return deferred.promise;
 }
 
-/**
- * @desc Sinh bản ghi lưu thông cho ngày đóng tiền của hợp đồng Thu về, Chốt, Bễ
- * @param {String} contractId
- * @param {Object} data
- * @returns {*|promise}
- */
-function insertHdLuuThongByTCB(contractId, data) {
-    const deferred = Q.defer();
-
-    let dateCondition = moment();
-    if (data.payDate)
-        dateCondition = moment(data.payDate, "DD/MM/YYYY");
-
-    let query = [
-        {
-            $project: {
-                _id: 1,
-                moneyPaid: 1,
-                status: 1,
-                contractId: 1,
-                createdAt: 1,
-                day: {"$dayOfMonth": "$createdAt"},
-                month: {"$month": "$createdAt"},
-                year: {"$year": "$createdAt"},
-            }
-        },
-        {
-            $match: {
-                contractId: ObjectId(contractId),
-                month: dateCondition.month() + 1,
-                day: dateCondition.date(),
-                year: dateCondition.year()
-            }
-        }
-    ];
-
-    HdLuuThong.aggregate(query).exec(function (err, items) {
-        if (err) {
-            deferred.reject(new errors.InvalidContentError(err.message));
-        } else {
-            if (items.length > 0) {
-                let [luuThongItem] = items;
-                let luuThongUpdateSet = {
-                    status: CONTRACT_OTHER_CONST.STATUS.COMPLETED
-                };
-
-                if (data.newPayMoney)
-                    luuThongUpdateSet.moneyPaid = data.newPayMoney === undefined ? 0 : parseInt(data.newPayMoney) + luuThongItem.moneyPaid;
-
-                HdLuuThong.findOneAndUpdate({
-                    _id: luuThongItem._id
-                }, {
-                    $set: luuThongUpdateSet
-                }, function (error, item) {
-                    if (error) {
-                        // deferred.reject(new errors.InvalidContentError("Not found"));
-                        deferred.resolve({});
-                    } else {
-                        deferred.resolve(item);
-                    }
-                });
-                deferred.resolve(items[0]);
-            }
-            else {
-                let luuthongList = [];
-                let luuthong = new HdLuuThong();
-                luuthong._id = new ObjectId();
-                luuthong.contractId = contractId;
-                luuthong.creator = data.creator;
-                luuthong.moneyHavePay = 0;
-                luuthong.moneyPaid = data.newPayMoney;
-                luuthong.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
-
-                if (data.payDate)
-                    luuthong.createdAt = moment(data.payDate, "DD/MM/YYYY").format("YYYY-MM-DD");
-                else
-                    luuthong.createdAt = moment().format("YYYY-MM-DD");
-
-                luuthongList.push(luuthong);
-
-                HdLuuThong.insertMany(luuthongList, function (error, item) {
-                    if (error) {
-                        console.log(error);
-                        deferred.resolve({});
-                    } else {
-                        deferred.resolve(item);
-                    }
-                });
-            }
-        }
-    });
-
-    return deferred.promise;
-}
-
 module.exports = {
     findById: findById,
     findDateDescByContractId: findDateDescByContractId,
@@ -945,6 +844,4 @@ module.exports = {
     updateStatus: updateStatus,
     insertHdLuuThong: insertHdLuuThong,
     findAndInsertIfNotExists: findAndInsertIfNotExists,
-    insertHdLuuThongByTCB: insertHdLuuThongByTCB
-
 };

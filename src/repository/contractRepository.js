@@ -169,34 +169,48 @@ function getListNewOrOldByDate(params) {
  */
 function getListByType(params) {
     const deferred = Q.defer();
+    let page = parseInt(params.page) || config.pagination.page;
+    let per_page = parseInt(params.per_page) || config.pagination.limit;
+    let offset = (page - 1) * per_page;
+
     let type = params.type || -1;
     let storeId = params.storeId || "";
     let userId = params.userId || "";
     let role = params.roles;
     let isRoot = role.indexOf(USER_CONSTANT.ROLE_ROOT) >= 0;
+    let date = params.date || new Date();
 
-    let query = {};
+    let dateFilter = new Date(date);
+
+    let dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth(), dateFilter.getDate(), 0, 0, 0);
+    let dateTo = dateFilter.addDays(1);
+    dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 0, 0, 0);
+
+    let matchQuery = {};
     switch (parseInt(type)) {
-        case CONTRACT_CONST.NEW:
-            query = {isCustomerNew: true};
-            break;
+
+        //TODO
+        // case CONTRACT_CONST.NEW:
+        //     matchQuery = {isCustomerNew: true};
+        //     break;
+
         case CONTRACT_CONST.MATURITY:
-            query = {status: CONTRACT_CONST.MATURITY};
+            matchQuery = {status: CONTRACT_CONST.MATURITY};
             break;
         case CONTRACT_CONST.COLLECT:
-            query = {status: CONTRACT_CONST.COLLECT};
+            matchQuery = {status: CONTRACT_CONST.COLLECT};
             break;
         case CONTRACT_CONST.CLOSE_DEAL:
-            query = {status: CONTRACT_CONST.CLOSE_DEAL};
+            matchQuery = {status: CONTRACT_CONST.CLOSE_DEAL};
             break;
         case CONTRACT_CONST.ESCAPE:
-            query = {status: CONTRACT_CONST.ESCAPE};
+            matchQuery = {status: CONTRACT_CONST.ESCAPE};
             break;
         case CONTRACT_CONST.STAND:
-            query = {status: CONTRACT_CONST.STAND};
+            matchQuery = {status: CONTRACT_CONST.STAND};
             break;
         case CONTRACT_CONST.END:
-            query = {
+            matchQuery = {
                 $or: [{
                     status: CONTRACT_CONST.END
                 }, {
@@ -205,30 +219,213 @@ function getListByType(params) {
             };
             break;
         case CONTRACT_CONST.ACCOUNTANT_END:
-            query = {status: CONTRACT_CONST.ACCOUNTANT_END};
+            matchQuery = {status: CONTRACT_CONST.ACCOUNTANT_END};
             break;
         default:
-            query = {status: -1};
+            matchQuery = {status: -1};
             break;
     }
 
+    // matchQuery.createdAt = {
+    //     $gte: dateFrom,
+    //     $lt: dateTo
+    // };
+
     if (storeId && !isRoot) {
-        query.storeId = ObjectId(storeId);
+        matchQuery.storeId = ObjectId(storeId);
     }
 
     if (userId && !isRoot) {
-        query.creator = ObjectId(userId);
+        matchQuery.creator = ObjectId(userId);
     }
 
+    let query = [
+        {
+            $match: matchQuery
+        }
+        ,
+        {
+            $lookup: {
+                from: "hdluuthongothers",
+                localField: "_id",
+                foreignField: "contractId",
+                as: "luuThongOthers"
+            }
+        }
+        , {
+            $project: {
+                _id: 1,
+                contractId: 1,
+                contractNo: 1,
+                loanMoney: 1,
+                customerId: 1,
+                actuallyCollectedMoney: 1,
+                loanDate: 1,
+                dailyMoneyPay: 1,
+                totalMoneyPaid: 1,
+                loanEndDate: 1,
+                contractDate: 1,
+                contractStatus: 1,
+                storeId: 1,
+                creator: 1,
+                contractCreatedAt: 1,
+                noIdentity: 1,
+                status: 1,
+                createdAt: 1,
+                // luuThongOtherList: {"$arrayElemAt": ["$luuThongOthers", 0]},
+                luuThongOtherList: {
+                    "$filter": {
+                        "input": "$luuThongOthers",
+                        "as": "item",
+                        cond: {
+                            $and: [
+                                {"$gte": ["$$item.createdAt", dateFrom]},
+                                {"$lt": ["$$item.createdAt", dateTo]}
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+        , {
+            $lookup: {
+                from: "customers",
+                localField: "customerId",
+                foreignField: "_id",
+                as: "customers"
+            }
+        }
+        , {
+            $project: {
+                _id: 1,
+                contractId: 1,
+                contractNo: 1,
+                loanMoney: 1,
+                actuallyCollectedMoney: 1,
+                loanDate: 1,
+                dailyMoneyPay: 1,
+                totalMoneyPaid: 1,
+                loanEndDate: 1,
+                contractDate: 1,
+                contractStatus: 1,
+                storeId: 1,
+                creator: 1,
+                contractCreatedAt: 1,
+                noIdentity: 1,
+                status: 1,
+                createdAt: 1,
+                customerItem: {"$arrayElemAt": ["$customers", 0]},
+                luuThongOtherList: {"$arrayElemAt": ["$luuThongOtherList", 0]},
+                // moneyPaid: {
+                //     $cond: [{
+                //         $and: [
+                //             {
+                //                 $ne: [{
+                //                     $cond: {
+                //                         if: {$isArray: "$luuThongOtherList"},
+                //                         then: {$size: "$luuThongOtherList"},
+                //                         else: 0
+                //                     }
+                //                 }, 0]
+                //             }
+                //         ]
+                //     },
+                //         "$luuThongOtherList.moneyPaid", 0
+                //     ]
+                // }
+            }
+        }
+        , {
+            $project: {
+                _id: 1,
+                contractId: 1,
+                contractNo: 1,
+                "customer.name": "$customerItem.name",
+                "customer._id": "$customerItem._id",
+                customerNameE: "$customerItem.nameE",
+                loanMoney: 1,
+                actuallyCollectedMoney: 1,
+                loanDate: 1,
+                dailyMoneyPay: 1,
+                totalMoneyPaid: 1,
+                loanEndDate: 1,
+                contractDate: 1,
+                contractStatus: 1,
+                storeId: 1,
+                creator: 1,
+                contractCreatedAt: 1,
+                noIdentity: 1,
+                moneyPaid: {$ifNull: [ "$luuThongOtherList.moneyPaid", 0 ]},
+                status: 1,
+                createdAt: 1,
+                totalHavePay: {$subtract: ["$actuallyCollectedMoney", "$totalMoneyPaid"]}
+            }
+        }
+        ,
+        {
+            $group: {
+                _id: null,
+                totalItems: {
+                    $sum: 1
+                },
+                // totalMoneyStatus: {
+                //     $sum: "$moneyPaid"
+                // },
+                docs: {
+                    $push: {
+                        _id: "$_id",
+                        contractId: "$_id",
+                        contractNo: "$contractNo",
+                        customer: "$customer",
+                        customerNameE: "$customerNameE",
+                        loanMoney: "$loanMoney",
+                        actuallyCollectedMoney: "$actuallyCollectedMoney",
+                        loanDate: "$loanDate",
+                        dailyMoneyPay: "$dailyMoneyPay",
+                        totalMoneyPaid: "$totalMoneyPaid",
+                        loanEndDate: "$loanEndDate",
+                        contractDate: "$contractDate",
+                        contractStatus: "$contractStatus",
+                        storeId: "$storeId",
+                        creator: "$creator",
+                        createdAt: "$createdAt",
+                        contractCreatedAt: "$createdAt",
+                        noIdentity: "$noIdentity",
+                        moneyPaid: "$moneyPaid",
+                        status: "$status",
+                        totalHavePay: "$totalHavePay",
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                totalItems: 1,
+                docs: {
+                    $slice: ["$docs", offset, per_page]
+                }
+            }
+        },
+        {
+            $project: {
+                totalItems: 1,
+                docs: 1,
+                totalMoneyStatus: {
+                    "$sum": "$docs.moneyPaid"
+                }
+            }
+        }
+
+    ];
+
     Contract
-        .find(query)
-        // .select(Serializer.summary)
+        .aggregate(query)
         .exec(function (error, contracts) {
             if (error) {
                 console.error(error);
                 deferred.reject(new errors.InvalidContentError(error.message));
             } else {
-                deferred.resolve(contracts);
+                deferred.resolve(contracts[0]);
             }
         });
 

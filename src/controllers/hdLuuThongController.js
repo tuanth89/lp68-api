@@ -3,6 +3,7 @@
 const errors = require('restify-errors');
 const ContractRepository = require('../repository/contractRepository');
 const HdLuuThongRepository = require('../repository/hdLuuThongRepository');
+const HdLuuThongOtherRepository = require('../repository/hdLuuThongOtherRepository');
 const AuthorizationService = require('../services/authorizationService');
 const EventDispatcher = require('../events/dispatcher');
 const _ = require('lodash');
@@ -412,7 +413,7 @@ function updateTotalMoneyPaidTCB(req, res, next) {
             EventDispatcher.addMultiLogToContractLogListener(contractLog);
 
             data.creator = contractItem.creator;
-            HdLuuThongRepository.insertHdLuuThongByTCB(contractId, data)
+            HdLuuThongOtherRepository.insertHdLuuThongByTCB(contractId, data)
                 .then(HdLuuThongItem => {
                     res.send(201, true);
                     next();

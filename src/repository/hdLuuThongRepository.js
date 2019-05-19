@@ -116,7 +116,7 @@ function getListByDate(params) {
 
     let date = params.date || new Date();
     let status = parseInt(params.status);
-    if (status === undefined || status === null)
+    if (!status)
         status = -1;
     let storeId = params.storeId || "";
     let userId = params.userId || "";
@@ -129,14 +129,16 @@ function getListByDate(params) {
     let dateTo = dateFilter.addDays(1);
     dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 0, 0, 0);
 
+    let queryMatch = {
+        createdAt: {
+            $gte: dateFrom,
+            $lt: dateTo
+        }
+    };
+
     let query = [
         {
-            $match: {
-                createdAt: {
-                    $gte: dateFrom,
-                    $lt: dateTo
-                }
-            }
+            $match: queryMatch
         }
         , {
             $lookup: {

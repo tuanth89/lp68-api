@@ -23,7 +23,7 @@ function getListByDate(params) {
 
     let date = params.date || new Date();
     let storeId = params.storeId || "";
-    // let userId = params.userId || "";
+    let userId = params.staffId || "";
     let role = params.roles || [];
     let isRoot = role.indexOf(USER_CONSTANT.ROLE_ROOT) >= 0;
 
@@ -42,6 +42,10 @@ function getListByDate(params) {
 
     if (storeId && !isRoot) {
         query.storeId = ObjectId(storeId);
+    }
+
+    if (userId && !isRoot) {
+        query.creator = ObjectId(userId);
     }
 
     ReportDaily

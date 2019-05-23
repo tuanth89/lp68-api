@@ -311,7 +311,8 @@ function transferType(req, res, next) {
         let contractLog = [{
             contractId: contractId,
             moneyPaid: payMoneyOriginal,
-            createdAt: data.newTransferDate
+            createdAt: data.newTransferDate,
+            newPayMoney: newPayMoney
         }];
         EventDispatcher.addMultiLogToContractLogListener(contractLog);
 

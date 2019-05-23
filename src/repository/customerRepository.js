@@ -217,6 +217,28 @@ function remove(id) {
 }
 
 /**
+ *
+ * @param visitorId
+ * @returns {*|promise}
+ */
+function removeByVisitor(visitorId) {
+    const deferred = Q.defer();
+
+    Customer.remove({
+        visitor: visitorId
+    }, function (error) {
+        if (error) {
+            console.error(error);
+            deferred.reject(new errors.InvalidContentError(error.message));
+        } else {
+            deferred.resolve(true);
+        }
+    });
+
+    return deferred.promise;
+}
+
+/**
  * Cập nhật số lượng lơn dữ liệu.
  * @param {Array} customers
  */
@@ -367,6 +389,7 @@ module.exports = {
     save: save,
     update: update,
     remove: remove,
+    removeByVisitor: removeByVisitor,
     updateBulk: updateBulk,
     getListAutoComplete: getListAutoComplete,
     updateImgDocs: updateImgDocs,

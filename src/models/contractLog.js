@@ -21,7 +21,12 @@ const ContractLogSchema = new mongoose.Schema({
     },
     histories: {
         type: Array
-    }
+    },
+    // Người tạo
+    creator: {
+        type: ObjectId,
+        ref: "User"
+    },
 
     // content: {
     //     type: String,

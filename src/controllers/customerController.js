@@ -156,15 +156,33 @@ function update(req, res, next) {
  * @param res
  * @param next
  */
+function removeAllByVisitor(req, res, next) {
+    let visitorId = req.params.visitorId;
+
+    EventDispatcher.removeByVisitorListener(visitorId);
+
+    CustomerRepository.removeByVisitor(visitorId)
+        .then(function (deleted) {
+            res.send(200, {removed: true});
+            next();
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
 function remove(req, res, next) {
-    // let _user = req.user;
     let customerId = req.params.customerId;
 
     CustomerRepository.findById(customerId)
         .then(customerItem => {
-            // ContractRepository.checkCustomerContractToDel(customerId)
-            //     .then((contract) => {
-            //         if (!contract) {
             EventDispatcher.removeAllByCustomerId(customerId, customerItem.visitor);
 
             CustomerRepository.remove(customerId)
@@ -172,13 +190,6 @@ function remove(req, res, next) {
                     res.send(200, {removed: true});
                     next();
                 });
-            // }
-            // else {
-
-            // res.send(200, {removed: false});
-            // next();
-            // }
-            // })
         })
         .catch(function (error) {
             return next(error);
@@ -240,6 +251,7 @@ module.exports = {
     one: one,
     update: update,
     remove: remove,
+    removeAllByVisitor: removeAllByVisitor,
     listAutoComplete: listAutoComplete,
     updateImgDocs: updateImgDocs,
     checkExists: checkExists

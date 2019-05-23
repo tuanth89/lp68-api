@@ -11,6 +11,10 @@ const ReportDailySchema = new mongoose.Schema({
             ref: "Store",
             required: true
         },
+        creator: {
+            type: ObjectId,
+            ref: "User"
+        },
         totalCustomerMaturity: {
             type: Number,
             default: 0

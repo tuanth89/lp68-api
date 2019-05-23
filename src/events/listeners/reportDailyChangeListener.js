@@ -24,8 +24,15 @@ function totalLuuThongTangDaily(contracts, isLuuThongTang) {
 
         let data = _.map(_.keys(group), function (e) {
             return _.reduce(group[e], function (r, o) {
-                return r.luuThongMoneyTang += parseInt(o.dailyMoneyPay), r.storeId = o.storeId, r.totalCustomerNew += (o.isCustomerNew ? 1 : 0), r
-            }, {createdAt: e, luuThongMoneyTang: 0, luuThongSLTang: group[e].length, storeId: "", totalCustomerNew: 0})
+                return r.luuThongMoneyTang += parseInt(o.dailyMoneyPay), r.storeId = o.storeId, r.creator = o.creator, r.totalCustomerNew += (o.isCustomerNew ? 1 : 0), r
+            }, {
+                createdAt: e,
+                luuThongMoneyTang: 0,
+                luuThongSLTang: group[e].length,
+                storeId: "",
+                creator: "",
+                totalCustomerNew: 0
+            })
         });
 
         data.forEach(item => {

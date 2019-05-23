@@ -56,4 +56,9 @@ module.exports = function (server) {
         actions: [`${resource}.${actions.remove}`]
     }, CustomerController.remove);
 
+    server.del({
+        path: prefix + '/:visitorId/delete/all',
+        actions: [`${resource}.${actions.remove}`]
+    }, CustomerController.removeAllByVisitor);
+
 };

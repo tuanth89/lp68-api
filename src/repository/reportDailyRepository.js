@@ -138,6 +138,7 @@ function checkExistsAndInsertOrUpdate(data) {
                     assignReportDaily(data, reportDailyItem);
 
                     reportDailyItem.storeId = data.storeId;
+                    reportDailyItem.creator = data.creator;
                     reportDailyItem.createdAt = data.createdAt;
 
                     reportDailyItem.save(reportDailyItem)

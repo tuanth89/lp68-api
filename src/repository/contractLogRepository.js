@@ -148,23 +148,43 @@ function bulkHistoriesByContractId(contracts) {
     let bulk = ContractLog.collection.initializeOrderedBulkOp();
 
     _.each(contracts, function (contract) {
-        let history = {};
+        let histories = [];
+
         let moneyPaid = contract.moneyPaid !== undefined ? StringService.formatNumeric(contract.moneyPaid) : 0;
-        history.title = "Đóng " + moneyPaid;
-        history.start = contract.createdAt;
-        history.stick = true;
+        if (moneyPaid > 0) {
+            let history = {};
 
-        bulk.find({contractId: ObjectId(contract.contractId)})
-            .update({$push: {histories: history}});
-    });
-
-    bulk.execute(function (error, results) {
-        if (error) {
-            deferred.reject(new errors.InvalidContentError(error.message));
-        } else {
-            deferred.resolve(contracts);
+            history.title = "Đóng " + moneyPaid;
+            history.start = contract.createdAt;
+            history.stick = true;
+            histories.push(history);
         }
+
+        if (contract.newPayMoney > 0) {
+            let historyOther = {};
+            historyOther.title = "Đóng " + StringService.formatNumeric(contract.newPayMoney);
+            historyOther.start = contract.createdAt;
+            historyOther.stick = true;
+            histories.push(historyOther);
+        }
+
+        if (histories.length > 0)
+            bulk.find({contractId: ObjectId(contract.contractId)})
+                .update({$push: {histories: {$each: histories}}});
     });
+
+    if (bulk && bulk.s && bulk.s.currentBatch
+        && bulk.s.currentBatch.operations
+        && bulk.s.currentBatch.operations.length > 0) {
+        bulk.execute(function (error, results) {
+            if (error) {
+                deferred.reject(false);
+            } else {
+                deferred.resolve(true);
+            }
+        });
+    } else
+        deferred.resolve(true);
 
     return deferred.promise;
 }
@@ -204,6 +224,7 @@ function insertMany(data) {
         }
 
         contractLog.contractId = contractItem.contractId;
+        contractLog.creator = contractItem.creator;
         contractLog.customerId = contractItem.customerId;
 
         contractLog.createdAt = moment().format("YYYY-MM-DD");

@@ -109,10 +109,22 @@ function checkExistsAndInsertOrUpdate(data) {
                 daoSLTang: "$daoSLTang",
                 daoSLGiam: "$daoSLGiam",
                 daoMoneyTang: "$daoMoneyTang",
-                daoMoneyGiam: "$daoMoneyGiam"
+                daoMoneyGiam: "$daoMoneyGiam",
+                storeId: "$storeId",
+                creator: "$creator",
+                totalCustomerMaturity: "$totalCustomerMaturity",
+                totalCustomerNew: "$totalCustomerNew"
             }
         },
-        {$match: {month: dateCondition.month() + 1, day: dateCondition.date(), year: dateCondition.year()}}
+        {
+            $match: {
+                month: dateCondition.month() + 1,
+                day: dateCondition.date(),
+                year: dateCondition.year(),
+                storeId: ObjectId(data.storeId),
+                creator: ObjectId(data.creator)
+            }
+        }
     ];
 
     ReportDaily
@@ -124,10 +136,13 @@ function checkExistsAndInsertOrUpdate(data) {
             } else {
                 if (items.length > 0) {
                     let [reportItem] = items;
+                    let reportId = reportItem._id;
+
+                    delete reportItem._id;
                     assignReportDaily(data, reportItem);
 
                     ReportDaily.findOneAndUpdate({
-                        _id: reportItem._id
+                        _id: ObjectId(reportId)
                     }, {
                         $set: reportItem
                     }, {upsert: true}, function (error, reportDaily) {

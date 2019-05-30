@@ -355,7 +355,7 @@ function getListByType(params) {
                 creator: 1,
                 contractCreatedAt: 1,
                 noIdentity: 1,
-                moneyPaid: {$ifNull: [ "$luuThongOtherList.moneyPaid", 0 ]},
+                moneyPaid: {$ifNull: ["$luuThongOtherList.moneyPaid", 0]},
                 status: 1,
                 createdAt: 1,
                 totalHavePay: {$subtract: ["$actuallyCollectedMoney", "$totalMoneyPaid"]}
@@ -642,7 +642,6 @@ function insertContractNewOrOldBulk(contracts) {
 
     _.each(contracts, function (contract) {
         contract._id = new ObjectId();
-        contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
         contract.contractId = contract._id;
         contract.createdAt = moment(contract.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
 
@@ -656,20 +655,26 @@ function insertContractNewOrOldBulk(contracts) {
         let startDate = moment(contract.createdAt);
         contract.loanEndDate = startDate.add(contract.loanDate, "days").format("YYYY-MM-DD");
 
-        let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
-        contract.dailyMoneyPay = dailyMoney.toFixed();
+        contract.status = CONTRACT_CONST.NEW;
+        contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_MOI;
+        contract.createContractNew = true;
 
+        if (contract.isHdLaiDung) {
+            contract.status = CONTRACT_CONST.STAND;
+            contract.dailyMoneyPay = 0;
+            contract.loanDate = 0;
+        } else {
+            let dailyMoney = contract.actuallyCollectedMoney / (contract.loanDate === 0 ? 1 : contract.loanDate);
+            contract.dailyMoneyPay = dailyMoney.toFixed();
+        }
         // if (contract.loanDate > 0) {
         //     let dailyMoney = contract.actuallyCollectedMoney / contract.loanDate;
         //     // contract.dailyMoney = Math.round(dailyMoney * 100) / 100;
         //     contract.dailyMoney = dailyMoney.toFixed();
         // }
 
-        contract.status = CONTRACT_CONST.NEW;
-        contract.createContractNew = true;
-        if (contract.isHdLaiDung) {
-            contract.status = CONTRACT_CONST.STAND;
-            // contract.dailyMoneyPay = 0;
+        if (contract.isHdDao) {
+            contract.typeCode = CONTRACT_OTHER_CONTANST.TYPE_CODE.XUAT_DAO;
         }
 
         if (contract.isHdThuVe) {

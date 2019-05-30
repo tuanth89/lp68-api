@@ -121,8 +121,7 @@ function insertOrUpdateBulk(customers) {
         if (!customer._id) {
             customer._id = new ObjectId();
             customer.createdAt = new Date();
-        }
-        else {
+        } else {
             customer.createdAt = new Date(customer.createdAt);
             customer._id = ObjectId(customer._id);
             customer.updatedAt = new Date();
@@ -165,8 +164,7 @@ function save(data) {
         .then((item) => {
             if (item) {
                 deferred.resolve(item);
-            }
-            else {
+            } else {
                 let customer = new Customer(data);
                 customer.save(function (error, user) {
                     if (error) {
@@ -245,22 +243,39 @@ function removeByVisitor(visitorId) {
 function updateBulk(customers) {
     const deferred = Q.defer();
     let bulk = Customer.collection.initializeOrderedBulkOp();
+
+    let listAdded = [];
+    let itemFound = {};
     _.forEach(customers, function (item) {
         if (!StringService.isObjectId(item.customerId)) {
-            let customerItem = new Customer(item);
-            customerItem._id = new ObjectId();
-            customerItem.name = item.customer.name;
-            customerItem.nameE = StringService.removeSignInString(item.customer.name);
-            customerItem.storeId = StringService.removeSignInString(item.storeId);
-            customerItem.visitor = StringService.removeSignInString(item.creator);
-            customerItem.createdAt = moment(item.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
+            itemFound = _.find(listAdded, function (itemAdded) {
+                return itemAdded.customerName.localeCompare(item.customer.name) !== -1;
+            });
 
-            item.customerId = customerItem._id;
-            item.customer._id = customerItem._id;
+            if (itemFound === undefined) {
+                let customerItem = new Customer(item);
+                customerItem._id = new ObjectId();
+                customerItem.name = item.customer.name;
+                customerItem.nameE = StringService.removeSignInString(item.customer.name);
+                customerItem.storeId = StringService.removeSignInString(item.storeId);
+                customerItem.visitor = StringService.removeSignInString(item.creator);
+                customerItem.createdAt = moment(item.createdAt, "DD/MM/YYYY").format("YYYY-MM-DD");
 
-            bulk.find({_id: ObjectId(customerItem._id)})
-                .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
-                .updateOne(customerItem);
+                bulk.find({_id: ObjectId(customerItem._id)})
+                    .upsert() // Tạo mới document khi mà không có document nào đúng với tiêu chí tìm kiếm.
+                    .updateOne(customerItem);
+
+                item.customerId = customerItem._id;
+                item.customer._id = customerItem._id;
+
+                listAdded.push({
+                    customerName: item.customer.name,
+                    customerId: customerItem._id
+                });
+            } else {
+                item.customerId = itemFound.customerId;
+                item.customer._id = itemFound.customerId;
+            }
         }
     });
 
@@ -274,8 +289,7 @@ function updateBulk(customers) {
                 deferred.resolve(customers);
             }
         });
-    }
-    else
+    } else
         deferred.resolve(customers);
 
     return deferred.promise;

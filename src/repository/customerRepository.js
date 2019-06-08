@@ -249,7 +249,7 @@ function updateBulk(customers) {
     _.forEach(customers, function (item) {
         if (!StringService.isObjectId(item.customerId)) {
             itemFound = _.find(listAdded, function (itemAdded) {
-                return itemAdded.customerName.localeCompare(item.customer.name) !== -1;
+                return itemAdded.customerName === item.customer.name;
             });
 
             if (itemFound === undefined) {

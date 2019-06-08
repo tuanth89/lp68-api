@@ -202,6 +202,7 @@ function getListByDate(params) {
                 creator: "$contract.creator",
                 contractCreatedAt: "$contract.createdAt",
                 noIdentity: "$contract.noIdentity",
+                note: "$contract.note",
                 moneyHavePay: 1,
                 moneyPaid: 1,
                 status: 1,

@@ -271,6 +271,7 @@ function getListByType(params) {
                 contractCreatedAt: 1,
                 noIdentity: 1,
                 status: 1,
+                note: 1,
                 createdAt: 1,
                 // luuThongOtherList: {"$arrayElemAt": ["$luuThongOthers", 0]},
                 luuThongOtherList: {
@@ -313,6 +314,7 @@ function getListByType(params) {
                 contractCreatedAt: 1,
                 noIdentity: 1,
                 status: 1,
+                note: 1,
                 createdAt: 1,
                 customerItem: {"$arrayElemAt": ["$customers", 0]},
                 luuThongOtherList: {"$arrayElemAt": ["$luuThongOtherList", 0]},
@@ -357,6 +359,7 @@ function getListByType(params) {
                 noIdentity: 1,
                 moneyPaid: {$ifNull: ["$luuThongOtherList.moneyPaid", 0]},
                 status: 1,
+                note: 1,
                 createdAt: 1,
                 totalHavePay: {$subtract: ["$actuallyCollectedMoney", "$totalMoneyPaid"]}
             }
@@ -393,6 +396,7 @@ function getListByType(params) {
                         noIdentity: "$noIdentity",
                         moneyPaid: "$moneyPaid",
                         status: "$status",
+                        note: "$note",
                         totalHavePay: "$totalHavePay",
                     }
                 }

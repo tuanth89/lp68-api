@@ -444,7 +444,7 @@ function circulationContract(req, res, next) {
             //Kiểm tra số hợp đồng có bị trùng lặp
             EventDispatcher.checkContractNoListener([contract]);
 
-            EventDispatcher.updateAndNewLuuThongListener(data._id, contract);
+            EventDispatcher.updateAndNewLuuThongListener(data._id, contract, contractId);
 
             // Sinh phế nhân viên cho hợp đồng cũ
             EventDispatcher.updatePheForStaffListener(contractId);

@@ -127,7 +127,7 @@ function newContractLuuThongListener(luuthongs) {
     });
 }
 
-function updateAndNewLuuThong(hdLuuThongId, contractNew) {
+function updateAndNewLuuThong(hdLuuThongId, contractNew, contractOldId) {
     let luuthongList = [];
     let updateLuuThong = {
         status: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
@@ -170,6 +170,31 @@ function updateAndNewLuuThong(hdLuuThongId, contractNew) {
 
         });
 
+    HdLuuThong.update({_id: hdLuuThongId}, {
+        $set: updateLuuThong
+    })
+        .then(() => {
+
+        });
+
+
+    HdLuuThong.update({
+            _id: {$ne: hdLuuThongId},
+            contractId: contractOldId,
+            status: CONTRACT_OTHER_CONST.STATUS.NORMAL
+        },
+        {
+            $set: {
+                status: CONTRACT_OTHER_CONST.STATUS.COMPLETED,
+                moneyPaid: 0,
+                moneyHavePay: 0,
+                updatedAt: new Date()
+            }
+        })
+        .then(() => {
+
+        });
+
     HdLuuThongRepository.saveMany(luuthongList)
         .catch((error) => {
             log.error(error);
@@ -199,13 +224,13 @@ function insertOrUpdateBulkContractLog(data) {
                 let history = {};
                 let moneyPaidOld = data.moneyPayOld !== undefined ? StringService.formatNumeric(parseInt(data.moneyPayOld)) : 0;
                 history.title = "Đóng " + moneyPaidOld;
-                history.start = moment(data.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+                history.start = new Date(moment(data.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z');
                 history.stick = true;
                 contractLogItem.histories.push(history);
 
                 let historyDaoHan = {};
                 historyDaoHan.title = "Đáo hạn";
-                historyDaoHan.start = history.start;
+                historyDaoHan.start = new Date(history.start);
                 historyDaoHan.stick = true;
                 contractLogItem.histories.push(historyDaoHan);
 
@@ -220,7 +245,7 @@ function insertOrUpdateBulkContractLog(data) {
                 let moneyPaid = data.moneyPayNew !== undefined ? StringService.formatNumeric(parseInt(data.moneyPayNew)) : 0;
                 let historyNew = {};
                 historyNew.title = "Đóng " + moneyPaid;
-                historyNew.start = moment().format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+                historyNew.start = new Date(moment().format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z');
                 historyNew.stick = true;
                 contractNewLogItem.histories.push(historyNew);
                 contractLogs.push(contractNewLogItem);

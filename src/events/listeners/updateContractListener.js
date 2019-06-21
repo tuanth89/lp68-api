@@ -9,6 +9,7 @@ const log = require('../../../logger').log;
 const moment = require('moment');
 const CONTRACT_OTHER_CONST = require('../../constant/contractOtherConstant');
 const ObjectId = require('mongoose').Types.ObjectId;
+const StringService = require('../../services/stringService');
 
 /**
  * @desc update trạng thái hợp đồng, hợp đồng lưu thông
@@ -38,9 +39,9 @@ function updateStatusLuuThongContract(data) {
         let updateSet = {
             status: data.luuThongStatus
         };
-        if (data.luuthongMoneyPaid) {
-            updateSet.moneyPaid = data.luuthongMoneyPaid;
-        }
+        // if (data.luuthongMoneyPaid) {
+        updateSet.moneyPaid = data.luuthongMoneyPaid;
+        // }
 
         HdLuuThong.findOneAndUpdate(
             {
@@ -152,7 +153,7 @@ function updateContractDongTruoc(data) {
                         day++;
 
                         let history = {
-                            title: "Đóng 0",
+                            title: "Đã đóng",
                             start: dateCurrent.format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z',
                             stick: true
                         };
@@ -235,9 +236,71 @@ function updateContractDongTruoc(data) {
         .done();
 }
 
+/**
+ * @desc Sửa tiền đóng theo ngày lưu thông và cập nhật lại tổng tiền, log
+ * @param {Object} data
+ * @returns {*|promise}
+ */
+function editMoneyPaidPerDay(data) {
+    // /* Sửa lại log theo ngày đã đóng cho hợp đồng */
+    // let contractLog = [{
+    //     contractId: contractId,
+    //     moneyPaid: newPayMoney,
+    //     createdAt: moment(data.payDate, "DD/MM/YYYY").format("YYYY-MM-DD")
+    // }];
+    // EventDispatcher.addMultiLogToContractLogListener(contractLog);
+
+    HdLuuThong.findOneAndUpdate(
+        {
+            _id: data.luuThongId
+        }, {
+            $set: {
+                moneyPaid: data.moneyPaidNew
+            }
+        }, function (error, item) {
+            if (error) {
+                console.log(error);
+            }
+        });
+
+    Contract.findOneAndUpdate(
+        {
+            _id: data.contractId
+        },
+        {
+            $set: {
+                totalMoneyPaid: data.totalMoneyPaid
+            }
+        }, function (error, item) {
+            if (error) {
+                console.log(error);
+            }
+        });
+
+
+    let dateFilter = new Date(data.createdAt);
+
+    let dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth(), dateFilter.getDate(), 0, 0, 0);
+    let dateTo = dateFilter.addDays(1);
+    dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 0, 0, 0);
+
+    ContractLog.updateOne({
+            contractId: ObjectId(data.contractId),
+            "histories.start": {$gte: dateFrom, $lt: dateTo}
+        },
+        {$set: {"histories.$.title": "Đóng " + StringService.formatNumeric(data.moneyPaidNew)}},
+        function (error, item) {
+            if (error) {
+                console.log(error);
+            }
+        }
+    );
+
+}
 
 module.exports = {
     updateStatusLuuThongContract: updateStatusLuuThongContract,
     updateContractTotalMoneyPaid: updateContractTotalMoneyPaid,
-    updateContractDongTruoc: updateContractDongTruoc
+    updateContractDongTruoc: updateContractDongTruoc,
+    editMoneyPaidPerDay: editMoneyPaidPerDay
 };

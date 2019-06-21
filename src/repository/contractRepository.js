@@ -273,6 +273,7 @@ function getListByType(params) {
                 status: 1,
                 note: 1,
                 createdAt: 1,
+                transferDate: 1,
                 // luuThongOtherList: {"$arrayElemAt": ["$luuThongOthers", 0]},
                 luuThongOtherList: {
                     "$filter": {
@@ -316,6 +317,7 @@ function getListByType(params) {
                 status: 1,
                 note: 1,
                 createdAt: 1,
+                transferDate: 1,
                 customerItem: {"$arrayElemAt": ["$customers", 0]},
                 luuThongOtherList: {"$arrayElemAt": ["$luuThongOtherList", 0]},
                 // moneyPaid: {
@@ -361,6 +363,7 @@ function getListByType(params) {
                 status: 1,
                 note: 1,
                 createdAt: 1,
+                transferDate: 1,
                 totalHavePay: {$subtract: ["$actuallyCollectedMoney", "$totalMoneyPaid"]}
             }
         }
@@ -392,6 +395,7 @@ function getListByType(params) {
                         storeId: "$storeId",
                         creator: "$creator",
                         createdAt: "$createdAt",
+                        transferDate: "$transferDate",
                         contractCreatedAt: "$createdAt",
                         noIdentity: "$noIdentity",
                         moneyPaid: "$moneyPaid",
@@ -416,6 +420,9 @@ function getListByType(params) {
                 docs: 1,
                 totalMoneyStatus: {
                     "$sum": "$docs.moneyPaid"
+                },
+                totalMoneyHavePayEnd: {
+                    "$sum": "$docs.totalHavePay"
                 }
             }
         }
@@ -498,7 +505,7 @@ function updateStatus(id, data) {
         lastUserUpdate: data.userId
     };
 
-    if (data.transferDate)
+    if (data.newTransferDate)
         updateSet.transferDate = moment(data.newTransferDate, "YYYY-MM-DD").format("YYYY-MM-DD");
 
     Contract.findOneAndUpdate({
@@ -1083,7 +1090,8 @@ function circulationContract(contractId, data) {
                     $set: {
                         totalMoneyPaid: totalPaid,
                         status: CONTRACT_CONST.MATURITY,
-                        transferDate: contractNew.createdAt,
+                        // transferDate: contractNew.createdAt,
+                        transferDate: data.newTransferDate !== undefined ? data.newTransferDate : contractNew.createdAt,
                         updatedAt: moment().format("YYYY-MM-DD")
                     }
                 }, function (error, user) {

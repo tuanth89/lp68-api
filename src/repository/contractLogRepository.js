@@ -150,20 +150,20 @@ function bulkHistoriesByContractId(contracts) {
     _.each(contracts, function (contract) {
         let histories = [];
 
-        let moneyPaid = contract.moneyPaid !== undefined ? StringService.formatNumeric(contract.moneyPaid) : 0;
-        if (moneyPaid > 0) {
-            let history = {};
+        let moneyPaid = contract.moneyPaid;
+        if (moneyPaid !== undefined) {
+        let history = {};
 
-            history.title = "Đóng " + moneyPaid;
-            history.start = contract.createdAt;
-            history.stick = true;
-            histories.push(history);
+        history.title = moneyPaid === 0 ? 'Nợ' : ("Đóng " + StringService.formatNumeric(contract.moneyPaid));
+        history.start = new Date(contract.createdAt);
+        history.stick = true;
+        histories.push(history);
         }
 
         if (contract.newPayMoney > 0) {
             let historyOther = {};
             historyOther.title = "Đóng " + StringService.formatNumeric(contract.newPayMoney);
-            historyOther.start = contract.createdAt;
+            historyOther.start = new Date(contract.createdAt);
             historyOther.stick = true;
             histories.push(historyOther);
         }
@@ -216,7 +216,7 @@ function insertMany(data) {
                 // }
             }
 
-            history.start = moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z';
+            history.start = new Date(moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z');
             history.stick = true;
 
             contractLog.histories = [];

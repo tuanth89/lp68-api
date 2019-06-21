@@ -426,6 +426,48 @@ function updateTotalMoneyPaidTCB(req, res, next) {
         .done();
 }
 
+/**
+ * @desc Sửa tiền đã dóng theo ngày và tính lại tổng tiền.
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function editMoneyPaid(req, res, next) {
+    let data = req.body || {};
+    let contractId = req.params.contractId;
+    let payMoneyOriginal = parseInt(data.payMoneyOriginal);
+    if (payMoneyOriginal <= 0) {
+        return next(new errors.InvalidContentError("Số tiền đóng không được <= 0"));
+    }
+
+    let moneyPaid = data.moneyPaid;
+
+    ContractRepository.findById(contractId)
+        .then((contractItem) => {
+            let totalMoneyPaid = contractItem.totalMoneyPaid + payMoneyOriginal - moneyPaid;
+
+            let dataContract = {
+                luuThongId: data._id,
+                contractId: contractId,
+                totalMoneyPaid: totalMoneyPaid,
+                moneyPaidOld: moneyPaid,
+                moneyPaidNew: payMoneyOriginal,
+                createdAt: data.createdAt
+            };
+
+            EventDispatcher.editMoneyPaidPerDayListener(dataContract);
+
+            res.send(200);
+            next();
+
+        })
+        .catch(function (error) {
+            return next(error);
+        })
+        .done();
+}
+
 module.exports = {
     list: list,
     listByDate: listByDate,
@@ -435,6 +477,7 @@ module.exports = {
     updateChotLai: updateChotLai,
     transferType: transferType,
     updateDongTruoc: updateDongTruoc,
+    editMoneyPaid: editMoneyPaid,
     updateTotalMoneyPaidTCB: updateTotalMoneyPaidTCB
 
 };

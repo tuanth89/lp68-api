@@ -243,6 +243,9 @@ function getListByDate(params) {
                 totalMoneyStatusEnd: {
                     $sum: "$moneyByStatusEnd"
                 },
+                totalMoneyHavePayEnd: {
+                    $sum: "$totalHavePay"
+                },
                 docs: {
                     $push: '$$ROOT'
                 }
@@ -252,6 +255,7 @@ function getListByDate(params) {
             $project: {
                 totalItems: 1,
                 totalMoneyStatusEnd: 1,
+                totalMoneyHavePayEnd: 1,
                 docs: {
                     $slice: ["$docs", offset, per_page]
                 }

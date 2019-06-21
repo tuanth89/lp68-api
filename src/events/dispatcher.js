@@ -49,10 +49,10 @@ function newContractLuuThongListener(contracts) {
     eventEmitter.emit('LP_NEW_CONTRACT_LUU_THONG_EVENT', contracts);
 }
 
-function updateAndNewLuuThongListener(hdLuuThongId, contractNew) {
+function updateAndNewLuuThongListener(hdLuuThongId, contractNew, contractOldId) {
     eventEmitter.once('LP_UPDATE_NEW_LUU_THONG_EVENT', NewContractListener.updateAndNewLuuThong);
 
-    eventEmitter.emit('LP_UPDATE_NEW_LUU_THONG_EVENT', hdLuuThongId, contractNew);
+    eventEmitter.emit('LP_UPDATE_NEW_LUU_THONG_EVENT', hdLuuThongId, contractNew, contractOldId);
 }
 
 function updateStatusContractAndLuuThongListener(contract) {
@@ -109,6 +109,12 @@ function daoTangGiamReportDailyListener(data) {
     eventEmitter.emit('LP_REPORT_DAILY_DAO_TANG_GIAM_EVENT', data);
 }
 
+function editMoneyPaidPerDayListener(data) {
+    eventEmitter.once('LP_EDIT_MONEY_PAID_EVENT', UpdateContractListener.editMoneyPaidPerDay);
+
+    eventEmitter.emit('LP_EDIT_MONEY_PAID_EVENT', data);
+}
+
 module.exports = {
     insertOrUpdateBulkContractLogListener: insertOrUpdateBulkContractLogListener,
     createContractLogListener: createContractLogListener,
@@ -126,5 +132,6 @@ module.exports = {
     removeAllByCustomerId: removeAllByCustomerId,
     removeByVisitorListener: removeByVisitorListener,
     totalLuuThongTangGiamListener: totalLuuThongTangGiamListener,
-    daoTangGiamReportDailyListener: daoTangGiamReportDailyListener
+    daoTangGiamReportDailyListener: daoTangGiamReportDailyListener,
+    editMoneyPaidPerDayListener: editMoneyPaidPerDayListener
 };

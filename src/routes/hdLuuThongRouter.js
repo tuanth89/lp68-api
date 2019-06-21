@@ -28,6 +28,9 @@ module.exports = function (server) {
     server.put(prefix + '/:contractId/transferType', HdLuuThongController.transferType);
     server.put(prefix + '/:contractId/updateDongTruoc', HdLuuThongController.updateDongTruoc);
 
+    /* Sửa tiền đã đóng theo ngày */
+    server.put(prefix + '/:contractId/editMoneyPaidPerDay', HdLuuThongController.editMoneyPaid);
+
     // Update tổng tiền cho hợp đồng Thu về, Chốt, Bễ
     server.put(prefix + '/:contractId/updateTotalMoneyPaidTCB', HdLuuThongController.updateTotalMoneyPaidTCB);
 

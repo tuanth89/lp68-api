@@ -343,7 +343,7 @@ function updateStatusEnd(req, res, next) {
         ContractRepository.updateStatus(contractId, data)
             .then(function () {
                 if (data.status === CONTRACT_CONTANST.ACCOUNTANT_END)
-                    EventDispatcher.updatePheForStaffListener(contractId);
+                    EventDispatcher.updatePheForStaffListener(contractId, data.isPheCustomerNew);
 
                 res.send(200);
                 next();
@@ -447,7 +447,7 @@ function circulationContract(req, res, next) {
             EventDispatcher.updateAndNewLuuThongListener(data._id, contract, contractId);
 
             // Sinh phế nhân viên cho hợp đồng cũ
-            EventDispatcher.updatePheForStaffListener(contractId);
+            EventDispatcher.updatePheForStaffListener(contractId, data.isPheCustomerNew);
 
             /* Báo cáo ngày đáo tăng giảm */
             let reportItem = {createdAt: contract.createdAt, totalCustomerMaturity: 1};

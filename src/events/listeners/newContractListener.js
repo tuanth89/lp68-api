@@ -265,10 +265,10 @@ function insertOrUpdateBulkContractLog(data) {
         .done();
 }
 
-function updatePheForStaff(contractId) {
+function updatePheForStaff(contractId, isCustomerNew) {
     ContractRepository.findById(contractId)
         .then(contractItem => {
-            PheConfigRepository.findByDayAndLoanMoney(contractItem.loanDate, contractItem.loanMoney, contractItem.isCustomerNew)
+            PheConfigRepository.findByDayAndLoanMoney(contractItem.loanDate, contractItem.loanMoney, isCustomerNew)
                 .then(item => {
                     if (item) {
                         Contract.update({_id: contractId}, {

@@ -100,6 +100,12 @@ const ContractSchema = new mongoose.Schema({
         contractEndDate: {
             type: Date
         },
+        /**
+         * Ngày đáo
+         */
+        maturityDate: {
+            type: Date
+        },
         note: {
             type: String
         },

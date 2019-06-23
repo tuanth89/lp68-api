@@ -67,10 +67,10 @@ function removeAllByContractListener(contract) {
     eventEmitter.emit('LP_REMOVE_ALL_BY_CONTRACT_EVENT', contract);
 }
 
-function updatePheForStaffListener(contractId) {
+function updatePheForStaffListener(contractId, isCustomerNew) {
     eventEmitter.once('LP_UPDATE_PHE_FOR_STAFF_EVENT', NewContractListener.updatePheForStaff);
 
-    eventEmitter.emit('LP_UPDATE_PHE_FOR_STAFF_EVENT', contractId);
+    eventEmitter.emit('LP_UPDATE_PHE_FOR_STAFF_EVENT', contractId, isCustomerNew);
 }
 
 function updateContractTotalMoneyPaidListener(data) {

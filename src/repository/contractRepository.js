@@ -506,7 +506,15 @@ function updateStatus(id, data) {
     };
 
     if (data.newTransferDate)
-        updateSet.transferDate = moment(data.newTransferDate, "YYYY-MM-DD").format("YYYY-MM-DD");
+    {
+        let transferDate = moment(data.newTransferDate, "YYYY-MM-DD").format("YYYY-MM-DD");
+
+        updateSet.transferDate = transferDate;
+
+        if (data.status === CONTRACT_CONST.ACCOUNTANT_END) {
+            updateSet.contractEndDate = transferDate;
+        }
+    }
 
     Contract.findOneAndUpdate({
         _id: id
@@ -964,7 +972,7 @@ function updateTotalMoneyPaidByUser(contractId, totalMoneyPaid, lastUserUpdate) 
 
                 if (totalMoney >= contract.actuallyCollectedMoney) {
                     updateSet.status = CONTRACT_CONST.END;
-                    updateSet.contractEndDate = moment().format("YYYY-MM-DD");
+                    // updateSet.contractEndDate = moment().format("YYYY-MM-DD");
                 }
 
                 Contract.update({
@@ -1085,13 +1093,15 @@ function circulationContract(contractId, data) {
                 /* Đáo tăng hay giảm */
                 contractNew.isGreaterThanOld = newLoanMoney > contractItem.loanMoney;
 
+                let transferDate = data.newTransferDate !== undefined ? data.newTransferDate : contractNew.createdAt;
                 // Thay đổi trạng thái hợp đồng cũ là đáo.
                 Contract.update({_id: contractId}, {
                     $set: {
                         totalMoneyPaid: totalPaid,
                         status: CONTRACT_CONST.MATURITY,
                         // transferDate: contractNew.createdAt,
-                        transferDate: data.newTransferDate !== undefined ? data.newTransferDate : contractNew.createdAt,
+                        transferDate: transferDate,
+                        maturityDate: transferDate,
                         updatedAt: moment().format("YYYY-MM-DD")
                     }
                 }, function (error, user) {

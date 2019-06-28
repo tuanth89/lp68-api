@@ -437,8 +437,8 @@ function editMoneyPaid(req, res, next) {
     let data = req.body || {};
     let contractId = req.params.contractId;
     let payMoneyOriginal = parseInt(data.payMoneyOriginal);
-    if (payMoneyOriginal <= 0) {
-        return next(new errors.InvalidContentError("Số tiền đóng không được <= 0"));
+    if (payMoneyOriginal < 0) {
+        return next(new errors.InvalidContentError("Số tiền đóng không được < 0"));
     }
 
     let moneyPaid = data.moneyPaid;

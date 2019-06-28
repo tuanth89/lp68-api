@@ -152,12 +152,12 @@ function bulkHistoriesByContractId(contracts) {
 
         let moneyPaid = contract.moneyPaid;
         if (moneyPaid !== undefined) {
-        let history = {};
+            let history = {};
 
-        history.title = moneyPaid === 0 ? 'Nợ' : ("Đóng " + StringService.formatNumeric(contract.moneyPaid));
-        history.start = new Date(contract.createdAt);
-        history.stick = true;
-        histories.push(history);
+            history.title = moneyPaid === 0 ? 'Nợ' : ("Đóng " + StringService.formatNumeric(contract.moneyPaid));
+            history.start = new Date(contract.createdAt);
+            history.stick = true;
+            histories.push(history);
         }
 
         if (contract.newPayMoney > 0) {
@@ -200,28 +200,26 @@ function insertMany(data) {
     let contractLogList = [];
 
     data.forEach((contractItem) => {
-
         let contractLog = new ContractLog();
-        if (parseInt(contractItem.paidMoney) > 0) {
-            let history = {};
-            if (contractItem.isDaoHan) {
-                history.title = "Đáo hạn";
-            } else {
-
+        let history = {};
+        if (contractItem.isDaoHan) {
+            history.title = "Đáo hạn";
+        } else {
+            if (parseInt(contractItem.paidMoney) > 0) {
                 let moneyPaid = contractItem.paidMoney !== undefined ? StringService.formatNumeric(parseInt(contractItem.paidMoney)) : 0;
                 history.title = "Đóng " + moneyPaid;
-                // else {
-                //     let moneyPaid = contractItem.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contractItem.dailyMoneyPay)) : 0;
-                //     history.title = "Đóng " + moneyPaid;
-                // }
             }
-
-            history.start = new Date(moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z');
-            history.stick = true;
-
-            contractLog.histories = [];
-            contractLog.histories.push(history);
+            // else {
+            //     let moneyPaid = contractItem.dailyMoneyPay !== undefined ? StringService.formatNumeric(parseInt(contractItem.dailyMoneyPay)) : 0;
+            //     history.title = "Đóng " + moneyPaid;
+            // }
         }
+
+        history.start = new Date(moment(contractItem.createdAt).format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z');
+        history.stick = true;
+
+        contractLog.histories = [];
+        contractLog.histories.push(history);
 
         contractLog.contractId = contractItem.contractId;
         contractLog.creator = contractItem.creator;

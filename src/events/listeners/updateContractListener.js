@@ -284,11 +284,12 @@ function editMoneyPaidPerDay(data) {
     let dateTo = dateFilter.addDays(1);
     dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 0, 0, 0);
 
+    let moneyPaid = data.moneyPaidNew > 0 ? ("Đóng " + StringService.formatNumeric(data.moneyPaidNew)) : "Nợ";
     ContractLog.updateOne({
             contractId: ObjectId(data.contractId),
             "histories.start": {$gte: dateFrom, $lt: dateTo}
         },
-        {$set: {"histories.$.title": "Đóng " + StringService.formatNumeric(data.moneyPaidNew)}},
+        {$set: {"histories.$.title": moneyPaid}},
         function (error, item) {
             if (error) {
                 console.log(error);

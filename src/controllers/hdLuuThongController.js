@@ -461,6 +461,7 @@ function editMoneyPaid(req, res, next) {
 
             if (isTVChotBe) {
                 dataContract.otherLuuThongId = data.luuThongOtherId;
+                dataContract.createdAt = data.payDate;
             } else {
                 dataContract.luuThongId = data._id;
             }

@@ -312,7 +312,8 @@ function transferType(req, res, next) {
             contractId: contractId,
             moneyPaid: payMoneyOriginal,
             createdAt: data.newTransferDate,
-            newPayMoney: newPayMoney
+            newPayMoney: newPayMoney,
+            isTransferType: true
         }];
         EventDispatcher.addMultiLogToContractLogListener(contractLog);
 
@@ -409,7 +410,7 @@ function updateTotalMoneyPaidTCB(req, res, next) {
             let contractLog = [{
                 contractId: contractId,
                 moneyPaid: newPayMoney,
-                createdAt: moment(data.payDate, "DD/MM/YYYY").format("YYYY-MM-DD")
+                createdAt: data.payDate
             }];
             EventDispatcher.addMultiLogToContractLogListener(contractLog);
 
@@ -441,6 +442,8 @@ function editMoneyPaid(req, res, next) {
         return next(new errors.InvalidContentError("Số tiền đóng không được < 0"));
     }
 
+    let isTVChotBe = data.isTVChotBe;
+
     let moneyPaid = data.moneyPaid;
 
     ContractRepository.findById(contractId)
@@ -448,13 +451,19 @@ function editMoneyPaid(req, res, next) {
             let totalMoneyPaid = contractItem.totalMoneyPaid + payMoneyOriginal - moneyPaid;
 
             let dataContract = {
-                luuThongId: data._id,
+                // luuThongId: data._id,
                 contractId: contractId,
                 totalMoneyPaid: totalMoneyPaid,
                 moneyPaidOld: moneyPaid,
                 moneyPaidNew: payMoneyOriginal,
                 createdAt: data.createdAt
             };
+
+            if (isTVChotBe) {
+                dataContract.otherLuuThongId = data.luuThongOtherId;
+            } else {
+                dataContract.luuThongId = data._id;
+            }
 
             EventDispatcher.editMoneyPaidPerDayListener(dataContract);
 

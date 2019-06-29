@@ -76,8 +76,7 @@ db.once('open', () => {
 
             if (value % 1 !== 0) {
                 itemKM.receive = Math.round(value);
-            }
-            else
+            } else
                 itemKM.receive = value;
 
             itemKM.isNewCustomer = false;
@@ -104,13 +103,13 @@ db.once('open', () => {
     // console.log(arrayKhachMoi);
 
     // Promise.all([dropPheConfig()]).then(function (results) {
-    //     PheConfig.insertMany(arrayKhachMoi)
-    //         .then((result) => {
-    //             console.log("result ", result);
-    //         })
-    //         .catch(err => {
-    //             console.error("error ", err);
-    //         });
+        PheConfig.insertMany(arrayKhachMoi)
+            .then((result) => {
+                console.log("result ", result);
+            })
+            .catch(err => {
+                console.error("error ", err);
+            });
     // });
 
 });

@@ -360,6 +360,7 @@ function getListByType(params) {
                 contractCreatedAt: 1,
                 noIdentity: 1,
                 moneyPaid: {$ifNull: ["$luuThongOtherList.moneyPaid", 0]},
+                luuThongOtherId: {$ifNull: ["$luuThongOtherList._id", null]},
                 status: 1,
                 note: 1,
                 createdAt: 1,
@@ -399,6 +400,7 @@ function getListByType(params) {
                         contractCreatedAt: "$createdAt",
                         noIdentity: "$noIdentity",
                         moneyPaid: "$moneyPaid",
+                        luuThongOtherId: "$luuThongOtherId",
                         status: "$status",
                         note: "$note",
                         totalHavePay: "$totalHavePay",
@@ -505,8 +507,7 @@ function updateStatus(id, data) {
         lastUserUpdate: data.userId
     };
 
-    if (data.newTransferDate)
-    {
+    if (data.newTransferDate) {
         let transferDate = moment(data.newTransferDate, "YYYY-MM-DD").format("YYYY-MM-DD");
 
         updateSet.transferDate = transferDate;

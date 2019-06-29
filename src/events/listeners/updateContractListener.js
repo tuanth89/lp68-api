@@ -2,6 +2,7 @@
 
 const ContractLog = require('../../models/contractLog');
 const HdLuuThong = require('../../models/hdLuuThong');
+const HdLuuThongOther = require('../../models/hdLuuThongOther');
 const Contract = require('../../models/contract');
 const ContractRepository = require('../../repository/contractRepository');
 const HdLuuThongRepository = require('../../repository/hdLuuThongRepository');
@@ -250,19 +251,35 @@ function editMoneyPaidPerDay(data) {
     // }];
     // EventDispatcher.addMultiLogToContractLogListener(contractLog);
 
-    HdLuuThong.findOneAndUpdate(
-        {
-            _id: data.luuThongId
-        }, {
-            $set: {
-                moneyPaid: data.moneyPaidNew
-            }
-        }, function (error, item) {
-            if (error) {
-                console.log(error);
-            }
-        });
+    if (data.luuThongId !== undefined) {
+        HdLuuThong.findOneAndUpdate(
+            {
+                _id: data.luuThongId
+            }, {
+                $set: {
+                    moneyPaid: data.moneyPaidNew
+                }
+            }, function (error, item) {
+                if (error) {
+                    console.log(error);
+                }
+            });
+    }
 
+    if (data.otherLuuThongId !== undefined) {
+        HdLuuThongOther.findOneAndUpdate(
+            {
+                _id: data.otherLuuThongId
+            }, {
+                $set: {
+                    moneyPaid: data.moneyPaidNew
+                }
+            }, function (error, item) {
+                if (error) {
+                    console.log(error);
+                }
+            });
+    }
     Contract.findOneAndUpdate(
         {
             _id: data.contractId

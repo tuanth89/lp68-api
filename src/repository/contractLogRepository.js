@@ -154,7 +154,9 @@ function bulkHistoriesByContractId(contracts) {
         if (moneyPaid !== undefined) {
             let history = {};
 
-            history.title = moneyPaid === 0 ? 'Nợ' : ("Đóng " + StringService.formatNumeric(contract.moneyPaid));
+            // Nếu là action chuyển sang trạng thái khác mà để đóng tiền gốc là 0 thì bỏ qua title
+            if (!contract.isTransferType || moneyPaid > 0)
+                history.title = moneyPaid === 0 ? 'Nợ' : ("Đóng " + StringService.formatNumeric(contract.moneyPaid));
             history.start = new Date(contract.createdAt);
             history.stick = true;
             histories.push(history);

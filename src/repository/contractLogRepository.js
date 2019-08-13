@@ -69,10 +69,12 @@ function findAllByContractId(contractId) {
             $project: {
                 _id: 1,
                 histories: 1,
-                createdAt: "$contract.createdAt",
                 loanMoney: "$contract.loanMoney",
                 actuallyCollectedMoney: "$contract.actuallyCollectedMoney",
-                totalMoneyPaid: "$contract.totalMoneyPaid"
+                totalMoneyPaid: "$contract.totalMoneyPaid",
+                loanDate: "$contract.loanDate",
+                createdAt: "$contract.createdAt",
+                loanEndDate: "$contract.loanEndDate"
             }
         }
     ];
@@ -294,6 +296,41 @@ function remove(id) {
     return deferred.promise;
 }
 
+/**
+ * @desc Tìm tất cả các ngày khách đã nợ theo hợp đồng
+ * @param contractId
+ * @returns {*|promise}
+ */
+function findAllDebitByContract(contractId) {
+    const deferred = Q.defer();
+
+    let query = [
+        { $match: { contractId: ObjectId(contractId), "histories.title": "Nợ" } },
+        { $project: {
+                histories: {
+                    $filter: {
+                        input: "$histories",
+                        as: "item",
+                        cond: { '$eq': [ '$$item.title', "Nợ" ] }
+                    }
+                }
+            }}
+    ];
+
+    ContractLog
+        .aggregate(query)
+        .exec(function (err, contract) {
+            if (err) {
+                deferred.reject(new errors.InvalidContentError(err.message));
+            } else {
+                deferred.resolve(contract.length > 0 ? contract[0] : null);
+            }
+        });
+
+    return deferred.promise;
+}
+
+
 module.exports = {
     findByContractId: findByContractId,
     findAllByContractId: findAllByContractId,
@@ -302,6 +339,7 @@ module.exports = {
     addHistories: addHistories,
     bulkHistoriesByContractId: bulkHistoriesByContractId,
     insertOrUpdateBulkContractLog: insertOrUpdateBulkContractLog,
-    remove: remove
+    remove: remove,
+    findAllDebitByContract: findAllDebitByContract
 
 };

@@ -114,11 +114,13 @@ function updateMany(req, res, next) {
     // let _user = AuthorizationService.getUser(req);
     HdLuuThongRepository.updateMany(data)
         .then(function (luuthongs) {
-            // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
-            EventDispatcher.newContractLuuThongListener(luuthongs);
+            if (luuthongs.length > 0) {
+                // Sinh các bản ghi lưu thông của ngày tiếp theo phải đóng tiền
+                EventDispatcher.newContractLuuThongListener(luuthongs);
 
-            // ghi log lưu vết cho các hợp đồng
-            EventDispatcher.addMultiLogToContractLogListener(data);
+                // ghi log lưu vết cho các hợp đồng
+                EventDispatcher.addMultiLogToContractLogListener(data);
+            }
 
             res.send(200);
             next();
@@ -126,7 +128,6 @@ function updateMany(req, res, next) {
         .catch(function (error) {
             return next(error);
         })
-        .done();
 }
 
 /**

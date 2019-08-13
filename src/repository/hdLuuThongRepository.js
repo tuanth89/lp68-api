@@ -2,7 +2,9 @@
 
 const HdLuuThong = require('../models/hdLuuThong');
 const Contract = require('../models/contract');
+const ContractLog = require('../models/contractLog');
 const ContractRepository = require('../repository/contractRepository');
+const ContractLogRepository = require('../repository/contractLogRepository');
 const Q = require("q");
 const errors = require('restify-errors');
 const moment = require('moment');
@@ -514,85 +516,134 @@ function saveMany(data) {
 }
 
 
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+        await callback(array[index], index, array);
+    }
+}
+
 /**
  *
  * @param data
  * @returns {*|promise}
  */
-function updateMany(data) {
+async function updateMany(data) {
     const deferred = Q.defer();
 
     let bulkContract = Contract.collection.initializeOrderedBulkOp();
+    let bulkContractLog = ContractLog.collection.initializeOrderedBulkOp();
     let bulkHdLuuThong = HdLuuThong.collection.initializeOrderedBulkOp();
     let luuthongs = [];
     let dailyMoneyPay = 0, // Số tiền phải đóng hàng ngày (cố định) (tiền lãi, thực thu / số ngày vay)
         // totalMoneyHavePayNow = 0, // Tổng số tiền phải đóng tói thời điểm hiện tại
         totalMoneyPaid = 0; // Tổng số tiền đã đóng tới thời điểm hiện tại
 
-    data.forEach((contractItem) => {
+    asyncForEach(data, async (contractItem) => {
         dailyMoneyPay = contractItem.dailyMoneyPay;
         totalMoneyPaid = contractItem.totalMoneyPaid || 0;
         totalMoneyPaid += contractItem.moneyPaid;
-
         let contractUpdateSet = {totalMoneyPaid: totalMoneyPaid};
-        let luuThongUpdateSet = {};
 
-        if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
-            // Tạo bản ghi lưu thông ngày tiếp theo
-            let luuthong = new HdLuuThong();
-            luuthong.creator = contractItem.creator;
-            luuthong.contractId = contractItem.contractId;
-            luuthong._doc.totalMoneyPaid = totalMoneyPaid;
+        let debitDateByContract = await ContractLogRepository.findAllDebitByContract(contractItem.contractId);
+        if (debitDateByContract !== null && debitDateByContract.histories.length > 0 && contractItem.moneyPaid > 0) {
+            let dateFilter = new Date(debitDateByContract.histories[0].start);
+            let dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth(), dateFilter.getDate(), 0, 0, 0);
+            let dateTo = dateFilter.addDays(1);
+            dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 0, 0, 0);
 
-            if (contractItem.contractStatus === CONTRACT_CONST.STAND) {
-                luuthong._doc.dailyMoneyPay = 0;
-                luuthong._doc.totalMoneyPaid = 0;
-                luuthong.moneyHavePay = 0;
-                luuthong.moneyPaid = 0;
-            } else {
-                luuthong._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
-                luuthong.moneyHavePay = dailyMoneyPay;
-                luuthong.moneyPaid = dailyMoneyPay;
-            }
+            bulkContractLog
+                .find({
+                    contractId: ObjectId(contractItem.contractId),
+                    "histories.start": {$gte: dateFrom, $lt: dateTo}
+                })
+                .update({$set: {"histories.$.title": "Đóng " + StringService.formatNumeric(contractItem.moneyPaid)}});
 
-            luuthong.createdAt = contractItem.createdAt;
-            luuthongs.push(luuthong);
-        } else // Nếu tiền đóng đủ và hết
-            contractUpdateSet.status = CONTRACT_CONST.END;
+        } else {
 
-        bulkHdLuuThong.find({_id: ObjectId(contractItem._id)})
-            .update({
-                $set: {
-                    moneyHavePay: contractItem.moneyHavePay,
-                    moneyPaid: contractItem.moneyPaid,
-                    status: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+            if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
+                // Tạo bản ghi lưu thông ngày tiếp theo
+                let luuthong = new HdLuuThong();
+                luuthong.creator = contractItem.creator;
+                luuthong.contractId = contractItem.contractId;
+                luuthong._doc.totalMoneyPaid = totalMoneyPaid;
+
+                if (contractItem.contractStatus === CONTRACT_CONST.STAND) {
+                    luuthong._doc.dailyMoneyPay = 0;
+                    luuthong._doc.totalMoneyPaid = 0;
+                    luuthong.moneyHavePay = 0;
+                    luuthong.moneyPaid = 0;
+                } else {
+                    luuthong._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
+                    luuthong.moneyHavePay = dailyMoneyPay;
+                    luuthong.moneyPaid = dailyMoneyPay;
                 }
-            });
+
+                luuthong.createdAt = contractItem.createdAt;
+                luuthongs.push(luuthong);
+            } else // Nếu tiền đóng đủ và hết
+                contractUpdateSet.status = CONTRACT_CONST.END;
+
+            bulkHdLuuThong.find({_id: ObjectId(contractItem._id)})
+                .update({
+                    $set: {
+                        moneyHavePay: contractItem.moneyHavePay,
+                        moneyPaid: contractItem.moneyPaid,
+                        status: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+                    }
+                });
+        }
 
         if (contractItem.contractStatus !== CONTRACT_CONST.STAND) {
             bulkContract.find({_id: ObjectId(contractItem.contractId)})
                 .update({$set: contractUpdateSet});
         }
-    });
+    }).then(()=> {
+        if (bulkHdLuuThong && bulkHdLuuThong.s && bulkHdLuuThong.s.currentBatch
+            && bulkHdLuuThong.s.currentBatch.operations
+            && bulkHdLuuThong.s.currentBatch.operations.length > 0) {
+            bulkHdLuuThong.execute(function (error, luuThongs) {
+                if (error) {
+                    deferred.reject(new errors.InvalidContentError(error.message));
+                } else {
+                    if (bulkContract && bulkContract.s && bulkContract.s.currentBatch
+                        && bulkContract.s.currentBatch.operations
+                        && bulkContract.s.currentBatch.operations.length > 0) {
+                        bulkContract.execute(function (error, items) {
+                            if (error) {
+                                deferred.reject(new errors.InvalidContentError(error.message));
+                            } else {
+                                deferred.resolve(luuthongs);
+                            }
+                        });
+                    } else
+                        deferred.resolve(luuthongs);
 
-
-    bulkHdLuuThong.execute(function (error, luuThongs) {
-        if (error) {
-            deferred.reject(new errors.InvalidContentError(error.message));
+                }
+            });
         } else {
-            if (bulkContract && bulkContract.s && bulkContract.s.currentBatch
-                && bulkContract.s.currentBatch.operations
-                && bulkContract.s.currentBatch.operations.length > 0) {
-                bulkContract.execute(function (error, items) {
+            if (bulkContractLog && bulkContractLog.s && bulkContractLog.s.currentBatch
+                && bulkContractLog.s.currentBatch.operations
+                && bulkContractLog.s.currentBatch.operations.length > 0) {
+                bulkContractLog.execute(function (error, luuThongs) {
                     if (error) {
                         deferred.reject(new errors.InvalidContentError(error.message));
                     } else {
-                        deferred.resolve(luuthongs);
+                        if (bulkContract && bulkContract.s && bulkContract.s.currentBatch
+                            && bulkContract.s.currentBatch.operations
+                            && bulkContract.s.currentBatch.operations.length > 0) {
+                            bulkContract.execute(function (error, items) {
+                                if (error) {
+                                    deferred.reject(new errors.InvalidContentError(error.message));
+                                } else {
+                                    deferred.resolve([]);
+                                }
+                            });
+                        } else
+                            deferred.resolve([]);
                     }
                 });
             } else
-                deferred.resolve(luuthongs);
-
+                deferred.resolve([]);
         }
     });
 

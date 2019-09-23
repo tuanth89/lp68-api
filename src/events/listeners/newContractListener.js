@@ -113,7 +113,9 @@ function newContractLuuThongListener(luuthongs) {
             luuthong.moneyHavePay = dailyMoneyPay;
             luuthong.moneyPaid = dailyMoneyPay;
         }
-
+        if (luuthongItem.status > 0) {
+            luuthong.status = luuthongItem.status;
+        }
         luuthong.createdAt = nextPayDate;
         luuthongList.push(luuthong);
     });

@@ -144,7 +144,7 @@ async function updateContractDongTruoc(data) {
         } else {
             let dayLimit = dayByMoney;
             while (day <= dayLimit) {
-                let dateFilter = new Date(debitDateByContract[0]);
+                let dateFilter = new Date(debitDateByContract.histories[0].start);
                 let dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth() + 1, dateFilter.getDate(), 0, 0, 0);
                 let dateTo = dateFilter.addDays(1);
                 dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth() + 1, dateTo.getDate(), 0, 0, 0);

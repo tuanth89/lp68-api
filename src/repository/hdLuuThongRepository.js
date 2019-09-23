@@ -544,22 +544,148 @@ async function updateMany(data) {
         totalMoneyPaid += contractItem.moneyPaid;
         let contractUpdateSet = {totalMoneyPaid: totalMoneyPaid};
 
-        let debitDateByContract = await ContractLogRepository.findAllDebitByContract(contractItem.contractId);
-        if (debitDateByContract !== null && debitDateByContract.histories.length > 0 && contractItem.moneyPaid > 0) {
-            let dateFilter = new Date(debitDateByContract.histories[0].start);
-            let dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth(), dateFilter.getDate(), 0, 0, 0);
-            let dateTo = dateFilter.addDays(1);
-            dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 0, 0, 0);
+        let day = 1;
+        let dayByMoney = Math.trunc(contractItem.moneyPaid / (contractItem.dailyMoneyPay === 0 ? contractItem.moneyPaid : contractItem.dailyMoneyPay));
 
-            bulkContractLog
-                .find({
-                    contractId: ObjectId(contractItem.contractId),
-                    "histories.start": {$gte: dateFrom, $lt: dateTo}
-                })
-                .update({$set: {"histories.$.title": "Đóng " + StringService.formatNumeric(contractItem.moneyPaid)}});
+        if (contractItem.moneyPaid > 0 && dayByMoney > 1) {
+            let debitDateByContract = await ContractLogRepository.findAllDebitByContract(contractItem.contractId);
+            if (debitDateByContract !== null && debitDateByContract.histories.length > 0 && contractItem.moneyPaid > 0) {
+                let debitDateCount = debitDateByContract.histories.length;
+                if (dayByMoney > debitDateCount) {
+                    while (day <= debitDateCount) {
+                        let dateFilter = new Date(debitDateByContract.histories[0].start);
+                        let dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth(), dateFilter.getDate(), 0, 0, 0);
+                        let dateTo = dateFilter.addDays(1);
+                        dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 0, 0, 0);
 
+                        bulkContractLog
+                            .find({
+                                contractId: ObjectId(contractItem.contractId),
+                                "histories.start": {$gte: dateFrom, $lt: dateTo}
+                            })
+                            .update({$set: {"histories.$.title": "Trả nợ"}});
+
+                        debitDateByContract.histories.shift();
+                        dayByMoney--;
+                        day++;
+                    }
+                } else {
+                    let dayLimit = dayByMoney;
+                    while (day < dayLimit) {
+                        let dateFilter = new Date(debitDateByContract.histories[0].start);
+                        let dateFrom = new Date(dateFilter.getFullYear(), dateFilter.getMonth(), dateFilter.getDate(), 0, 0, 0);
+                        let dateTo = dateFilter.addDays(1);
+                        dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 0, 0, 0);
+
+                        bulkContractLog
+                            .find({
+                                contractId: ObjectId(contractItem.contractId),
+                                "histories.start": {$gte: dateFrom, $lt: dateTo}
+                            })
+                            .update({$set: {"histories.$.title": "Trả nợ"}});
+
+                        debitDateByContract.histories.shift();
+                        dayByMoney--;
+                        day++;
+                    }
+                }
+            }
+
+            // Nếu đã đóng hết nợ và vẫn còn thừa tiền thì tính nộp hiện tại + tương lai
+            if (dayByMoney > 0) {
+                day = 1;
+                bulkHdLuuThong.find({_id: ObjectId(contractItem._id)})
+                    .update({
+                        $set: {
+                            moneyHavePay: contractItem.moneyHavePay,
+                            moneyPaid: contractItem.moneyPaid,
+                            status: CONTRACT_OTHER_CONST.STATUS.COMPLETED
+                        }
+                    });
+                if (dayByMoney === 1) {
+                    if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
+                        // Tạo bản ghi lưu thông ngày tiếp theo
+                        let luuthong = Object.assign({});
+                        luuthong = new HdLuuThong();
+                        luuthong.creator = contractItem.creator;
+                        luuthong.contractId = contractItem.contractId;
+                        luuthong._doc.totalMoneyPaid = totalMoneyPaid;
+
+                        if (contractItem.contractStatus === CONTRACT_CONST.STAND) {
+                            luuthong._doc.dailyMoneyPay = 0;
+                            luuthong._doc.totalMoneyPaid = 0;
+                            luuthong.moneyHavePay = 0;
+                            luuthong.moneyPaid = 0;
+                        } else {
+                            luuthong._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
+                            luuthong.moneyHavePay = dailyMoneyPay;
+                            luuthong.moneyPaid = dailyMoneyPay;
+                        }
+
+                        luuthong.createdAt = contractItem.createdAt;
+                        luuthongs.push(luuthong);
+                    } else // Nếu tiền đóng đủ và hết
+                        contractUpdateSet.status = CONTRACT_CONST.END;
+                } else {
+                    dayByMoney--;
+
+                    let dateAfter = moment(contractItem.createdAt);
+                    while (day <= dayByMoney) {
+                        let dateContractLog = moment(contractItem.createdAt);
+                        let dateCurrent = moment(contractItem.createdAt);
+                        dateContractLog.add(day, "days");
+                        dateCurrent.add(day - 1, "days");
+                        dateAfter.add(day - 1, "days");
+
+                        let luuThongNewPaid = Object.assign({});
+                        luuThongNewPaid = new HdLuuThong();
+                        luuThongNewPaid.moneyHavePay = 0;
+                        luuThongNewPaid.moneyPaid = 0;
+                        luuThongNewPaid.status = CONTRACT_OTHER_CONST.STATUS.COMPLETED;
+                        luuThongNewPaid.contractId = contractItem.contractId;
+                        luuThongNewPaid.creator = contractItem.creator;
+                        luuThongNewPaid.createdAt = dateCurrent.format("YYYY-MM-DD");
+
+                        luuthongs.push(luuThongNewPaid);
+                        day++;
+
+                        let history = {
+                            title: "Đã đóng",
+                            start: dateContractLog.format("YYYY-MM-DD HH:mm:ss.000").toString() + 'Z',
+                            stick: true
+                        };
+
+                        bulkContractLog.find({contractId: ObjectId(contractItem.contractId)})
+                            .update({$push: {histories: history}});
+                    }
+
+                    if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
+                        // Tạo bản ghi lưu thông ngày tiếp theo
+                        dateAfter.add(1, "days");
+                        let luuthongNew = Object.assign({});
+                        luuthongNew = new HdLuuThong();
+                        luuthongNew.creator = contractItem.creator;
+                        luuthongNew.contractId = contractItem.contractId;
+                        luuthongNew._doc.totalMoneyPaid = totalMoneyPaid;
+
+                        if (contractItem.contractStatus === CONTRACT_CONST.STAND) {
+                            luuthongNew._doc.dailyMoneyPay = 0;
+                            luuthongNew._doc.totalMoneyPaid = 0;
+                            luuthongNew.moneyHavePay = 0;
+                            luuthongNew.moneyPaid = 0;
+                        } else {
+                            luuthongNew._doc.dailyMoneyPay = contractItem.dailyMoneyPay;
+                            luuthongNew.moneyHavePay = dailyMoneyPay;
+                            luuthongNew.moneyPaid = dailyMoneyPay;
+                        }
+
+                        luuthongNew.createdAt = dateAfter.format("YYYY-MM-DD");
+                        luuthongs.push(luuthongNew);
+                    } else // Nếu tiền đóng đủ và hết
+                        contractUpdateSet.status = CONTRACT_CONST.END;
+                }
+            }
         } else {
-
             if (totalMoneyPaid < contractItem.actuallyCollectedMoney) {
                 // Tạo bản ghi lưu thông ngày tiếp theo
                 let luuthong = new HdLuuThong();
@@ -597,11 +723,15 @@ async function updateMany(data) {
             bulkContract.find({_id: ObjectId(contractItem.contractId)})
                 .update({$set: contractUpdateSet});
         }
-    }).then(()=> {
+
+    }).then(() => {
+        let isBulkHdLuuThong = false;
         if (bulkHdLuuThong && bulkHdLuuThong.s && bulkHdLuuThong.s.currentBatch
             && bulkHdLuuThong.s.currentBatch.operations
             && bulkHdLuuThong.s.currentBatch.operations.length > 0) {
-            bulkHdLuuThong.execute(function (error, luuThongs) {
+            isBulkHdLuuThong = true;
+
+            bulkHdLuuThong.execute(function (error, result) {
                 if (error) {
                     deferred.reject(new errors.InvalidContentError(error.message));
                 } else {
@@ -617,34 +747,36 @@ async function updateMany(data) {
                         });
                     } else
                         deferred.resolve(luuthongs);
-
                 }
             });
-        } else {
-            if (bulkContractLog && bulkContractLog.s && bulkContractLog.s.currentBatch
-                && bulkContractLog.s.currentBatch.operations
-                && bulkContractLog.s.currentBatch.operations.length > 0) {
-                bulkContractLog.execute(function (error, luuThongs) {
-                    if (error) {
-                        deferred.reject(new errors.InvalidContentError(error.message));
-                    } else {
-                        if (bulkContract && bulkContract.s && bulkContract.s.currentBatch
-                            && bulkContract.s.currentBatch.operations
-                            && bulkContract.s.currentBatch.operations.length > 0) {
-                            bulkContract.execute(function (error, items) {
-                                if (error) {
-                                    deferred.reject(new errors.InvalidContentError(error.message));
-                                } else {
-                                    deferred.resolve([]);
-                                }
-                            });
-                        } else
-                            deferred.resolve([]);
-                    }
-                });
-            } else
-                deferred.resolve([]);
         }
+
+        if (bulkContractLog && bulkContractLog.s && bulkContractLog.s.currentBatch
+            && bulkContractLog.s.currentBatch.operations
+            && bulkContractLog.s.currentBatch.operations.length > 0) {
+            bulkContractLog.execute(function (error, result) {
+                if (isBulkHdLuuThong)
+                    return;
+
+                if (error) {
+                    deferred.reject(new errors.InvalidContentError(error.message));
+                } else {
+                    if (bulkContract && bulkContract.s && bulkContract.s.currentBatch
+                        && bulkContract.s.currentBatch.operations
+                        && bulkContract.s.currentBatch.operations.length > 0) {
+                        bulkContract.execute(function (error, items) {
+                            if (error) {
+                                deferred.reject(new errors.InvalidContentError(error.message));
+                            } else {
+                                deferred.resolve([]);
+                            }
+                        });
+                    } else
+                        deferred.resolve([]);
+                }
+            });
+        }
+
     });
 
     return deferred.promise;

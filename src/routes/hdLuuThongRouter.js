@@ -9,6 +9,7 @@ module.exports = function (server) {
      * LIST
      */
     server.get(prefix + '/listByDate/all', HdLuuThongController.listByDate);
+    server.get(prefix + '/listByDate/exportAll', HdLuuThongController.exportToExcel);
 
     /**
      * GET
@@ -33,5 +34,4 @@ module.exports = function (server) {
 
     // Update tổng tiền cho hợp đồng Thu về, Chốt, Bễ
     server.put(prefix + '/:contractId/updateTotalMoneyPaidTCB', HdLuuThongController.updateTotalMoneyPaidTCB);
-
 };

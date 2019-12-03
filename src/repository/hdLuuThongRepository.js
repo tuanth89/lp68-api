@@ -112,6 +112,7 @@ Date.prototype.addDays = function (days) {
 function getListByDate(params) {
     const deferred = Q.defer();
 
+    let exportExcel = params.exportExcel || false;
     let page = parseInt(params.page) || config.pagination.page;
     let per_page = parseInt(params.per_page) || config.pagination.limit;
     let offset = (page - 1) * per_page;
@@ -235,37 +236,39 @@ function getListByDate(params) {
 
     query.push({$sort: {"customerNameE": 1, noIdentity: -1}});
 
-    let pageIndex = [
-        {
-            $group: {
-                _id: null,
-                totalItems: {
-                    $sum: 1
-                },
-                totalMoneyStatusEnd: {
-                    $sum: "$moneyByStatusEnd"
-                },
-                totalMoneyHavePayEnd: {
-                    $sum: "$totalHavePay"
-                },
-                docs: {
-                    $push: '$$ROOT'
+    if (!exportExcel) {
+        let pageIndex = [
+            {
+                $group: {
+                    _id: null,
+                    totalItems: {
+                        $sum: 1
+                    },
+                    totalMoneyStatusEnd: {
+                        $sum: "$moneyByStatusEnd"
+                    },
+                    totalMoneyHavePayEnd: {
+                        $sum: "$totalHavePay"
+                    },
+                    docs: {
+                        $push: '$$ROOT'
+                    }
+                }
+            },
+            {
+                $project: {
+                    totalItems: 1,
+                    totalMoneyStatusEnd: 1,
+                    totalMoneyHavePayEnd: 1,
+                    docs: {
+                        $slice: ["$docs", offset, per_page]
+                    }
                 }
             }
-        },
-        {
-            $project: {
-                totalItems: 1,
-                totalMoneyStatusEnd: 1,
-                totalMoneyHavePayEnd: 1,
-                docs: {
-                    $slice: ["$docs", offset, per_page]
-                }
-            }
-        }
-    ];
+        ];
 
-    query.push(...pageIndex);
+        query.push(...pageIndex);
+    }
 
     HdLuuThong
         .aggregate(query)
@@ -275,7 +278,7 @@ function getListByDate(params) {
                 console.log(error);
                 deferred.reject(new errors.InvalidContentError(error.message));
             } else {
-                deferred.resolve(contracts[0]);
+                deferred.resolve(!exportExcel ? contracts[0] : contracts);
             }
         });
 

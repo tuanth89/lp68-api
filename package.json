@@ -37,7 +37,7 @@
     "mongoose-type-email": "^1.0.5",
     "mongoose-validator": "^2.1.0",
     "morgan": "^1.9.0",
-    "npm": "^5.8.0",
+    "npm": "^6.14.6",
     "parse-error": "^0.2.0",
     "pug": "^2.0.3",
     "q": "^1.5.1",
